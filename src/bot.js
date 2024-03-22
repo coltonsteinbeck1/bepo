@@ -11,6 +11,7 @@ import ytdl from "ytdl-core";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
+import pingCommand from "./commands/fun/ping.js";
 import { getAllChannels } from "./supabase/supabase.js";
 
 dotenv.config();
@@ -26,6 +27,7 @@ client.commands = new Collection();
 client.commands.set("play", playCommand);
 client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
+client.commands.set("ping", pingCommand);
 
 // OpenAI API key
 const openAI = new OpenAI({
