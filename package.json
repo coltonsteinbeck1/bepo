@@ -1,0 +1,38 @@
+{
+  "dependencies": {
+    "@discordjs/voice": "^0.16.1",
+    "@supabase/supabase-js": "^2.39.0",
+    "axios": "^1.6.2",
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.3.1",
+    "libsodium-wrappers": "^0.7.13",
+    "openai": "^4.19.0",
+    "ora": "^7.0.1",
+    "yargs": "^17.7.2",
+    "ytdl-core": "^4.11.5"
+  },
+  "name": "bepo",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./src/bot.js",
+  "scripts": {
+    "deploy": "node scripts/deploy-commands.js",
+    "delete": "node scripts/delete-commands.js",
+    "generate": "node src/dalle/cli.js generate",
+    "start": "node src/bot.js",
+    "bot-start": "pm2 start src/bot.js -i 4"
+  },
+  "bin": {
+    "bepo": "./src/cli.js"
+  },
+  "volta": {
+    "node": "20.10.0",
+    "npm": "10.2.3"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "supabase": "^1.123.4"
+  }
+}
