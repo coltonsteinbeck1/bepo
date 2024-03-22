@@ -4,7 +4,7 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl!, supabaseKey!);
 
 // Function to get all guilds
 async function getAllGuilds() {
@@ -53,7 +53,8 @@ async function getConfig() {
   return data;
 }
 
-async function insertImages(prompt, url) {
+// FIXME: initializeImageId does not exist
+async function insertImages(prompt: string, url: string) {
   initializeImageId();
 
   const { data, error } = await supabase
@@ -66,4 +67,4 @@ async function insertImages(prompt, url) {
   }
 }
 
-export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages };
+export { getAllChannels, getAllGuilds, getAllUsers, getConfig, insertImages };

@@ -1,4 +1,8 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  EmbedBuilder,
+  SlashCommandBuilder,
+} from "discord.js";
 
 const pollCommand = {
   data: new SlashCommandBuilder()
@@ -70,7 +74,7 @@ const pollCommand = {
         .setDescription("The tenth option for the poll")
         .setRequired(false),
     ),
-  async execute(interaction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     const question = interaction.options.getString("question");
     const options = [
       interaction.options.getString("option_1"),
@@ -85,21 +89,33 @@ const pollCommand = {
       interaction.options.getString("option_10") || "",
     ].filter((option) => option !== "");
     const emojis = ["✅", "❌", "😄", "😊", "😍", "🤔", "🙌", "👏", "👍", "�"];
+    // Use the options array as needed
+    // ...
 
     const embed = new EmbedBuilder().setTitle(question);
 
-    for (let i = 0; i < options.length; i++) {
-      if (options[i] && options[i].length > 0) {
+    options.forEach((o, i) => {
+      if (o && o.length > 0) {
         embed.addFields({
-          name: `${options[i]}`,
+          name: `${o}`,
           value: `${emojis[i]} `,
           inline: true,
         });
       }
-    }
+    });
 
     // Reply to the interaction with the embed
     await interaction.reply({ embeds: [embed], fetchReply: true });
+
+    // //Fetch the reply message
+    // const message = await interaction.fetchReply();
+
+    // // Add reaction emojis to the message
+    // for(let i = 0; i < options.length; i++) {
+    //     if (options[i] && options[i].length > 0) {
+    //         await message.react(emojis[i]);
+    //     }
+    // }
   },
 };
 export default pollCommand; // Export the command

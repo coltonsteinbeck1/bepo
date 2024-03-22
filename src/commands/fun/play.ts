@@ -1,10 +1,13 @@
-// play.js
 import {
-  joinVoiceChannel,
-  createAudioResource,
   createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
 } from "@discordjs/voice";
-import { SlashCommandBuilder } from "discord.js";
+import {
+  ChatInputCommandInteraction,
+  SlashCommandBuilder,
+  VoiceBasedChannel,
+} from "discord.js";
 import ytdl from "ytdl-core";
 
 const playCommand = {
@@ -23,9 +26,13 @@ const playCommand = {
         .setDescription("The channel to play in")
         .setRequired(true),
     ),
-  async execute(interaction) {
+  async execute(interaction: ChatInputCommandInteraction) {
     const link = interaction.options.getString("link");
-    const channel = interaction.options.getChannel("channel");
+    const channel: VoiceBasedChannel | null =
+      interaction.options.getChannel("channel");
+
+    // TODO: improve error handling
+    if (!channel || !link) return;
 
     if (channel.type === 2) {
       const connection = joinVoiceChannel({

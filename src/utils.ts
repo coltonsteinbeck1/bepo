@@ -11,15 +11,15 @@ export const DALLE_DIR_PATH = path.join(__dirname, "dalle");
 
 export const IMAGE_PATH = path.join(__dirname, "images/image.png");
 
-export const loadJSON = (path) =>
-  JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
+export const loadJSON = (path: string) =>
+  JSON.parse(fs.readFileSync(new URL(path, import.meta.url), "utf8"));
 
-export const isJSFile = (file) => file.match(/^.*\.(cjs|mjs|js)$/);
+export const isJSFile = (file: string) => file.match(/^.*\.(cjs|mjs|js)$/);
 
 export const runScript = (
-  scriptPath,
-  args = undefined,
-  exitCallback = undefined,
+  scriptPath: string,
+  args?: cp.ForkOptions,
+  exitCallback?: () => void,
 ) => {
   const res = cp.fork(scriptPath, args);
 
@@ -36,11 +36,15 @@ export const runScript = (
   }
 };
 
-export const runGenerate = (prompt, exitCallback = undefined) => {
-  runScript(path.join(DALLE_DIR_PATH, "generate.js"), [prompt], exitCallback);
+export const runGenerate = (prompt: string, exitCallback?: () => void) => {
+  runScript(
+    path.join(DALLE_DIR_PATH, "generate.js"),
+    [prompt] as cp.ForkOptions,
+    exitCallback,
+  );
 };
 
-export const ensureDir = (dir) => {
+export const ensureDir = (dir: string) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }

@@ -1,10 +1,10 @@
 import {
+  AttachmentBuilder,
+  ChatInputCommandInteraction,
   EmbedBuilder,
   SlashCommandBuilder,
-  AttachmentBuilder,
 } from "discord.js";
-import path from "path";
-import { runGenerate, IMAGE_PATH } from "../../utils.js";
+import { IMAGE_PATH, runGenerate } from "../../utils.js";
 
 const drawCommand = {
   data: new SlashCommandBuilder()
@@ -16,8 +16,7 @@ const drawCommand = {
         .setDescription("The prompt for DALL-E to draw")
         .setRequired(true),
     ),
-  async execute(interaction) {
-    await interaction.deferReply();
+  async execute(interaction: ChatInputCommandInteraction) {
     const prompt = interaction.options.getString("prompt");
     const cb = () => {
       const attachment = new AttachmentBuilder(IMAGE_PATH);
@@ -27,7 +26,7 @@ const drawCommand = {
         .setImage(`attachment://image.png`);
 
       interaction
-        .editReply({ embeds: [embed], files: [attachment] })
+        .deferReply({ embeds: [embed], files: [attachment] })
         .catch(console.error.bind(console));
     };
     runGenerate(prompt, cb);

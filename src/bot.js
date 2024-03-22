@@ -1,12 +1,17 @@
 import {
-    createAudioPlayer,
-    createAudioResource,
-    joinVoiceChannel,
+  createAudioPlayer,
+  createAudioResource,
+  joinVoiceChannel,
 } from "@discordjs/voice";
-import { AttachmentBuilder, Client, Collection, EmbedBuilder } from "discord.js";
+import {
+  AttachmentBuilder,
+  Client,
+  Collection,
+  EmbedBuilder,
+} from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
-import {runGenerate, IMAGE_PATH} from "./utils.js"
+import { runGenerate, IMAGE_PATH } from "./utils.js";
 import ytdl from "ytdl-core";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
@@ -15,11 +20,14 @@ import { getAllChannels } from "./supabase/supabase.js";
 
 dotenv.config();
 
-
-
-
 const client = new Client({
-  intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent", "GuildVoiceStates"],
+  intents: [
+    "Guilds",
+    "GuildMembers",
+    "GuildMessages",
+    "MessageContent",
+    "GuildVoiceStates",
+  ],
 });
 
 client.commands = new Collection();
@@ -70,7 +78,10 @@ client.on("messageCreate", async (message) => {
     message.react(randomLoveEmoji);
   }
   //Doesn't respond on group pings
-  if (message.content.includes('@everyone') || message.content.includes('@here')) {
+  if (
+    message.content.includes("@everyone") ||
+    message.content.includes("@here")
+  ) {
     return;
   }
 
@@ -87,7 +98,6 @@ client.on("messageCreate", async (message) => {
   conversation.push({
     role: "system",
     content: process.env.MODEL_SYSTEM_MESSAGE,
-
   });
   let previousMessage = await message.channel.messages.fetch({ limit: 30 });
 
@@ -142,8 +152,6 @@ client.on("messageCreate", async (message) => {
     const chunk = responseMessage.substring(i, i + chunkSizeLimit);
     await message.reply(chunk);
   }
-
 });
 
 client.login(BOT_TOKEN);
-
