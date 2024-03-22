@@ -17,6 +17,7 @@ const drawCommand = {
         .setRequired(true),
     ),
   async execute(interaction: ChatInputCommandInteraction) {
+    await interaction.deferReply();
     const prompt = interaction.options.getString("prompt");
     const cb = () => {
       const attachment = new AttachmentBuilder(IMAGE_PATH);
@@ -26,7 +27,7 @@ const drawCommand = {
         .setImage(`attachment://image.png`);
 
       interaction
-        .deferReply({ embeds: [embed], files: [attachment] })
+        .editReply({ embeds: [embed], files: [attachment] })
         .catch(console.error.bind(console));
     };
     runGenerate(prompt, cb);

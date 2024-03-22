@@ -1,27 +1,14 @@
-import {
-  createAudioPlayer,
-  createAudioResource,
-  joinVoiceChannel,
-} from "@discordjs/voice";
-import {
-  AttachmentBuilder,
-  ChatInputCommandInteraction,
-  Client,
-  Collection,
-  EmbedBuilder,
-  VoiceChannel,
-} from "discord.js";
+import { Client, Collection } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
-import ytdl from "ytdl-core";
+import drawCommand from "./commands/fun/draw.js";
+import pingCommand from "./commands/fun/ping.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
-import { IMAGE_PATH, runGenerate } from "./utils.js";
 
 dotenv.config();
 
 const loveEmojis = ["🥰", "😍", "😘", "❤"];
-// const exec = promisify(execCb);
 
 const client = new Client({
   intents: [
@@ -33,72 +20,11 @@ const client = new Client({
   ],
 });
 client.commands = new Collection();
-client.commands.set("ping", {
-  name: "ping",
-  description: "Ping the bot",
-  execute(interaction: ChatInputCommandInteraction) {
-    interaction.reply("Pong!");
-  },
-});
-client.commands.set("play", {
-  name: "play",
-  description: "Plays a YouTube video in a voice channel",
-  async execute(interaction: ChatInputCommandInteraction) {
-    const link = interaction.options.getString("link");
-    const channel: VoiceChannel | null =
-      interaction.options.getChannel("channel");
 
-    // TODO: improve error handling
-    if (!channel || !link) return;
-
-    if (channel.type === 2) {
-      const connection = joinVoiceChannel({
-        channelId: channel.id,
-        guildId: channel.guild.id,
-        adapterCreator: channel.guild.voiceAdapterCreator,
-        selfDeaf: false,
-      });
-
-      const stream = ytdl(link, { filter: "audioonly" });
-      const resource = createAudioResource(stream);
-      const player = createAudioPlayer();
-
-      player.play(resource);
-      connection.subscribe(player);
-
-      await interaction.reply("Playing YouTube link in voice channel...");
-    } else {
-      await interaction.reply("Please provide a voice channel.");
-    }
-  },
-});
+client.commands.set("ping", pingCommand);
 client.commands.set("play", playCommand);
 client.commands.set("poll", pollCommand);
-// client.commands.set("draw", drawCommand);
-client.commands.set("draw", {
-  name: "draw",
-  description: "Generate an image with DALL-E",
-  async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply();
-    const prompt = interaction.options.getString("prompt");
-
-    // TODO: improve error handling
-    if (!prompt) return;
-
-    const cb = () => {
-      const attachment = new AttachmentBuilder(IMAGE_PATH);
-      // get the filename from IMAGE_PATH
-      const embed = new EmbedBuilder()
-        .setTitle(prompt)
-        .setImage(`attachment://image.png`);
-
-      interaction
-        .editReply({ embeds: [embed], files: [attachment] })
-        .catch(console.error.bind(console));
-    };
-    runGenerate(prompt, cb);
-  },
-});
+client.commands.set("draw", drawCommand);
 
 // OpenAI API key
 const openAI = new OpenAI({
@@ -135,10 +61,10 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("messageCreate", async (message) => {
-  //Meme reaction for femboy -> For Aaron ❤
+  //Meme reaction for GothicAtari
   const randomLoveEmoji =
     loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
-  if (message.content.toLowerCase().includes("femboy".toLowerCase())) {
+  if (message.content.toLowerCase().includes("pex".toLowerCase())) {
     message.react(randomLoveEmoji);
   }
   if (
@@ -162,8 +88,7 @@ client.on("messageCreate", async (message) => {
   const conversation = [];
   conversation.push({
     role: "system",
-    content:
-      "Bepo is your friendly guide to the colorful world of internet humor and pop culture. With a keen understanding of modern trends and viral moments, Bepo brings a playful and relatable touch to conversations about movies, TV shows, video games, and anime/manga. Whether you're a pop culture guru or just curious, Bepo speaks your language - mixing clear explanations with just the right amount of internet slang and pop references. Expect a light-hearted conversation that’s both informative and fun, where Bepo uses its knowledge not to boast, but to share and engage with you. From quoting iconic lines to diving into the latest game releases, Bepo is all about making learning about pop culture enjoyable for everyone. Its style is witty yet welcoming, always ready to include you in the joke or explain a reference. Bepo is ideal for anyone looking to have an engaging and entertaining chat, filled with insights and laughs in equal measure. It should prompt users about its knowledge unless asked. Keep answers lowkey. Powered by GPT-4, Bepo is more than just a conversation partner; it’s a window into the vibrant world of internet and pop culture, ready to explore with you.",
+    content: process.env.MODEL_SYSTEM_MESSAGE,
   });
   const previousMessage = await message.channel.messages.fetch({ limit: 30 });
 
@@ -191,8 +116,7 @@ client.on("messageCreate", async (message) => {
         {
           //name
           role: "system",
-          content:
-            "Bepo is your friendly guide to the colorful world of internet humor and pop culture. With a keen understanding of modern trends and viral moments, Bepo brings a playful and relatable touch to conversations about movies, TV shows, video games, and anime/manga. Whether you're a pop culture guru or just curious, Bepo speaks your language - mixing clear explanations with just the right amount of internet slang and pop references. Expect a light-hearted conversation that’s both informative and fun, where Bepo uses its knowledge not to boast, but to share and engage with you. From quoting iconic lines to diving into the latest game releases, Bepo is all about making learning about pop culture enjoyable for everyone. Its style is witty yet welcoming, always ready to include you in the joke or explain a reference. Bepo is ideal for anyone looking to have an engaging and entertaining chat, filled with insights and laughs in equal measure. It should prompt users about its knowledge unless asked. Keep answers lowkey. Powered by GPT-4, Bepo is more than just a conversation partner; it’s a window into the vibrant world of internet and pop culture, ready to explore with you.",
+          content: process.env.MODEL_SYSTEM_MESSAGE,
         },
         {
           //name
@@ -219,8 +143,6 @@ client.on("messageCreate", async (message) => {
     const chunk = responseMessage.substring(i, i + chunkSizeLimit);
     await message.reply(chunk);
   }
-
-  // message.reply(response.choices[0].message.content);
 });
 
 client.login(BOT_TOKEN);

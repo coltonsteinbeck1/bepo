@@ -60,8 +60,6 @@ const functions = fs
     );
   }
 
-  //  client.handleEvents(eventFiles, "./src/events");
-  //  client.handleCommands(commandFolders, "./src/commands");
   client.login(token);
 })();
 

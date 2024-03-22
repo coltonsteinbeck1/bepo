@@ -30,9 +30,6 @@ try {
   ensureDir(path.join(__dirname, "images"));
   writeFileSync(path.join(__dirname, "images", "image.png"), buffer);
 
-  // const url = result.data[0].url; // Replace with your actual URL
-  // await insertImages(prompt, url);
-
   spinner.stop();
   process.exitCode = 0;
 } catch (error) {
@@ -47,6 +44,5 @@ try {
   }
   process.exitCode = 1;
 }
-// const { CommandInteraction, MessageEmbed } = require('discord.js');
 
 //

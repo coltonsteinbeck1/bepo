@@ -21,6 +21,9 @@ Clone repo
 cd /path/to/bepo
 Set up db connections with guild and command tables -> npm install -g @supabase/cli
 Set enviroment variables (.env)
+npm install
+npm run build
+node src/bot.js
 
 In the CLI:
 npm run deploy -> Sets all the commands 

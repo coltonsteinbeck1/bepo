@@ -2,10 +2,12 @@
   "dependencies": {
     "@discordjs/voice": "^0.16.1",
     "@supabase/supabase-js": "^2.39.0",
+    "@types/node-fetch": "^2.6.11",
     "axios": "^1.6.2",
     "discord.js": "^14.14.1",
     "dotenv": "^16.3.1",
     "libsodium-wrappers": "^0.7.13",
+    "node-fetch": "^3.3.2",
     "openai": "^4.19.0",
     "ora": "^7.0.1",
     "yargs": "^17.7.2",
@@ -20,7 +22,7 @@
     "delete": "node scripts/delete-commands.js",
     "generate": "node dist/dalle/cli.js generate",
     "build": "tsup",
-    "start": "node dist/bot.js",
+    "start": " npm run build && node dist/bot.js",
     "bot-start": "pm2 start dist/bot.js -i 4",
     "lint": "eslint src",
     "format": "prettier src --write"

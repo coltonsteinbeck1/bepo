@@ -90,7 +90,6 @@ const pollCommand = {
     ].filter((option) => option !== "");
     const emojis = ["✅", "❌", "😄", "😊", "😍", "🤔", "🙌", "👏", "👍", "�"];
     // Use the options array as needed
-    // ...
 
     const embed = new EmbedBuilder().setTitle(question);
 
@@ -106,16 +105,6 @@ const pollCommand = {
 
     // Reply to the interaction with the embed
     await interaction.reply({ embeds: [embed], fetchReply: true });
-
-    // //Fetch the reply message
-    // const message = await interaction.fetchReply();
-
-    // // Add reaction emojis to the message
-    // for(let i = 0; i < options.length; i++) {
-    //     if (options[i] && options[i].length > 0) {
-    //         await message.react(emojis[i]);
-    //     }
-    // }
   },
 };
 export default pollCommand; // Export the command

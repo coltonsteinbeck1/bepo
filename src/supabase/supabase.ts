@@ -53,18 +53,4 @@ async function getConfig() {
   return data;
 }
 
-// FIXME: initializeImageId does not exist
-async function insertImages(prompt: string, url: string) {
-  initializeImageId();
-
-  const { data, error } = await supabase
-    .from("images")
-    .insert([{ image_id: initializeImageId + 1, url: url, prompt: prompt }])
-    .select();
-  if (error) {
-    console.error("Error inserting image:", error);
-    return [];
-  }
-}
-
-export { getAllChannels, getAllGuilds, getAllUsers, getConfig, insertImages };
+export { getAllChannels, getAllGuilds, getAllUsers, getConfig };
