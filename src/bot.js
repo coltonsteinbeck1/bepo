@@ -6,7 +6,7 @@ import {
 import { AttachmentBuilder, Client, Collection, EmbedBuilder } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
-import {runGenerate, IMAGE_PATH} from "./utils.js"
+import {bepoContext} from "./utils.js"
 import ytdl from "ytdl-core";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
@@ -113,18 +113,12 @@ client.on("messageCreate", async (message) => {
   const response = await openAI.chat.completions
     .create({
       model: "gpt-4",
-      messages: [
-        {
-          //name
-          role: "system",
-          content: process.env.MODEL_SYSTEM_MESSAGE,
-        },
-        {
-          //name
-          role: "user",
-          content: message.content,
-        },
-      ],
+      messages: bepoContext,
+      temperature: 1,
+      max_tokens: 1024,
+      top_p: 0.42,
+      frequency_penalty: 0.39,
+      presence_penalty: 0,
     })
     .catch((error) => {
       message.reply("ERROR on OPENAIs end.");
