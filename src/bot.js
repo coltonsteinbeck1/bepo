@@ -6,7 +6,6 @@ import {
 import { AttachmentBuilder, Client, Collection, EmbedBuilder } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
-import {bepoContext} from "./utils.js"
 import ytdl from "ytdl-core";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
@@ -103,7 +102,7 @@ client.on("messageCreate", async (message) => {
 
     if (message.author.id === client.user.id) {
       conversation.push({
-        role: "assistant",
+        role: "user",
         name: username,
         content: message.content,
       });
@@ -112,10 +111,21 @@ client.on("messageCreate", async (message) => {
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
     .create({
-      model: "gpt-4",
-      messages: bepoContext,
+      model: "gpt-4o",
+      messages: [
+        {
+          //name
+          role: "system",
+          content: process.env.MODEL_SYSTEM_MESSAGE,
+        },
+        {
+          //name
+          role: "user",
+          content: message.content,
+        },
+      ],
       temperature: 1,
-      max_tokens: 1024,
+      max_tokens: 2048,
       top_p: 0.42,
       frequency_penalty: 0.39,
       presence_penalty: 0,
