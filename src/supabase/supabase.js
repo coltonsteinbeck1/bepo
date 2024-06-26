@@ -69,6 +69,14 @@ async function insertImages(prompt, url) {
         return []
     }
 }
-
-export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages }
+// Function to get all context messages
+async function getContext() {
+    let { data: messages, error } = await supabase.from('messages').select('content')       
+    if (error) {
+        console.error('Error fetching context:', error)
+        return []
+    }
+    return messages
+}
+export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages, getContext }
 

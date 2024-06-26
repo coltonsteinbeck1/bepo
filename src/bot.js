@@ -12,6 +12,7 @@ import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import { getAllChannels } from "./supabase/supabase.js";
+import { getAllContext } from "../scripts/create-context.js";
 
 dotenv.config();
 
@@ -37,6 +38,8 @@ const openAI = new OpenAI({
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
 const loveEmojis = ["🥰", "😍", "😘", "❤"];
+
+const chatContext = await getAllContext();
 
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
@@ -67,8 +70,10 @@ client.on("messageCreate", async (message) => {
   //Meme reaction for testing -> For Aaron ❤
   const randomLoveEmoji =
     loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
-  if (message.content.toLowerCase().includes("pex".toLowerCase())) {
-    message.react(randomLoveEmoji);
+  if (message.content.toLowerCase().includes("pex".toLowerCase()) && !message.author.bot) {
+    setTimeout(() => {
+      message.react(randomLoveEmoji);
+    }, 4000);
   }
   //Doesn't respond on group pings
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
@@ -85,11 +90,12 @@ client.on("messageCreate", async (message) => {
   }, 15000);
 
   let conversation = [];
-  conversation.push({
-    role: "system",
-    content: process.env.MODEL_SYSTEM_MESSAGE,
-
+  chatContext.forEach((message) => {
+    if(message.content === null) return;
+    conversation.push({role: message.role, content: message.content});
   });
+
+
   let previousMessage = await message.channel.messages.fetch({ limit: 30 });
 
   previousMessage.reverse().forEach((message) => {
@@ -110,30 +116,24 @@ client.on("messageCreate", async (message) => {
   });
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
-    .create({
-      model: "gpt-4o",
-      messages: [
-        {
-          //name
-          role: "system",
-          content: process.env.MODEL_SYSTEM_MESSAGE,
-        },
-        {
-          //name
-          role: "user",
-          content: message.content,
-        },
-      ],
-      temperature: 1,
-      max_tokens: 2048,
-      top_p: 0.42,
-      frequency_penalty: 0.39,
-      presence_penalty: 0,
-    })
-    .catch((error) => {
-      message.reply("ERROR on OPENAIs end.");
-      console.log("OpenAI Error:\n", error);
-    });
+      .create({
+        model: "gpt-4o",
+        messages: [
+          //primes the Model with the context
+          ...conversation,
+          //user messages
+          { role: "user", content: message.content},
+        ],
+        temperature: 1.0,
+        max_tokens: 500,
+        top_p: 1,
+        frequency_penalty: 0.5,
+        presence_penalty: 0,
+      })
+      .catch((error) => {
+        message.reply("ERROR on OPENAIs end.");
+        console.log("OpenAI Error:\n", error);
+      });
   clearInterval(sendTypingInterval);
 
   if (!response) {
