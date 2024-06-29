@@ -14,14 +14,18 @@ const openAI = new OpenAI({
 });
 
 const prompt = process.argv[2];
+const style = process.argv[3];
+const quality = process.argv[4];
 const spinner = ora("Generating image").start();
 
 try {
   const result = await openAI.images.generate({
     prompt,
-    size: "1024x1024",
+    size: "1792x1024",
     n: 1,
     model: "dall-e-3",
+    style: style ? style : "vivid",
+    quality: quality ? quality : "standard",
   });
   console.log(result.data);
   spinner.text = "Processing results";

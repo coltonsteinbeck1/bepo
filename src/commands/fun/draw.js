@@ -11,6 +11,18 @@ const drawCommand = {
         .setName("prompt")
         .setDescription("The prompt for DALL-E to draw")
         .setRequired(true),
+    )
+    .addStringOption((option) =>
+      option
+        .setName("style")
+        .setDescription("The style of the generated image -> natural or vivid")
+        .setRequired(false)
+    )
+    .addStringOption((option) =>
+      option
+        .setName("quality")
+        .setDescription("The quality for DALL-E to draw")
+        .setRequired(false),
     ),
   async execute(interaction) {
     await interaction.deferReply();

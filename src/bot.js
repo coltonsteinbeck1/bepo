@@ -37,7 +37,10 @@ const openAI = new OpenAI({
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
-const loveEmojis = ["🥰", "😍", "😘", "❤"];
+const DEFAULT_SYSTEM_MESSAGE = process.env.DEFAULT_SYSTEM_MESSAGE;
+const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
+const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎"];
+const pray = "🙏";
 
 const chatContext = await getAllContext();
 
@@ -67,14 +70,32 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("messageCreate", async (message) => {
-  //Meme reaction for testing -> For Aaron ❤
-  const randomLoveEmoji =
-    loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
+  //Meme reactions
+  const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
+  const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * dislikeEmojis.length)];
   if (message.content.toLowerCase().includes("pex".toLowerCase()) && !message.author.bot) {
     setTimeout(() => {
       message.react(randomLoveEmoji);
-    }, 4000);
+    }, 5000);
   }
+  if ((message.content.toLowerCase().includes("allah".toLowerCase()) 
+      || message.content.toLowerCase().includes("jesus".toLowerCase())
+      || message.content.toLowerCase().includes("prayge".toLowerCase()))
+      && !message.author.bot) {
+      setTimeout(() => {
+        message.react(pray);
+      }, 5000);
+    }
+
+    if((message.content.toLowerCase().includes("OW".toLowerCase())
+      || message.content.toLowerCase().includes("overwatch".toLowerCase())
+      || message.content.toLowerCase().includes(process.env.BZ_KEYWORD.toLowerCase()))
+      && !message.author.bot){
+      setTimeout(() => {
+        message.react(randomDislikeEmoji);
+      }, 5000);
+    }
+  
   //Doesn't respond on group pings
   if (message.content.includes('@everyone') || message.content.includes('@here')) {
     return;
@@ -90,13 +111,16 @@ client.on("messageCreate", async (message) => {
   }, 15000);
 
   let conversation = [];
-  chatContext.forEach((message) => {
-    if(message.content === null) return;
-    conversation.push({role: message.role, content: message.content});
-  });
+  if(message.guild.id === process.env.GUILD_BZ){
+    chatContext.forEach((message) => {
+      if(message.content === null) return;
+      conversation.push({role: message.role, content: message.content});
+    });
+  }else{
+    conversation.push({role: "system", content: DEFAULT_SYSTEM_MESSAGE});
+  }
 
-
-  let previousMessage = await message.channel.messages.fetch({ limit: 30 });
+  let previousMessage = await message.channel.messages.fetch({ limit: 40 });
 
   previousMessage.reverse().forEach((message) => {
     if (message.author.bot && message.author.id != client.id) return;
@@ -119,7 +143,7 @@ client.on("messageCreate", async (message) => {
       .create({
         model: "gpt-4o",
         messages: [
-          //primes the Model with the context
+          //primes the model with the context
           ...conversation,
           //user messages
           { role: "user", content: message.content},
