@@ -39,7 +39,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
 const DEFAULT_SYSTEM_MESSAGE = process.env.DEFAULT_SYSTEM_MESSAGE;
 const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
-const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎"];
+const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const pray = "🙏";
 
 const chatContext = await getAllContext();
@@ -87,10 +87,10 @@ client.on("messageCreate", async (message) => {
       }, 5000);
     }
 
-    if((message.content.toLowerCase().includes("OW".toLowerCase())
+    if(((message.content.includes("OW")
       || message.content.toLowerCase().includes("overwatch".toLowerCase())
-      || message.content.toLowerCase().includes(process.env.BZ_KEYWORD.toLowerCase()))
-      && !message.author.bot){
+      || message.content.toLowerCase().includes("valorant".toLowerCase()))
+      && !message.author.bot)){
       setTimeout(() => {
         message.react(randomDislikeEmoji);
       }, 5000);
