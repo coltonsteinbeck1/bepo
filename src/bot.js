@@ -43,7 +43,6 @@ const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "
 const pray = "🙏";
 
 const chatContext = await getAllContext();
-
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
 });
@@ -73,10 +72,11 @@ client.on("messageCreate", async (message) => {
   //Meme reactions
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * dislikeEmojis.length)];
-  if (message.content.toLowerCase().includes("pex".toLowerCase()) && !message.author.bot) {
+  if (message.content.toLowerCase().includes("pex".toLowerCase())
+    && !message.author.bot) {
     setTimeout(() => {
       message.react(randomLoveEmoji);
-    }, 5000);
+    }, 2500);
   }
   if ((message.content.toLowerCase().includes("allah".toLowerCase()) 
       || message.content.toLowerCase().includes("jesus".toLowerCase())
@@ -84,7 +84,7 @@ client.on("messageCreate", async (message) => {
       && !message.author.bot) {
       setTimeout(() => {
         message.react(pray);
-      }, 5000);
+      }, 25000);
     }
 
     if(((message.content.includes("OW")
@@ -93,7 +93,7 @@ client.on("messageCreate", async (message) => {
       && !message.author.bot)){
       setTimeout(() => {
         message.react(randomDislikeEmoji);
-      }, 5000);
+      }, 2500);
     }
   
   //Doesn't respond on group pings
@@ -111,12 +111,12 @@ client.on("messageCreate", async (message) => {
   }, 15000);
 
   let conversation = [];
-  if(message.guild.id === process.env.GUILD_BZ){
+  if(message.guild.id === process.env.GUILD_BZ || message.guild.id === process.env.GUILD_HOME){
     chatContext.forEach((message) => {
       if(message.content === null) return;
       conversation.push({role: message.role, content: message.content});
     });
-  }else{
+  }else {
     conversation.push({role: "system", content: DEFAULT_SYSTEM_MESSAGE});
   }
 
