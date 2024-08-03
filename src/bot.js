@@ -12,7 +12,7 @@ import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import { getAllChannels } from "./supabase/supabase.js";
-import { getAllContext } from "../scripts/create-context.js";
+import { getAllContext, randomizeReaction } from "../scripts/create-context.js";
 
 dotenv.config();
 
@@ -40,7 +40,8 @@ const BOT_PREFIX = process.env.PREFIX;
 const DEFAULT_SYSTEM_MESSAGE = process.env.DEFAULT_SYSTEM_MESSAGE;
 const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
-const pray = "🙏";
+const prayEmojis = ["🙏", "🛐", "✝️", "☪️","📿"];
+const probability = 0.15;
 
 const chatContext = await getAllContext();
 client.on("ready", () => {
@@ -72,10 +73,13 @@ client.on("messageCreate", async (message) => {
   //Meme reactions
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * dislikeEmojis.length)];
+  const randomPrayerEmoji = prayEmojis[Math.floor(Math.random() * prayEmojis.length)];
   if (message.content.toLowerCase().includes("pex".toLowerCase())
     && !message.author.bot) {
     setTimeout(() => {
-      message.react(randomLoveEmoji);
+      if(randomizeReaction(probability)){
+        message.react(randomLoveEmoji);
+      }
     }, 2500);
   }
   if ((message.content.toLowerCase().includes("allah".toLowerCase()) 
@@ -83,7 +87,9 @@ client.on("messageCreate", async (message) => {
       || message.content.toLowerCase().includes("prayge".toLowerCase()))
       && !message.author.bot) {
       setTimeout(() => {
-        message.react(pray);
+        if(randomizeReaction(probability)){
+          message.react(randomPrayerEmoji);
+        }
       }, 25000);
     }
 
@@ -92,7 +98,9 @@ client.on("messageCreate", async (message) => {
       || message.content.toLowerCase().includes("valorant".toLowerCase()))
       && !message.author.bot)){
       setTimeout(() => {
-        message.react(randomDislikeEmoji);
+        if(randomizeReaction(probability)){
+          message.react(randomDislikeEmoji);
+        }
       }, 2500);
     }
   
@@ -141,7 +149,7 @@ client.on("messageCreate", async (message) => {
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
       .create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: [
           //primes the model with the context
           ...conversation,

@@ -14,6 +14,10 @@ async function getAllContext(){
     });
     return formattedMessages;
 }
-export {getAllContext};
+
+async function randomizeReaction(probability){
+return Math.random() < probability;
+}
+export {getAllContext, randomizeReaction};
 
 
