@@ -16,7 +16,7 @@ async function getAllContext(){
 }
 
 async function randomizeReaction(probability){
-return Math.random() < probability;
+    return Math.random() < probability;
 }
 export {getAllContext, randomizeReaction};
 

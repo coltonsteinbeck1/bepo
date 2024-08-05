@@ -74,10 +74,11 @@ client.on("messageCreate", async (message) => {
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * dislikeEmojis.length)];
   const randomPrayerEmoji = prayEmojis[Math.floor(Math.random() * prayEmojis.length)];
+
   if (message.content.toLowerCase().includes("pex".toLowerCase())
     && !message.author.bot) {
-    setTimeout(() => {
-      if(randomizeReaction(probability)){
+    setTimeout(async () => {
+      if(await randomizeReaction(probability)){
         message.react(randomLoveEmoji);
       }
     }, 2500);
@@ -86,19 +87,19 @@ client.on("messageCreate", async (message) => {
       || message.content.toLowerCase().includes("jesus".toLowerCase())
       || message.content.toLowerCase().includes("prayge".toLowerCase()))
       && !message.author.bot) {
-      setTimeout(() => {
-        if(randomizeReaction(probability)){
+      setTimeout(async () => {
+        if( await randomizeReaction(probability)){
           message.react(randomPrayerEmoji);
         }
-      }, 25000);
+      }, 2500);
     }
 
     if(((message.content.includes("OW")
       || message.content.toLowerCase().includes("overwatch".toLowerCase())
       || message.content.toLowerCase().includes("valorant".toLowerCase()))
       && !message.author.bot)){
-      setTimeout(() => {
-        if(randomizeReaction(probability)){
+      setTimeout(async () => {
+        if(await randomizeReaction(probability)){
           message.react(randomDislikeEmoji);
         }
       }, 2500);
