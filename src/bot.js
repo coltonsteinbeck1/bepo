@@ -13,6 +13,7 @@ import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import { getAllChannels } from "./supabase/supabase.js";
 import { getAllContext, randomizeReaction } from "../scripts/create-context.js";
+import apexMapCommand from "./commands/fun/apexMap.js";
 
 dotenv.config();
 
@@ -28,6 +29,7 @@ client.commands.set("play", playCommand);
 client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
+client.commands.set('maprotation', apexMapCommand);
 
 // OpenAI API key
 const openAI = new OpenAI({
