@@ -14,12 +14,15 @@ const apexMapCommand = {
         const response = await fetch(URL);
         let data = await response.json();
 
+        console.log(data);
         if (!data || data.error) {
           return interaction.editReply('Error fetching map rotation data. Please try again later.');
         }
-
         const { battle_royale, ltm, ranked } = data;
 
+        console.log(battle_royale);
+        console.log(ltm);
+        console.log(ranked);
         // Add checks to ensure properties are defined
         if (!battle_royale || !battle_royale.current || !battle_royale.next ||
             !ltm || !ltm.current || !ltm.next ||
@@ -29,17 +32,26 @@ const apexMapCommand = {
 
         const embed = new EmbedBuilder()
         .setColor(0x0099FF)
-        .setTitle('Apex Legends Map Rotation')
-        .setDescription('Current and next maps for different modes in Apex Legends')
+        .setTitle('Current Apex Legends map')
+        .setDescription('Check out the current and upcoming maps for different modes in Apex Legends.')
         .addFields(
-          { name: 'Battle Royale', value: `**Current Map:** ${battle_royale.current.map} (until ${battle_royale.current.remainingMins} mins)
-                  **Next Map:** ${battle_royale.next.map} (in ${battle_royale.next.DurationInMinutes} mins)` },
-          { name: 'Ranked', value: `**Current Map:** ${ranked.current.map} (until ${ranked.current.remainingMins} mins)
-                  **Next Map:** ${ranked.next.map} (in ${ranked.next.DurationInMinutes} mins)` },
-          { name: 'Arenas', value: `**Current Map:** ${ltm.current.map} (until ${ltm.current.remainingMins} mins)
-                  **Next Map:** ${ltm.next.map} (in ${ltm.next.DurationInMinutes} mins)` }
-        ).setTimestamp();
-        
+            {
+                name: '🗺️ **Battle Royale**',
+                value: `**Current pubs map:** ${battle_royale.current.map}, ends in **${Math.ceil(battle_royale.current.remainingSecs / 3600)} hour(s)**.
+    **Next map:** ${battle_royale.next.map}, ends in **${Math.ceil(battle_royale.next.DurationInMinutes / 60)} hour(s)** (up for **${battle_royale.next.DurationInMinutes} mins**).
+                    
+    **Current ranked map:** ${ranked.current.map}.`,
+                inline: false
+            },
+            {
+                name: '🗺️ **Mixtape**',
+                value: `**Current Mixtape map:** ${ltm.current.map} (${ltm.current.eventName}), ends in **${ltm.current.remainingMins} minutes**.
+    **Next map:** ${ltm.next.map} (${ltm.next.eventName}), ends in **${ltm.next.DurationInMinutes} minutes** (up for **${ltm.next.DurationInMinutes} mins**).`,
+                inline: false
+            }
+        )
+        .setImage(battle_royale.current.asset) // Set an image of the current Battle Royale map to the embed
+        .setTimestamp();    
         await interaction.editReply({ embeds: [embed] });
       } catch (error) {
         console.error(error);
