@@ -31,16 +31,16 @@ const apexMapCommand = {
         }
 
         const embed = new EmbedBuilder()
-        .setColor(0x0099FF)
+        .setColor('#B93038')
         .setTitle('Current Apex Legends map')
         .setDescription('Check out the current and upcoming maps for different modes in Apex Legends.')
         .addFields(
             {
                 name: '🗺️ **Battle Royale**',
                 value: `**Current pubs map:** ${battle_royale.current.map}, ends in **${Math.ceil(battle_royale.current.remainingSecs / 3600)} hour(s)**.
-    **Next map:** ${battle_royale.next.map}, ends in **${Math.ceil(battle_royale.next.DurationInMinutes / 60)} hour(s)** (up for **${battle_royale.next.DurationInMinutes} mins**).
+                **Next map:** ${battle_royale.next.map}, ends in **${Math.ceil(battle_royale.next.DurationInMinutes / 60)} hour(s)** (up for **${battle_royale.next.DurationInMinutes} mins**).
                     
-    **Current ranked map:** ${ranked.current.map}.`,
+                **Current ranked map:** ${ranked.current.map}.`,
                 inline: false
             },
             {
