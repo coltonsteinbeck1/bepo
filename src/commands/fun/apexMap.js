@@ -20,9 +20,9 @@ const apexMapCommand = {
         }
         const { battle_royale, ltm, ranked } = data;
 
-        console.log(battle_royale);
-        console.log(ltm);
-        console.log(ranked);
+        console.log("battle royale: ",battle_royale);
+        console.log("mixtape", ltm);
+        console.log("Ranked", ranked);
         // Add checks to ensure properties are defined
         if (!battle_royale || !battle_royale.current || !battle_royale.next ||
             !ltm || !ltm.current || !ltm.next ||
@@ -35,21 +35,21 @@ const apexMapCommand = {
         .setTitle('Current Apex Legends map')
         .setDescription('Check out the current and upcoming maps for different modes in Apex Legends.')
         .addFields(
-            {
-                name: '🗺️ **Battle Royale**',
-                value: `**Current pubs map:** ${battle_royale.current.map}, ends in **${Math.ceil(battle_royale.current.remainingSecs / 3600)} hour(s)**.
-                **Next map:** ${battle_royale.next.map}, ends in **${Math.ceil(battle_royale.next.DurationInMinutes / 60)} hour(s)** (up for **${battle_royale.next.DurationInMinutes} mins**).
-                    
-                **Current ranked map:** ${ranked.current.map}.`,
-                inline: false
-            },
-            {
-                name: '🗺️ **Mixtape**',
-                value: `**Current Mixtape map:** ${ltm.current.map} (${ltm.current.eventName}), ends in **${ltm.current.remainingMins} minutes**.
-    **Next map:** ${ltm.next.map} (${ltm.next.eventName}), ends in **${ltm.next.DurationInMinutes} minutes** (up for **${ltm.next.DurationInMinutes} mins**).`,
-                inline: false
-            }
-        )
+          {
+              name: '🗺️ **Battle Royale**',
+              value: `**Current pubs map:** ${battle_royale.current.map}, ends in **${formatTime(battle_royale.current.remainingMins)}**.
+      **Next map:** ${battle_royale.next.map}, and will end in **${Math.ceil(battle_royale.next.DurationInMinutes / 60)} hours** (up for **${battle_royale.next.DurationInMinutes} mins**).
+      
+      **Current ranked map:** ${ranked.current.map}.`,
+              inline: false
+          },
+          {
+              name: '🗺️ **Mixtape**',
+              value: `**Current Mixtape map:** ${ltm.current.map} (${ltm.current.eventName}), ends in **${formatTime(ltm.current.remainingMins)}**.
+      **Next map:** ${ltm.next.map} (${ltm.next.eventName}), ends in **${formatTime(ltm.next.DurationInMinutes)}** (up for **${ltm.next.DurationInMinutes} mins**).`,
+              inline: false
+          }
+      )
         .setImage(battle_royale.current.asset) // Set an image of the current Battle Royale map to the embed
         .setTimestamp();    
         await interaction.editReply({ embeds: [embed] });
@@ -63,3 +63,15 @@ const apexMapCommand = {
 };
 
 export default apexMapCommand;
+
+function formatTime(remainingMinutes) {
+  if (remainingMinutes >= 60) {
+      const hours = Math.floor(remainingMinutes / 60);
+      console.log(hours)
+      const remainingMinutes = remainingMinutes % 60;
+      return `${hours} hour${hours > 1 ? 's' : ''} ${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+  } else {
+      return `${remainingMinutes} minute${remainingMinutes !== 1 ? 's' : ''}`;
+  }
+}
+
