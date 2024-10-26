@@ -33,7 +33,8 @@ client.commands.set('maprotation', apexMapCommand);
 
 // OpenAI API key
 const openAI = new OpenAI({
-  apiKey: process.env.OPENAI_KEY,
+  apiKey: process.env.xAI_KEY,
+  baseURL: "https://api.x.ai/v1",
 });
 
 // Initialize Supabase and get the bot token and prefix, and emojis
@@ -123,15 +124,16 @@ client.on("messageCreate", async (message) => {
 
   let conversation = [];
   if(message.guild.id === process.env.GUILD_BZ || message.guild.id === process.env.GUILD_HOME){
+    conversation.push({role: "system", content: process.env.MODEL_SYSTEM_MESSAGE});
     chatContext.forEach((message) => {
       if(message.content === null) return;
       conversation.push({role: message.role, content: message.content});
     });
   }else {
-    conversation.push({role: "system", content: DEFAULT_SYSTEM_MESSAGE});
+    conversation.push({role: "system", content: process.env.DEFAULT_SYSTEM_MESSAGE});
   }
 
-  let previousMessage = await message.channel.messages.fetch({ limit: 40 });
+  let previousMessage = await message.channel.messages.fetch({ limit: 10 });
 
   previousMessage.reverse().forEach((message) => {
     if (message.author.bot && message.author.id != client.id) return;
@@ -152,7 +154,7 @@ client.on("messageCreate", async (message) => {
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
       .create({
-        model: "gpt-4o-mini",
+        model: "grok-beta",
         messages: [
           //primes the model with the context
           ...conversation,

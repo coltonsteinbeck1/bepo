@@ -27,7 +27,7 @@ const apexMapCommand = {
         if (!battle_royale || !battle_royale.current || !battle_royale.next ||
             !ltm || !ltm.current || !ltm.next ||
             !ranked || !ranked.current || !ranked.next) {
-          return interaction.editReply('Error: Incomplete map rotation data.');
+          return interaction.editReply('API broke; Womp womp.');
         }
 
         const embed = new EmbedBuilder()
@@ -56,7 +56,7 @@ const apexMapCommand = {
       } catch (error) {
         console.error(error);
         if (!interaction.replied) {
-          await interaction.editReply('An error occurred while fetching map rotation data.');
+          await interaction.editReply('Interaction failed; Womp Womp.');
         }
       }
     },
