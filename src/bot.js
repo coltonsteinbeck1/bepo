@@ -14,6 +14,7 @@ import pingCommand from "./commands/fun/ping.js";
 import { getAllChannels } from "./supabase/supabase.js";
 import { getAllContext, randomizeReaction } from "../scripts/create-context.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
+import minecraftServer from "./commands/fun/minecraftServer.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
+client.commands.set('minecraftServer', minecraftServer)
 
 // OpenAI API key
 const openAI = new OpenAI({
