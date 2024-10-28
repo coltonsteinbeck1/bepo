@@ -1,5 +1,5 @@
-import { EmbedBuilder, SlashCommandBuilder } from "discord.js";
-const AWS = require('aws-sdk');
+import { SlashCommandBuilder } from "discord.js";
+import AWS from 'aws-sdk'
 AWS.config.update({ region: 'us-west-2' }); // Replace with your region
 
 const ec2 = new AWS.EC2({
@@ -7,15 +7,15 @@ const ec2 = new AWS.EC2({
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
 });
 
-const INSTANCE_ID = 'i-0abcd1234efgh5678'; // Replace with your instance ID
+const INSTANCE_ID = 'i-0d05d8ad48e06453f';
 
 const minecraftServer = {
   data: new SlashCommandBuilder()
     .setName('minecraftserver')
-    .setDescription('Command to turn on/off Minecraft Server hosted in AWS')
+    .setDescription('Command for Minecraft Server hosted in AWS')
     .addStringOption(option =>
       option.setName('action')
-        .setDescription('The action to perform')
+        .setDescription('Action to start/stop server')
         .setRequired(true)
         .addChoices(
           { name: 'start', value: 'start' },
