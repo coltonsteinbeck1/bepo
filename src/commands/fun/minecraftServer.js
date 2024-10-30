@@ -1,13 +1,14 @@
 import { SlashCommandBuilder } from "discord.js";
 import AWS from 'aws-sdk'
-AWS.config.update({ region: 'us-west-2' }); // Replace with your region
+AWS.config.update({ region: 'us-east-1' });
+
 
 const ec2 = new AWS.EC2({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  secretAccessKey: process.env.AWS_SECRET_KEY
 });
 
-const INSTANCE_ID = 'i-0d05d8ad48e06453f';
+const INSTANCE_ID = 'i-0b0708116d330d582';
 
 const minecraftServer = {
   data: new SlashCommandBuilder()
@@ -31,6 +32,7 @@ const minecraftServer = {
         };
         await ec2.startInstances(params).promise();
         await interaction.reply('Minecraft server is starting...');
+        //Call script to run mods (?)
       } catch (error) {
         console.error(error);
         await interaction.reply('Failed to start the Minecraft server.');
@@ -41,6 +43,7 @@ const minecraftServer = {
           InstanceIds: [INSTANCE_ID],
         };
         await ec2.stopInstances(params).promise();
+        //We need to save data for MC server, (ctrl + c) on actual vm
         await interaction.reply('Minecraft server is stopping...');
       } catch (error) {
         console.error(error);

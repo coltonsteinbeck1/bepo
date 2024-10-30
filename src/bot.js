@@ -31,7 +31,7 @@ client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
-client.commands.set('minecraftServer', minecraftServer)
+client.commands.set('minecraftserver', minecraftServer)
 
 // OpenAI API key
 const openAI = new OpenAI({
