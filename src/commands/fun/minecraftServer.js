@@ -8,7 +8,7 @@ const ec2 = new AWS.EC2({
   secretAccessKey: process.env.AWS_SECRET_KEY
 });
 
-const INSTANCE_ID = 'i-0b0708116d330d582';
+const INSTANCE_ID = 'i-0040cf0ae0c1ebf28';
 
 const minecraftServer = {
   data: new SlashCommandBuilder()
