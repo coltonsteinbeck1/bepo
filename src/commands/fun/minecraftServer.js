@@ -19,13 +19,28 @@ const minecraftServer = {
         .setDescription('Action to start/stop server')
         .setRequired(true)
         .addChoices(
+          {name: 'status', value:"status"},
           { name: 'start', value: 'start' },
           { name: 'stop', value: 'stop' }
         )),
   async execute(interaction) {
     const action = interaction.options.getString('action');
-
-    if (action === 'start') {
+    
+    if (action === 'status') {
+      try {
+        const params = {
+          InstanceIds: [INSTANCE_ID],
+        };
+        const data = await ec2.describeInstances(params).promise();
+        const instance = data.Reservations[0].Instances[0];
+        const state = instance.State.Name;
+    
+        await interaction.reply(`Minecraft server is currently \`${state}\`.`);
+      } catch (error) {
+        console.error('Error fetching instance status:', error);
+        await interaction.reply('Failed to retrieve server status.');
+      }
+    }else if (action === 'start') {
       try {
         const params = {
           InstanceIds: [INSTANCE_ID],
