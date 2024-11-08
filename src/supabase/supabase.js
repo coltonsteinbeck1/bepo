@@ -19,7 +19,7 @@ async function getAllGuilds() {
 
 // Function to get all channels
 async function getAllChannels() {
-    const { data, error } = await supabase.from('channels').select('*')
+    const { data, error } = await supabase.from('channels').select('content').order('timestamp', {ascending: true})
     if (error) {
         console.error('Error fetching channels:', error)
         return []
