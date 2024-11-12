@@ -8,7 +8,7 @@ const ec2 = new AWS.EC2({
   secretAccessKey: process.env.AWS_SECRET_KEY
 });
 
-const INSTANCE_ID = 'i-0040cf0ae0c1ebf28';
+const INSTANCE_ID = process.env.INSTANCE_ID;
 
 const minecraftServer = {
   data: new SlashCommandBuilder()
@@ -25,7 +25,7 @@ const minecraftServer = {
         )),
   async execute(interaction) {
     const action = interaction.options.getString('action');
-    
+    await interaction.deferReply();
     if (action === 'status') {
       try {
         const params = {
@@ -35,37 +35,65 @@ const minecraftServer = {
         const instance = data.Reservations[0].Instances[0];
         const state = instance.State.Name;
     
-        await interaction.reply(`Minecraft server is currently \`${state}\`.`);
+        await interaction.editReply(`Minecraft server is currently \`${state}\`.`);
       } catch (error) {
         console.error('Error fetching instance status:', error);
         await interaction.reply('Failed to retrieve server status.');
       }
-    }else if (action === 'start') {
+    }
+    else if (action === 'start') {
       try {
         const params = {
           InstanceIds: [INSTANCE_ID],
         };
         await ec2.startInstances(params).promise();
-        await interaction.reply('Minecraft server is starting...');
-        //Call script to run mods (?)
+        await interaction.editReply('Minecraft server is starting...');
+        await ec2.waitFor('instanceRunning', params).promise();
+        await interaction.followUp('Minecraft server is now up and running!');
+
       } catch (error) {
         console.error(error);
-        await interaction.reply('Failed to start the Minecraft server.');
+        if (interaction.replied || interaction.deferred) {
+          if (interaction.replied) {
+            await interaction.followUp('Failed to start the Minecraft server.');
+          } else {
+            await interaction.editReply('Failed to start the Minecraft server.');
+          }
+        } else {
+          await interaction.reply('Failed to start the Minecraft server.');
+        }
       }
-    } else if (action === 'stop') {
+    } 
+    else if (action === 'stop') {
       try {
         const params = {
           InstanceIds: [INSTANCE_ID],
         };
         await ec2.stopInstances(params).promise();
-        //We need to save data for MC server, (ctrl + c) on actual vm
-        await interaction.reply('Minecraft server is stopping...');
-      } catch (error) {
+        await interaction.editReply('Minecraft server is stopping...');
+        await ec2.waitFor('instanceStopped', params).promise();
+        await interaction.followUp('Minecraft server has been stopped.');
+      } 
+      catch (error) {
         console.error(error);
-        await interaction.reply('Failed to stop the Minecraft server.');
+        if (interaction.replied || interaction.deferred) {
+          if (interaction.replied) {
+            await interaction.followUp('Failed to stop the Minecraft server.');
+          } else {
+            await interaction.editReply('Failed to stop the Minecraft server.');
+          }
+        } else {
+          await interaction.reply('Failed to stop the Minecraft server.');
+        }
       }
-    } else {
-      await interaction.reply('Invalid action. Use `start` or `stop`.');
+    } 
+    else {
+      console.error('Error executing command:', error);
+      if (interaction.replied || interaction.deferred) {
+        await interaction.editReply('An error occurred while executing the command.');
+      } else {
+        await interaction.reply('An error occurred while executing the command.');
+      }
     }
   }
 };
