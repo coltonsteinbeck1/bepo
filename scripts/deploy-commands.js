@@ -27,7 +27,6 @@ const deploy = async (commands, rest, clientId, guildList) => {
       `Successfully reloaded ${commands.length} application (/) commands.`,
     );
   } catch (error) {
-    // And of course, make sure you catch and log any errors!
     console.error(error);
   }
 };

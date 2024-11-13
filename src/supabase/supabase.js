@@ -19,7 +19,7 @@ async function getAllGuilds() {
 
 // Function to get all channels
 async function getAllChannels() {
-    const { data, error } = await supabase.from('channels').select('*')
+    const { data, error } = await supabase.from('channels').select('content').order('timestamp', {ascending: true})
     if (error) {
         console.error('Error fetching channels:', error)
         return []
@@ -69,6 +69,14 @@ async function insertImages(prompt, url) {
         return []
     }
 }
-
-export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages }
+// Function to get all context messages
+async function getContext() {
+    let { data: messages, error } = await supabase.from('messages').select('content')       
+    if (error) {
+        console.error('Error fetching context:', error)
+        return []
+    }
+    return messages
+}
+export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages, getContext }
 
