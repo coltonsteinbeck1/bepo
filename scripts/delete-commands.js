@@ -6,8 +6,6 @@ const { clientId, guildId, token } = loadConfig();
 const rest = new REST().setToken(token);
 const spinner = ora("Deleting guild-based commands").start();
 
-// ...
-
 // for guild-based commands
 rest
   .put(Routes.applicationGuildCommands(clientId, guildId), { body: [] })

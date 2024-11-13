@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@aws-sdk/client-ec2": "^3.687.0",
     "@discordjs/voice": "^0.16.1",
     "@supabase/supabase-js": "^2.44.0",
     "aws-sdk": "^2.1691.0",

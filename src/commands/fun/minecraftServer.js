@@ -1,11 +1,13 @@
 import { SlashCommandBuilder } from "discord.js";
-import AWS from 'aws-sdk'
-AWS.config.update({ region: 'us-east-1' });
+import { EC2Client, DescribeInstancesCommand, StartInstancesCommand, StopInstancesCommand, waitUntilInstanceRunning, waitUntilInstanceStopped } from '@aws-sdk/client-ec2';
 
 
-const ec2 = new AWS.EC2({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_KEY
+const ec2Client = new EC2Client({
+  region: 'us-east-1',
+  credentials: {  
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: process.env.AWS_SECRET_KEY
+  },
 });
 
 const INSTANCE_ID = process.env.INSTANCE_ID;
@@ -16,78 +18,60 @@ const minecraftServer = {
     .setDescription('Command for Minecraft Server hosted in AWS')
     .addStringOption(option =>
       option.setName('action')
-        .setDescription('Action to start/stop server')
+        .setDescription('Action to start/stop/status server')
         .setRequired(true)
         .addChoices(
-          {name: 'status', value:"status"},
+          { name: 'status', value: 'status' },
           { name: 'start', value: 'start' },
           { name: 'stop', value: 'stop' }
         )),
   async execute(interaction) {
     const action = interaction.options.getString('action');
-    await interaction.deferReply();
-    if (action === 'status') {
-      try {
-        const params = {
-          InstanceIds: [INSTANCE_ID],
-        };
-        const data = await ec2.describeInstances(params).promise();
+
+    try {
+      const params = {
+        InstanceIds: [INSTANCE_ID],
+      };
+
+      if (action === 'status') {
+        const command = new DescribeInstancesCommand(params);
+        const data = await ec2Client.send(command);
         const instance = data.Reservations[0].Instances[0];
         const state = instance.State.Name;
-    
-        await interaction.editReply(`Minecraft server is currently \`${state}\`.`);
-      } catch (error) {
-        console.error('Error fetching instance status:', error);
-        await interaction.reply('Failed to retrieve server status.');
-      }
-    }
-    else if (action === 'start') {
-      try {
-        const params = {
-          InstanceIds: [INSTANCE_ID],
-        };
-        await ec2.startInstances(params).promise();
-        await interaction.editReply('Minecraft server is starting...');
-        await ec2.waitFor('instanceRunning', params).promise();
-        await interaction.followUp('Minecraft server is now up and running!');
 
-      } catch (error) {
-        console.error(error);
-        if (interaction.replied || interaction.deferred) {
-          if (interaction.replied) {
-            await interaction.followUp('Failed to start the Minecraft server.');
-          } else {
-            await interaction.editReply('Failed to start the Minecraft server.');
-          }
-        } else {
-          await interaction.reply('Failed to start the Minecraft server.');
-        }
-      }
-    } 
-    else if (action === 'stop') {
-      try {
-        const params = {
-          InstanceIds: [INSTANCE_ID],
-        };
-        await ec2.stopInstances(params).promise();
+        await interaction.reply(`Minecraft server is currently \`${state}\`.`);
+      } else if (action === 'start') {
+        await interaction.deferReply();
+        const command = new StartInstancesCommand(params);
+        await ec2Client.send(command);
+        await interaction.editReply('Minecraft server is starting...');
+
+        // Wait for the instance to be running
+        await waitUntilInstanceRunning({ client: ec2Client, maxWaitTime: 300 }, params);
+
+        // Retrieve the updated instance information
+        const describeCommand = new DescribeInstancesCommand(params);
+        const data = await ec2Client.send(describeCommand);
+        const instance = data.Reservations[0].Instances[0];
+        const publicIpAddress = instance.PublicIpAddress;
+
+        await interaction.followUp(
+          `Minecraft server is now up and running!\nIP Address: \`${publicIpAddress}\``
+        );
+      } else if (action === 'stop') {
+        await interaction.deferReply();
+        const command = new StopInstancesCommand(params);
+        await ec2Client.send(command);
         await interaction.editReply('Minecraft server is stopping...');
-        await ec2.waitFor('instanceStopped', params).promise();
+
+        // Wait for the instance to be stopped
+        await waitUntilInstanceStopped({ client: ec2Client, maxWaitTime: 300 }, params);
+
         await interaction.followUp('Minecraft server has been stopped.');
-      } 
-      catch (error) {
-        console.error(error);
-        if (interaction.replied || interaction.deferred) {
-          if (interaction.replied) {
-            await interaction.followUp('Failed to stop the Minecraft server.');
-          } else {
-            await interaction.editReply('Failed to stop the Minecraft server.');
-          }
-        } else {
-          await interaction.reply('Failed to stop the Minecraft server.');
-        }
+      } else {
+        await interaction.reply('Invalid action. Use `start`, `stop`, or `status`.');
       }
-    } 
-    else {
+    } catch (error) {
       console.error('Error executing command:', error);
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply('An error occurred while executing the command.');
@@ -95,7 +79,7 @@ const minecraftServer = {
         await interaction.reply('An error occurred while executing the command.');
       }
     }
-  }
+  },
 };
 
 export default minecraftServer;

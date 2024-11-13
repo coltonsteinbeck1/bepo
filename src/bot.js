@@ -1,25 +1,16 @@
-import {
-    createAudioPlayer,
-    createAudioResource,
-    joinVoiceChannel,
-} from "@discordjs/voice";
-import { AttachmentBuilder, Client, Collection, EmbedBuilder } from "discord.js";
+;import {Client, Collection } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
-import ytdl from "ytdl-core";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
-import { getAllChannels } from "./supabase/supabase.js";
-import { getAllContext, randomizeReaction } from "../scripts/create-context.js";
+import { getAllContext} from "../scripts/create-context.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
+import {memeFilter,buildConversationContext,isBotMentioned, isGroupPing,isBotMessageOrPrefix, sendTypingIndicator}from "./utils.js";
 
 dotenv.config();
-
-
-
 
 const client = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent", "GuildVoiceStates"],
@@ -42,11 +33,6 @@ const openAI = new OpenAI({
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
-const DEFAULT_SYSTEM_MESSAGE = process.env.DEFAULT_SYSTEM_MESSAGE;
-const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
-const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
-const prayEmojis = ["🙏", "🛐", "✝️", "☪️","📿"];
-const probability = 0.15;
 
 const chatContext = await getAllContext();
 client.on("ready", () => {
@@ -75,84 +61,18 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("messageCreate", async (message) => {
-  //Meme reactions
-  const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
-  const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * dislikeEmojis.length)];
-  const randomPrayerEmoji = prayEmojis[Math.floor(Math.random() * prayEmojis.length)];
+    // Meme reactions
+    await memeFilter(message);
 
-  if (message.content.toLowerCase().includes("pex".toLowerCase())
-    && !message.author.bot) {
-    setTimeout(async () => {
-      if(await randomizeReaction(probability)){
-        message.react(randomLoveEmoji);
-      }
-    }, 2500);
-  }
-  if ((message.content.toLowerCase().includes("allah".toLowerCase()) 
-      || message.content.toLowerCase().includes("jesus".toLowerCase())
-      || message.content.toLowerCase().includes("prayge".toLowerCase()))
-      && !message.author.bot) {
-      setTimeout(async () => {
-        if( await randomizeReaction(probability)){
-          message.react(randomPrayerEmoji);
-        }
-      }, 2500);
-    }
-
-    if(((message.content.includes("OW")
-      || message.content.toLowerCase().includes("overwatch".toLowerCase())
-      || message.content.toLowerCase().includes("valorant".toLowerCase()))
-      && !message.author.bot)){
-      setTimeout(async () => {
-        if(await randomizeReaction(probability)){
-          message.react(randomDislikeEmoji);
-        }
-      }, 2500);
-    }
+    // Doesn't respond on group pings
+    if (isGroupPing(message)) return;
   
-  //Doesn't respond on group pings
-  if (message.content.includes('@everyone') || message.content.includes('@here')) {
-    return;
-  }
-
-  if (message.author.bot) return;
-  if (message.content.startsWith(BOT_PREFIX)) return;
-  if (!message.mentions.has(client.user.id)) return;
-  await message.channel.sendTyping();
-
-  const sendTypingInterval = setInterval(async () => {
-    await message.channel.sendTyping();
-  }, 15000);
-
-  let conversation = [];
-  if(message.guild.id === process.env.GUILD_BZ || message.guild.id === process.env.GUILD_HOME){
-    conversation.push({role: "system", content: process.env.MODEL_SYSTEM_MESSAGE});
-    chatContext.forEach((message) => {
-      if(message.content === null) return;
-      conversation.push({role: message.role, content: message.content});
-    });
-  }else {
-    conversation.push({role: "system", content: process.env.DEFAULT_SYSTEM_MESSAGE});
-  }
-
-  let previousMessage = await message.channel.messages.fetch({ limit: 10 });
-
-  previousMessage.reverse().forEach((message) => {
-    if (message.author.bot && message.author.id != client.id) return;
-    if (message.content.startsWith(BOT_PREFIX)) return;
-
-    const username = message.author.username
-      .replace(/\s+/g, "_")
-      .replace(/[^\w\s]/gi, "");
-
-    if (message.author.id === client.user.id) {
-      conversation.push({
-        role: "user",
-        name: username,
-        content: message.content,
-      });
-    }
-  });
+    if (isBotMessageOrPrefix(message, BOT_PREFIX)) return;
+    if (!isBotMentioned(message, client)) return;
+  
+    const sendTypingInterval = await sendTypingIndicator(message);
+  
+    let conversation = await buildConversationContext(message, chatContext);
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
       .create({
@@ -170,13 +90,12 @@ client.on("messageCreate", async (message) => {
         presence_penalty: 0,
       })
       .catch((error) => {
-        message.reply("ERROR on OPENAIs end.");
-        console.log("OpenAI Error:\n", error);
+        message.reply("Model connection having issues");
+        console.log("LLM connection Error:\n", error);
       });
-  clearInterval(sendTypingInterval);
 
   if (!response) {
-    message.reply("I am struggling rn fr fr. Ask me later");
+    message.reply("No message recieved. I am struggling fr");
     return;
   }
 
