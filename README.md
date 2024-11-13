@@ -1,6 +1,5 @@
 
 # Bepo
-![Bepo Logo](src/images/logo.png)
 
 The Discord bot who should probably go outside and touch grass! 🤖
 
