@@ -6,7 +6,7 @@ The Discord bot who should probably go outside and touch grass! 🤖
 ## Features
 - **Memes Chronically**: Degen behavior, powered by LLM's!
 - **Draws Cool Stuff**: Go wild (or whatever TOS allows) :D
-- **Game Stats**: Get the latest stats for Apex (and more to come!).
+- **Game Stats**: Get the latest stats for Apex Map Rotation and Counter-Strike 2 Patch Notes.
 - **Minecraft Support**: Keep track of your server stats.
 
 ## Dev Commands
