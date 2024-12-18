@@ -8,6 +8,7 @@ import pingCommand from "./commands/fun/ping.js";
 import { getAllContext} from "../scripts/create-context.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
+import cs2Command from "./commands/fun/cs2.js"
 import {memeFilter,buildConversationContext,isBotMentioned, isGroupPing,isBotMessageOrPrefix, sendTypingIndicator}from "./utils.js";
 
 dotenv.config();
@@ -22,7 +23,8 @@ client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
-client.commands.set('minecraftserver', minecraftServer)
+client.commands.set('cs2',cs2Command);
+client.commands.set('minecraftserver', minecraftServer);
 
 // OpenAI API key
 const openAI = new OpenAI({
