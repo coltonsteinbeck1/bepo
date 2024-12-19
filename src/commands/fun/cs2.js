@@ -40,32 +40,41 @@ const cs2Command = {
 
       // Create embeds for the patch notes
       for (let note of limitedPatchNotes) {
-        let cleanBody = note.body
-          .replace(/\[\/?list\]/g, '')
-          .replace(/\[\*\] /g, '• ')
-          .replace(/\[\/?\w+(=[^\]]+)?\]/g, '')
-          .replace(/\n{2,}/g, '\n')
-          .trim();
-        
-        let sections = cleanBody.split(/\n(?=\[.+\])/g);
+// Clean up the body text
+let cleanBody = note.body
+  .replace(/\[\/?list\]/g, '')        // Remove [list] and [/list] tags
+  .replace(/\[\*\]/g, '• ')           // Replace [*] with bullet points
+  .replace(/\[\/?\w+(=[^\]]+)?\]/g, '') // Remove other BBCode tags
+  .replace(/\r?\n|\r/g, '\n')         // Normalize newlines
+  .replace(/\n{2,}/g, '\n')           // Replace multiple newlines with a single newline
+  .trim();
 
-        const embed = new EmbedBuilder()
-        .setColor('#ffA500')
-        .setTitle(note.headline)
-        .setFooter({ text: `Updated: ${new Date(note.updatetime * 1000).toLocaleString()}` });
+// Split the body into sections based on section headers like [MAPS], [MISC]
+let sections = cleanBody.split(/\n(?=\[.+\])/g);
 
-    sections.forEach(section => {
-        // Extract the section title
-        let match = section.match(/^\[(.+)\]\n?/);
-        if (match) {
-            let title = `**${match[1]}**`; // Bold the section title
-            let content = section.replace(/^\[.+\]\n?/, '').trim();
-            embed.addFields({ name: title, value: content || '\u200B' });
-        } else {
-            // If no section title, add the content directly
-            embed.addFields({ name: '\u200B', value: section });
-        }
-        });
+let limitedSections = sections.slice(0, 25);
+
+const embed = new EmbedBuilder()
+  .setColor('#ffA500')
+  .setTitle(note.headline)
+  .setFooter({ text: `Updated: ${new Date(note.updatetime * 1000).toLocaleString()}` });
+
+// Add fields to the embed
+    limitedSections.forEach(section => {
+      // Extract the section title
+      let match = section.match(/^\[(.+)\]\n?/);
+      if (match) {
+        let title = `**${match[1]}**`; // Bold the section title
+        let content = section.replace(/^\[.+\]\n?/, '').trim();
+        embed.addFields({ name: title, value: content || '\u200B' });
+      } else {
+        // If no section title, add the content directly
+        embed.addFields({ name: '\u200B', value: section || '\u200B' });
+      }
+    });
+
+    // Send the embed
+    await interaction.followUp({ embeds: [embed] });
         await interaction.followUp({ embeds: [embed] });
       }
     } catch (error) {
