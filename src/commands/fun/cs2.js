@@ -37,17 +37,17 @@ const cs2Command = {
       // Limit embeds to prevent exceeding rate limits
       const maxEmbeds = 1; //Future state change in case more patch notes are needed
       const limitedPatchNotes = cachedPatchNotes.slice(0, maxEmbeds);
-
+      console.log(limitedPatchNotes);
       // Create embeds for the patch notes
       for (let note of limitedPatchNotes) {
-// Clean up the body text
-let cleanBody = note.body
-  .replace(/\[\/?list\]/g, '')        // Remove [list] and [/list] tags
-  .replace(/\[\*\]/g, '• ')           // Replace [*] with bullet points
-  .replace(/\[\/?\w+(=[^\]]+)?\]/g, '') // Remove other BBCode tags
-  .replace(/\r?\n|\r/g, '\n')         // Normalize newlines
-  .replace(/\n{2,}/g, '\n')           // Replace multiple newlines with a single newline
-  .trim();
+        // Clean up the body text
+        let cleanBody = note.body
+        .replace(/\[\/?list\]/g, '')        // Remove [list] and [/list] tags
+        .replace(/\[\*\]/g, '• ')           // Replace [*] with bullet points
+        .replace(/\[\/?\w+(=[^\]]+)?\]/g, '') // Remove other BBCode tags
+        .replace(/\r?\n|\r/g, '\n')         // Normalize newlines
+        .replace(/\n{2,}/g, '\n')           // Replace multiple newlines with a single newline
+        .trim();
 
 // Split the body into sections based on section headers like [MAPS], [MISC]
 let sections = cleanBody.split(/\n(?=\[.+\])/g);
@@ -75,7 +75,6 @@ const embed = new EmbedBuilder()
 
     // Send the embed
     await interaction.followUp({ embeds: [embed] });
-        await interaction.followUp({ embeds: [embed] });
       }
     } catch (error) {
       console.error(error);
