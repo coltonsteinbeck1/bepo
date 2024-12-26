@@ -56,7 +56,7 @@ const minecraftServer = {
         const publicIpAddress = instance.PublicIpAddress;
 
         await interaction.followUp(
-          `Minecraft server is now up and running!\nIP Address: \`${publicIpAddress}\``
+          `Minecraft server is now up and running!`
         );
       } else if (action === 'stop') {
         await interaction.deferReply();
