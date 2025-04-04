@@ -2,7 +2,7 @@ import cp from "child_process";
 import fs from "fs";
 import path from "path";
 import url from "url";
-import { randomizeReaction } from "../scripts/create-context.js";
+import { randomizeReaction } from "../../scripts/create-context.js";
 import dotenv from "dotenv";
 dotenv.config();
 

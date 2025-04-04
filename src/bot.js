@@ -9,7 +9,8 @@ import { getAllContext} from "../scripts/create-context.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
-import {memeFilter,buildConversationContext,isBotMentioned, isGroupPing,isBotMessageOrPrefix, sendTypingIndicator}from "./utils.js";
+import MarkovChain from "./utils/markovChaining.js";
+import {memeFilter,buildConversationContext,isBotMentioned, isGroupPing,isBotMessageOrPrefix, sendTypingIndicator}from "./utils//utils.js";
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
 
 const chatContext = await getAllContext();
+const markov = new MarkovChain();
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
 });
@@ -63,15 +65,23 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  markov.train(message.content);
     // Meme reactions
     await memeFilter(message);
 
     // Doesn't respond on group pings
     if (isGroupPing(message)) return;
   
-    if (isBotMessageOrPrefix(message, BOT_PREFIX)) return;
-    if (!isBotMentioned(message, client)) return;
-  
+    if (!isBotMessageOrPrefix(message, BOT_PREFIX) && !isBotMentioned(message, client)) {
+      if (Math.random() < 0.05) {
+        const generatedText = markov.generate();
+        if (generatedText.trim().length > 0) {
+          await message.reply(generatedText);
+        }
+      }
+      return;
+    }
     const sendTypingInterval = await sendTypingIndicator(message);
   
     let conversation = await buildConversationContext(message, chatContext);
