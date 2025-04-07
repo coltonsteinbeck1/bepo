@@ -70,6 +70,20 @@ client.on("interactionCreate", async (interaction) => {
           await member.roles.remove(roleId);
           await interaction.reply({ content: "Role removed.", ephemeral: true });
         }
+      } else if (interaction.customId.startsWith("removeRole:")) {
+        const roleId = interaction.customId.split(":")[1];
+        const member = interaction.member;
+
+        if (!member) {
+          return interaction.reply({ content: "Member not found.", ephemeral: true });
+        }
+
+        if (member.roles.cache.has(roleId)) {
+          await member.roles.remove(roleId);
+          await interaction.reply({ content: "Role removed.", ephemeral: true });
+        } else {
+          await interaction.reply({ content: "You do not have this role.", ephemeral: true });
+        }
       }
     }
   } catch (error) {

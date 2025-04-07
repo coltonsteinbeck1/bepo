@@ -19,7 +19,7 @@ async function getAllGuilds() {
 
 // Function to get all channels
 async function getAllChannels() {
-    const { data, error } = await supabase.from('channels').select('content').order('timestamp', {ascending: true})
+    const { data, error } = await supabase.from('channels').select('content').order('timestamp', { ascending: true })
     if (error) {
         console.error('Error fetching channels:', error)
         return []
@@ -61,7 +61,7 @@ async function insertImages(prompt, url) {
     const { data, error } = await supabase
         .from('images')
         .insert([
-            { image_id: initializeImageId+1, url: url, prompt: prompt },
+            { image_id: initializeImageId + 1, url: url, prompt: prompt },
         ])
         .select();
     if (error) {
@@ -71,12 +71,21 @@ async function insertImages(prompt, url) {
 }
 // Function to get all context messages
 async function getContext() {
-    let { data: messages, error } = await supabase.from('messages').select('content')       
+    let { data: messages, error } = await supabase.from('messages').select('content')
     if (error) {
         console.error('Error fetching context:', error)
         return []
     }
     return messages
 }
-export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages, getContext }
+
+async function getBZBannedRoles() {
+    let { data: roles, error } = await supabase.from('bz_roles').select('role_id')
+    if (error) {
+        console.error('Error fetching context:', error)
+        return []
+    }
+    return roles
+}
+export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages, getContext, getBZBannedRoles }
 
