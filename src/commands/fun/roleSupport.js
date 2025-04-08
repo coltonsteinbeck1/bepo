@@ -3,7 +3,7 @@ import { getBZBannedRoles } from "../../supabase/supabase.js";
 
 const roleSupport = {
     data: new SlashCommandBuilder()
-        .setName("roles")
+        .setName("rolesupport")
         .setDescription("Manage your self-assignable roles")
         .addStringOption(option =>
             option
@@ -83,7 +83,24 @@ const roleSupport = {
                 });
             } else if (action === 'remove') {
                 const member = interaction.member;
-                const currentRoles = member.roles.cache.filter(role => role.id !== guild.id && !role.managed);
+                const bzRolesData = await getBZBannedRoles();
+                const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+                const currentRoles = guild.roles.cache.filter(role => {
+                    try {
+                        const roleId = Number(role.id);
+                        const isBanned = bannedRolesSet.has(roleId);
+
+                        // Log each role being checked
+                        console.log(`Checking role: ${role.name} (${roleId.toString()}) - Banned: ${isBanned}`);
+
+                        return !role.managed &&
+                            role.id !== guild.id &&
+                            !isBanned;
+                    } catch (error) {
+                        console.error(`Error processing role ${role.name}:`, error);
+                        return false; // Skip this role if there's an error
+                    }
+                });
 
                 const buttons = currentRoles.map(role =>
                     new ButtonBuilder()
