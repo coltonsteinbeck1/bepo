@@ -1,16 +1,16 @@
-;import {Client, Collection } from "discord.js";
+; import { Client, Collection, Guild } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
-import { getAllContext} from "../scripts/create-context.js";
+import { getAllContext } from "../scripts/create-context.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
 import MarkovChain from "./utils/markovChaining.js";
-import {memeFilter,buildConversationContext,isBotMentioned, isGroupPing,isBotMessageOrPrefix, sendTypingIndicator}from "./utils//utils.js";
+import { memeFilter, buildConversationContext, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
 
 dotenv.config();
 
@@ -24,7 +24,7 @@ client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
-client.commands.set('cs2',cs2Command);
+client.commands.set('cs2', cs2Command);
 client.commands.set('minecraftserver', minecraftServer);
 
 // OpenAI API key
@@ -67,44 +67,45 @@ client.on("interactionCreate", async (interaction) => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   markov.train(message.content);
-    // Meme reactions
-    await memeFilter(message);
+  // Meme reactions
+  await memeFilter(message);
 
-    // Doesn't respond on group pings
-    if (isGroupPing(message)) return;
-  
-    if (!isBotMessageOrPrefix(message, BOT_PREFIX) && !isBotMentioned(message, client)) {
-      if (Math.random() < 0.05) {
-        const generatedText = markov.generate();
-        if (generatedText.trim().length > 0) {
-          await message.reply(generatedText);
-        }
+  // Doesn't respond on group pings
+  if (isGroupPing(message)) return;
+
+  if (!isBotMessageOrPrefix(message, BOT_PREFIX) && !isBotMentioned(message, client)) {
+    if (Math.random() < 0.35) {
+      const generatedText = markov.generate(null, Math.floor(Math.random() * 30) + 20); // Randomize length between 20-50
+      if (generatedText.trim().length > 0) {
+        await message.reply(generatedText);
       }
-      return;
     }
-    const sendTypingInterval = await sendTypingIndicator(message);
-  
-    let conversation = await buildConversationContext(message, chatContext);
+    return;
+  }
+
+  const sendTypingInterval = await sendTypingIndicator(message);
+
+  let conversation = await buildConversationContext(message, chatContext);
   clearInterval(sendTypingInterval);
   const response = await openAI.chat.completions
-      .create({
-        model: "grok-beta",
-        messages: [
-          //primes the model with the context
-          ...conversation,
-          //user messages
-          { role: "user", content: message.content},
-        ],
-        temperature: 1.0,
-        max_tokens: 500,
-        top_p: 1,
-        frequency_penalty: 0.5,
-        presence_penalty: 0,
-      })
-      .catch((error) => {
-        message.reply("Model connection having issues");
-        console.log("LLM connection Error:\n", error);
-      });
+    .create({
+      model: "grok-beta",
+      messages: [
+        //primes the model with the context
+        ...conversation,
+        //user messages
+        { role: "user", content: message.content },
+      ],
+      temperature: 1.0,
+      max_tokens: 500,
+      top_p: 1,
+      frequency_penalty: 0.5,
+      presence_penalty: 0,
+    })
+    .catch((error) => {
+      message.reply("Model connection having issues");
+      console.log("LLM connection Error:\n", error);
+    });
 
   if (!response) {
     message.reply("No message recieved. I am struggling fr");
