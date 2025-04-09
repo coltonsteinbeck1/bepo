@@ -1,4 +1,4 @@
-; import { Client, Collection, Guild } from "discord.js";
+import { Client, Collection, Guild } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import drawCommand from "./commands/fun/draw.js";
@@ -27,6 +27,7 @@ client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
 client.commands.set('cs2', cs2Command);
 client.commands.set('minecraftserver', minecraftServer);
+client.commands.set('rolesupport', roleSupport);
 
 // OpenAI API key
 const openAI = new OpenAI({
@@ -48,23 +49,61 @@ client.on("ready", () => {
 });
 
 client.on("interactionCreate", async (interaction) => {
-  if (!interaction.isCommand()) return;
-
-  const command = client.commands.get(interaction.commandName);
-
-  if (!command) {
-    console.error(`Command not found: ${interaction.commandName}`);
-    return;
-  }
-
   try {
-    await command.execute(interaction);
+    if (interaction.isCommand()) {
+      const command = client.commands.get(interaction.commandName);
+
+      if (!command) {
+        console.error(`Command not found: ${interaction.commandName}`);
+        return;
+      }
+
+      await command.execute(interaction);
+    } else if (interaction.isButton()) {
+      if (interaction.customId.startsWith("roleToggle:")) {
+        const roleId = interaction.customId.split(":")[1];
+        const member = interaction.member;
+
+        if (!member) {
+          return interaction.reply({ content: "Member not found.", ephemeral: true });
+        }
+
+        if (!member.roles.cache.has(roleId)) {
+          await member.roles.add(roleId);
+          await interaction.reply({ content: "Role added.", ephemeral: true });
+        } else {
+          await member.roles.remove(roleId);
+          await interaction.reply({ content: "Role removed.", ephemeral: true });
+        }
+      } else if (interaction.customId.startsWith("removeRole:")) {
+        const roleId = interaction.customId.split(":")[1];
+        const member = interaction.member;
+
+        if (!member) {
+          return interaction.reply({ content: "Member not found.", ephemeral: true });
+        }
+
+        if (member.roles.cache.has(roleId)) {
+          await member.roles.remove(roleId);
+          await interaction.reply({ content: "Role removed.", ephemeral: true });
+        } else {
+          await interaction.reply({ content: "You do not have this role.", ephemeral: true });
+        }
+      }
+    }
   } catch (error) {
-    console.error(error);
-    await interaction.reply({
-      content: "There was an error while executing this command!",
-      ephemeral: true,
-    });
+    console.error("Error during interaction:", error);
+    if (interaction.replied || interaction.deferred) {
+      await interaction.followUp({
+        content: "There was an error while executing this interaction!",
+        ephemeral: true,
+      });
+    } else {
+      await interaction.reply({
+        content: "There was an error while executing this interaction!",
+        ephemeral: true,
+      });
+    }
   }
 });
 
@@ -76,7 +115,7 @@ client.on("messageCreate", async (message) => {
 
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
-
+  
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
     const sendTypingInterval = await sendTypingIndicator(message);
 
@@ -101,6 +140,7 @@ client.on("messageCreate", async (message) => {
         message.reply("Model connection having issues");
         console.log("LLM connection Error:\n", error);
       });
+
 
     if (!response) {
       message.reply("No message recieved. I am struggling fr");

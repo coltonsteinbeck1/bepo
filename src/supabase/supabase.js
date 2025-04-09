@@ -17,19 +17,20 @@ async function getAllGuilds() {
     return data
 }
 
-// Function to get all channels
+// Function to get channels Markov can run in
 async function getMarkovChannels() {
     const { data, error } = await supabase
         .from('channels')
         .select('channel_id')
         .in('channel_name', ['chillin', 'bot_spam']);
-
+  
     if (error) {
         console.error('Error fetching channels:', error);
         return [];
     }
     return data;
 }
+
 // Function to get all users
 async function getAllUsers() {
     const { data, error } = await supabase.from('users').select('*')
@@ -81,5 +82,15 @@ async function getContext() {
     }
     return messages
 }
-export { getAllGuilds, getMarkovChannels, getAllUsers, getConfig, insertImages, getContext }
+
+async function getBZBannedRoles() {
+    let { data: roles, error } = await supabase.from('bz_roles').select('role_id')
+    if (error) {
+        console.error('Error fetching context:', error)
+        return []
+    }
+    return roles
+}
+
+export { getAllGuilds, getMarkovChannels, getAllUsers, getConfig, insertImages, getContext, getBZBannedRoles }
 
