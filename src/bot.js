@@ -1,4 +1,4 @@
-; import { Client, Collection } from "discord.js";
+import { Client, Collection, Guild } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import drawCommand from "./commands/fun/draw.js";
@@ -6,11 +6,12 @@ import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import { getAllContext } from "../scripts/create-context.js";
+import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
-import { memeFilter, buildConversationContext, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils.js";
-import roleSupport from "./commands/fun/roleSupport.js";
+import MarkovChain from "./utils/markovChaining.js";
+import { memeFilter, buildConversationContext, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
 
 dotenv.config();
 
@@ -39,6 +40,10 @@ const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
 
 const chatContext = await getAllContext();
+const markovChannels = await getMarkovChannels();
+const markovChannelIds = markovChannels.map(channel => channel.channel_id);
+const markov = new MarkovChain();
+
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
 });
@@ -103,51 +108,63 @@ client.on("interactionCreate", async (interaction) => {
 });
 
 client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  markov.train(message.content);
   // Meme reactions
   await memeFilter(message);
 
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
+  
+  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
+    const sendTypingInterval = await sendTypingIndicator(message);
 
-  if (isBotMessageOrPrefix(message, BOT_PREFIX)) return;
-  if (!isBotMentioned(message, client)) return;
+    let conversation = await buildConversationContext(message, chatContext);
+    clearInterval(sendTypingInterval);
+    const response = await openAI.chat.completions
+      .create({
+        model: "grok-beta",
+        messages: [
+          //primes the model with the context
+          ...conversation,
+          //user messages
+          { role: "user", content: message.content },
+        ],
+        temperature: 1.0,
+        max_tokens: 500,
+        top_p: 1,
+        frequency_penalty: 0.5,
+        presence_penalty: 0,
+      })
+      .catch((error) => {
+        message.reply("Model connection having issues");
+        console.log("LLM connection Error:\n", error);
+      });
 
-  const sendTypingInterval = await sendTypingIndicator(message);
 
-  let conversation = await buildConversationContext(message, chatContext);
-  clearInterval(sendTypingInterval);
-  const response = await openAI.chat.completions
-    .create({
-      model: "grok-beta",
-      messages: [
-        //primes the model with the context
-        ...conversation,
-        //user messages
-        { role: "user", content: message.content },
-      ],
-      temperature: 1.0,
-      max_tokens: 500,
-      top_p: 1,
-      frequency_penalty: 0.5,
-      presence_penalty: 0,
-    })
-    .catch((error) => {
-      message.reply("Model connection having issues");
-      console.log("LLM connection Error:\n", error);
-    });
+    if (!response) {
+      message.reply("No message recieved. I am struggling fr");
+      return;
+    }
 
-  if (!response) {
-    message.reply("No message recieved. I am struggling fr");
+    const responseMessage = response.choices[0].message.content;
+    const chunkSizeLimit = 2000;
+
+    for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
+      const chunk = responseMessage.substring(i, i + chunkSizeLimit);
+      await message.reply(chunk);
+    }
     return;
   }
-
-  const responseMessage = response.choices[0].message.content;
-  const chunkSizeLimit = 2000;
-
-  for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
-    const chunk = responseMessage.substring(i, i + chunkSizeLimit);
-    await message.reply(chunk);
+  if (markovChannelIds.includes(message.channelId.toString())) {
+    if (Math.random() < 0.025) {
+      const generatedText = markov.generate(null, Math.floor(Math.random() * 30) + 20); // Randomize length between 20-50
+      if (generatedText.trim().length > 0) {
+        await message.reply(generatedText);
+      }
+    }
   }
+
 
 });
 

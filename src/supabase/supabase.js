@@ -17,14 +17,18 @@ async function getAllGuilds() {
     return data
 }
 
-// Function to get all channels
-async function getAllChannels() {
-    const { data, error } = await supabase.from('channels').select('content').order('timestamp', { ascending: true })
+// Function to get channels Markov can run in
+async function getMarkovChannels() {
+    const { data, error } = await supabase
+        .from('channels')
+        .select('channel_id')
+        .in('channel_name', ['chillin', 'bot_spam']);
+  
     if (error) {
-        console.error('Error fetching channels:', error)
-        return []
+        console.error('Error fetching channels:', error);
+        return [];
     }
-    return data
+    return data;
 }
 
 // Function to get all users
@@ -87,5 +91,6 @@ async function getBZBannedRoles() {
     }
     return roles
 }
-export { getAllGuilds, getAllChannels, getAllUsers, getConfig, insertImages, getContext, getBZBannedRoles }
+
+export { getAllGuilds, getMarkovChannels, getAllUsers, getConfig, insertImages, getContext, getBZBannedRoles }
 

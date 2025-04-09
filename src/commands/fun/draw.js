@@ -1,6 +1,6 @@
 import { EmbedBuilder, SlashCommandBuilder, AttachmentBuilder } from "discord.js";
 import path from "path";
-import { runGenerate, IMAGE_PATH } from "../../utils.js";
+import { runGenerate, IMAGE_PATH } from "../../utils/utils.js";
 
 const drawCommand = {
   data: new SlashCommandBuilder()
