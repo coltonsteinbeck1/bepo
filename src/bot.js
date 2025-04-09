@@ -10,6 +10,7 @@ import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
+import roleSupport from "./commands/fun/roleSupport.js"
 import MarkovChain from "./utils/markovChaining.js";
 import { memeFilter, buildConversationContext, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
 
@@ -115,7 +116,7 @@ client.on("messageCreate", async (message) => {
 
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
-  
+
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
     const sendTypingInterval = await sendTypingIndicator(message);
 
@@ -157,7 +158,7 @@ client.on("messageCreate", async (message) => {
     return;
   }
   if (markovChannelIds.includes(message.channelId.toString())) {
-    if (Math.random() < 0.025) {
+    if (Math.random() < 0.0025) {
       const generatedText = markov.generate(null, Math.floor(Math.random() * 30) + 20); // Randomize length between 20-50
       if (generatedText.trim().length > 0) {
         await message.reply(generatedText);

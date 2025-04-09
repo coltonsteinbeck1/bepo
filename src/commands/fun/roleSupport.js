@@ -73,16 +73,17 @@ const roleSupport = {
                 const member = interaction.member;
                 const bzRolesData = await getBZBannedRoles();
                 const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+
+                // Filter to only show roles that the user actually has
                 const currentRoles = guild.roles.cache.filter(role => {
                     try {
                         const roleId = Number(role.id);
                         const isBanned = bannedRolesSet.has(roleId);
 
-                        // Log each role being checked
-
                         return !role.managed &&
                             role.id !== guild.id &&
-                            !isBanned;
+                            !isBanned &&
+                            member.roles.cache.has(role.id); // Only include roles the user has
                     } catch (error) {
                         return false; // Skip this role if there's an error
                     }
