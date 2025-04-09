@@ -31,11 +31,9 @@ const roleSupport = {
             if (action === 'add') {
                 // Fetch and log banned role IDs for debugging
                 const bzRolesData = await getBZBannedRoles();
-                console.log('Banned Roles Data:', bzRolesData);
 
                 // Convert role IDs to Number for proper comparison
                 const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
-                console.log('Banned Roles Set:', [...bannedRolesSet].map(id => id.toString()));
 
                 // Get all roles and filter out managed roles, @everyone, and roles with banned IDs
                 const availableRoles = guild.roles.cache.filter(role => {
@@ -43,26 +41,16 @@ const roleSupport = {
                         const roleId = Number(role.id);
                         const isBanned = bannedRolesSet.has(roleId);
 
-                        // Log each role being checked
-                        console.log(`Checking role: ${role.name} (${roleId.toString()}) - Banned: ${isBanned}`);
-
                         return !role.managed &&
                             role.id !== guild.id &&
                             !isBanned;
                     } catch (error) {
-                        console.error(`Error processing role ${role.name}:`, error);
                         return false; // Skip this role if there's an error
                     }
                 });
 
                 const member = interaction.member;
                 const filteredRoles = availableRoles.filter(role => !member.roles.cache.has(role.id));
-
-                // Log final available roles
-                console.log('Final Available Roles:', [...filteredRoles.values()].map(r => ({
-                    name: r.name,
-                    id: r.id
-                })));
 
                 const buttons = filteredRoles.map(role =>
                     new ButtonBuilder()
@@ -91,13 +79,11 @@ const roleSupport = {
                         const isBanned = bannedRolesSet.has(roleId);
 
                         // Log each role being checked
-                        console.log(`Checking role: ${role.name} (${roleId.toString()}) - Banned: ${isBanned}`);
 
                         return !role.managed &&
                             role.id !== guild.id &&
                             !isBanned;
                     } catch (error) {
-                        console.error(`Error processing role ${role.name}:`, error);
                         return false; // Skip this role if there's an error
                     }
                 });
