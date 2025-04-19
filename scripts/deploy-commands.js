@@ -2,7 +2,7 @@ import { REST, Routes } from "discord.js";
 import { readdirSync } from "fs";
 import ora from "ora";
 import path from "path";
-import { COMMAND_DIR_PATH, isJSFile, loadConfig } from "../src/utils.js";
+import { COMMAND_DIR_PATH, isJSFile, loadConfig } from "../src/utils/utils.js";
 import { getAllGuilds } from "../src/supabase/supabase.js";
 import dotenv from "dotenv";
 dotenv.config();
@@ -52,10 +52,10 @@ const main = async () => {
       }
     }
   }
-   const clientId = process.env.CLIENT_ID;
+  const clientId = process.env.CLIENT_ID;
 
   spinner.text = "Deploying to Discord";
-  
+
   await deploy(commands, rest, clientId, guildList);
   spinner.stop();
 };

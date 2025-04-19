@@ -8,9 +8,9 @@ dotenv.config();
 
 export const __dirname = url.fileURLToPath(new URL(".", import.meta.url));
 
-export const COMMAND_DIR_PATH = path.join(__dirname, "commands");
+export const COMMAND_DIR_PATH = path.join(__dirname, "..", "commands");
 
-export const DALLE_DIR_PATH = path.join(__dirname, "dalle");
+export const DALLE_DIR_PATH = path.join(__dirname, "..", "dalle");
 
 export const IMAGE_PATH = path.join(__dirname, "images/image.png")
 

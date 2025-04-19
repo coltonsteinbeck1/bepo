@@ -5,24 +5,12 @@ import { runGenerate, IMAGE_PATH } from "../../utils/utils.js";
 const drawCommand = {
   data: new SlashCommandBuilder()
     .setName("draw")
-    .setDescription("Generate an image with DALL-E")
+    .setDescription("Generate an image with Grok")
     .addStringOption((option) =>
       option
         .setName("prompt")
-        .setDescription("The prompt for DALL-E to draw")
+        .setDescription("The prompt for Grok to draw")
         .setRequired(true),
-    )
-    .addStringOption((option) =>
-      option
-        .setName("style")
-        .setDescription("The style of the generated image -> natural or vivid")
-        .setRequired(false)
-    )
-    .addStringOption((option) =>
-      option
-        .setName("quality")
-        .setDescription("The quality for DALL-E to draw")
-        .setRequired(false),
     ),
   async execute(interaction) {
     await interaction.deferReply();
@@ -34,7 +22,7 @@ const drawCommand = {
         .setTitle(prompt)
         .setImage(`attachment://image.png`);
 
-      interaction.editReply({ embeds: [embed],files:[attachment] }).catch(console.error.bind(console));
+      interaction.editReply({ embeds: [embed], files: [attachment] }).catch(console.error.bind(console));
     };
     runGenerate(prompt, cb);
   },

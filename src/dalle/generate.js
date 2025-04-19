@@ -4,28 +4,23 @@ import fetch from "node-fetch";
 import { OpenAI } from "openai";
 import ora from "ora";
 import path from "path";
-import { __dirname, ensureDir } from "../utils.js";
-import { insertImages } from "../supabase/supabase.js";
+import { __dirname, ensureDir } from "../utils/utils.js";
 
 dotenv.config();
 
 const openAI = new OpenAI({
-  apiKey: process.env.OPENAI_KEY,
+  apiKey: process.env.xAI_KEY,
+  baseURL: "https://api.x.ai/v1",
 });
 
 const prompt = process.argv[2];
-const style = process.argv[3];
-const quality = process.argv[4];
 const spinner = ora("Generating image").start();
 
 try {
   const result = await openAI.images.generate({
     prompt,
-    size: "1792x1024",
-    n: 1,
-    model: "dall-e-3",
-    style: style ? style : "vivid",
-    quality: quality ? quality : "standard",
+    // size: "1792x1024",
+    model: "grok-2-image"
   });
   console.log(result.data);
   spinner.text = "Processing results";
