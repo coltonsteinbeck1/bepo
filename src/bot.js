@@ -5,6 +5,7 @@ import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
+import resetConversation from "./commands/fun/resetConversation.js";
 import { getAllContext } from "../scripts/create-context.js";
 import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
@@ -12,7 +13,7 @@ import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import MarkovChain from "./utils/markovChaining.js";
-import { memeFilter, buildConversationContext, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
+import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ client.commands.set('maprotation', apexMapCommand);
 client.commands.set('cs2', cs2Command);
 client.commands.set('minecraftserver', minecraftServer);
 client.commands.set('rolesupport', roleSupport);
+client.commands.set("reset", resetConversation);
 
 // OpenAI API key
 const openAI = new OpenAI({
@@ -40,7 +42,7 @@ const openAI = new OpenAI({
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
 
-const chatContext = await getAllContext();
+// const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
 const markov = new MarkovChain();
@@ -119,23 +121,25 @@ client.on("messageCreate", async (message) => {
 
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
     const sendTypingInterval = await sendTypingIndicator(message);
+    if (message.content.match(/^reset bot$/i)) {
+      const key = `${message.channelId}:${message.author.id}`;
+      convoStore.delete(key);
+      return message.reply("Your conversation has been reset.");
+    }
+    // 1) get existing context (with system prompt on first run)
+    const context = await buildStreamlinedConversationContext(message);
+    appendToConversation(message, "user", message.content);
 
-    let conversation = await buildConversationContext(message, chatContext);
     clearInterval(sendTypingInterval);
     const response = await openAI.chat.completions
       .create({
-        model: "grok-beta",
-        messages: [
-          //primes the model with the context
-          ...conversation,
-          //user messages
-          { role: "user", content: message.content },
-        ],
-        temperature: 1.0,
-        max_tokens: 500,
-        top_p: 1,
-        frequency_penalty: 0.5,
-        presence_penalty: 0,
+        model: "grok-3-mini-beta",
+        messages: [...context, { role: "user", content: message.content }],
+        // temperature: 1.0,
+        // max_tokens: 500,
+        // top_p: 1,
+        // frequency_penalty: 0.5,
+        // presence_penalty: 0,
       })
       .catch((error) => {
         message.reply("Model connection having issues");

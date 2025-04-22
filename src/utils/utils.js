@@ -22,6 +22,8 @@ const probability = 0.18;
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_PREFIX = process.env.PREFIX;
 
+export const convoStore = new Map();
+export const EXPIRATION_MS = 1000 * 60 * 30;
 
 export const loadJSON = (path) =>
   JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
@@ -103,11 +105,28 @@ export async function buildConversationContext(message, chatContext) {
   return conversation;
 }
 
-export async function fetchPreviousMessages(message) {
-  let previousMessages = await message.channel.messages.fetch({ limit: 10 });
-  return previousMessages.reverse().filter((msg) => {
-    return !(msg.author.bot && msg.author.id != client.id) && !msg.content.startsWith(BOT_PREFIX);
-  });
+export async function buildStreamlinedConversationContext(message) {
+  const key = `${message.channelId}:${message.author.id}`;
+  if (!convoStore.has(key)) {
+    const systemMsg = process.env.MODEL_SYSTEM_MESSAGE
+    convoStore.set(key, {
+      history: [{ role: "system", content: systemMsg }],
+      timer: setTimeout(() => convoStore.delete(key), EXPIRATION_MS),
+    });
+  } else {
+    // reset the timer on activity
+    clearTimeout(convoStore.get(key).timer);
+    convoStore.get(key).timer = setTimeout(() => convoStore.delete(key), EXPIRATION_MS);
+  }
+  return convoStore.get(key).history;
+}
+
+export async function appendToConversation(message, role, content) {
+  const key = `${message.channelId}:${message.author.id}`;
+  const entry = convoStore.get(key);
+  if (!entry) return;
+  entry.history.push({ role, content });
+  // trim …
 }
 
 export async function memeFilter(message) {
