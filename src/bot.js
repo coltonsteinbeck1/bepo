@@ -12,6 +12,7 @@ import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
+import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
 import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
 
@@ -31,6 +32,7 @@ client.commands.set('cs2', cs2Command);
 client.commands.set('minecraftserver', minecraftServer);
 client.commands.set('rolesupport', roleSupport);
 client.commands.set("reset", resetConversation);
+client.commands.set("cs2prices", cs2Prices);
 
 // OpenAI API key
 const openAI = new OpenAI({
