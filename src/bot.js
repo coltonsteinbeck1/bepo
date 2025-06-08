@@ -155,6 +155,9 @@ client.on("messageCreate", async (message) => {
     }
 
     const responseMessage = response.choices[0].message.content;
+
+    appendToConversation(message, "assistant", responseMessage);
+
     const chunkSizeLimit = 2000;
 
     for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
