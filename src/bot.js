@@ -2,7 +2,8 @@ import { Client, Collection, Guild } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import drawCommand from "./commands/fun/draw.js";
-import playCommand from "./commands/fun/play.js";
+import yapCommand from "./commands/fun/yap.js";
+import stopYapCommand from "./commands/fun/stopyap.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import resetConversation from "./commands/fun/resetConversation.js";
@@ -23,7 +24,8 @@ const client = new Client({
 });
 
 client.commands = new Collection();
-client.commands.set("play", playCommand);
+client.commands.set("yap", yapCommand);
+client.commands.set("stopyap", stopYapCommand);
 client.commands.set("poll", pollCommand);
 client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
