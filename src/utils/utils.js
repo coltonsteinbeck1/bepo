@@ -3,6 +3,7 @@ import fs from "fs";
 import path from "path";
 import url from "url";
 import { randomizeReaction } from "../../scripts/create-context.js";
+import { getAllImagesFromMessage, analyzeImageWithVision } from "./imageUtils.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -108,7 +109,7 @@ export async function buildConversationContext(message, chatContext) {
 export async function buildStreamlinedConversationContext(message) {
   const key = `${message.channelId}:${message.author.id}`;
   if (!convoStore.has(key)) {
-    const systemMsg = process.env.MODEL_SYSTEM_MESSAGE
+    const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
     convoStore.set(key, {
       history: [{ role: "system", content: systemMsg }],
       timer: setTimeout(() => convoStore.delete(key), EXPIRATION_MS),
@@ -121,12 +122,29 @@ export async function buildStreamlinedConversationContext(message) {
   return convoStore.get(key).history;
 }
 
+export async function processMessageWithImages(message) {
+  // Check if message has images
+  const imageData = await getAllImagesFromMessage(message);
+  
+  return {
+    hasImages: imageData.imageUrls.length > 0,
+    processedContent: message.content,
+    imageUrls: imageData.imageUrls,
+    hasGifs: imageData.hasGifs
+  };
+}
+
 export async function appendToConversation(message, role, content) {
   const key = `${message.channelId}:${message.author.id}`;
   const entry = convoStore.get(key);
   if (!entry) return;
   entry.history.push({ role, content });
-  // trim …
+  
+    // Trim conversation history if it gets too long (keep system message + last 10 exchanges)
+  if (entry.history.length > 21) { // 1 system + 20 messages (10 exchanges)
+    const systemMessage = entry.history[0];
+    entry.history = [systemMessage, ...entry.history.slice(-20)];
+  }
 }
 
 export async function memeFilter(message) {

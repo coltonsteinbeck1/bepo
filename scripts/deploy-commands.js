@@ -42,13 +42,17 @@ const main = async () => {
     const jsFiles = availCommands.filter((c) => isJSFile(c));
     for (const c of jsFiles) {
       const commandPath = path.join(COMMAND_DIR_PATH, f, c);
-      const { default: parsedCommand } = await import(commandPath);
-      if (isValidCommand(parsedCommand)) {
-        commands.push(parsedCommand.data.toJSON());
-      } else {
-        console.error(
-          `[WARNING] The command at ${commandPath} is missing a required "data" or "execute" property.`,
-        );
+      try {
+        const { default: parsedCommand } = await import(commandPath);
+        if (isValidCommand(parsedCommand)) {
+          commands.push(parsedCommand.data.toJSON());
+        } else {
+          console.error(
+            `[WARNING] The command at ${commandPath} is missing a required "data" or "execute" property. Parsed command:`, parsedCommand,
+          );
+        }
+      } catch (error) {
+        console.error(`[ERROR] Failed to import command at ${commandPath}:`, error);
       }
     }
   }

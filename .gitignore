@@ -3,3 +3,4 @@ node_modules
 app.log
 nohup.out
 src/images/image.png
+temp/

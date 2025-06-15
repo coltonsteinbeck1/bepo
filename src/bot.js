@@ -14,7 +14,8 @@ import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
-import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator } from "./utils//utils.js";
+import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore } from "./utils//utils.js";
+import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 
 dotenv.config();
 
@@ -34,10 +35,15 @@ client.commands.set('rolesupport', roleSupport);
 client.commands.set("reset", resetConversation);
 client.commands.set("cs2prices", cs2Prices);
 
-// OpenAI API key
-const openAI = new OpenAI({
+// OpenAI API key for xAI (Grok)
+const xAI = new OpenAI({
   apiKey: process.env.xAI_KEY,
   baseURL: "https://api.x.ai/v1",
+});
+
+// OpenAI API for vision capabilities
+const openAI = new OpenAI({
+  apiKey: process.env.OPENAI_KEY,
 });
 
 // Initialize Supabase and get the bot token and prefix, and emojis
@@ -123,31 +129,163 @@ client.on("messageCreate", async (message) => {
 
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
     const sendTypingInterval = await sendTypingIndicator(message);
+    
     if (message.content.match(/^reset bot$/i)) {
       const key = `${message.channelId}:${message.author.id}`;
       convoStore.delete(key);
+      clearInterval(sendTypingInterval);
       return message.reply("Your conversation has been reset.");
     }
+
+    // Process message and check for images
+    const messageData = await processMessageWithImages(message);
+    
     // 1) get existing context (with system prompt on first run)
     const context = await buildStreamlinedConversationContext(message);
-    appendToConversation(message, "user", message.content);
+    
+    let response;
+    
+    if (messageData.hasImages && messageData.imageUrls.length > 0) {
+      // Use OpenAI with vision for image-containing messages
+      const visionMessages = [...context];
+      
+      // Replace the system message with the image-specific one
+      visionMessages[0] = { role: "system", content: process.env.IMAGE_SYSTEM_PROMPT };
+      
+      // Build the user message with image content
+      let imagePrompt;
+      if (messageData.hasGifs) {
+        imagePrompt = message.content || "this is a gif but i can only see the first frame... react to what i can see and acknowledge it's supposed to be animated. keep it real.";
+      } else {
+        imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
+      }
+      
+      const userMessageContent = [
+        {
+          type: "text",
+          text: imagePrompt
+        }
+      ];
+      
+      // Add images to the message
+      let processedImages = 0;
+      for (const imageUrl of messageData.imageUrls) {
+        try {
+          // Check if this specific URL is a GIF
+          const isGif = imageUrl.toLowerCase().includes('.gif') || 
+                       (message.attachments && 
+                        Array.from(message.attachments.values()).some(att => 
+                          att.url === imageUrl && att.contentType === 'image/gif'));
+          
+          if (isGif) {
+            // For GIFs, use frame extraction for better analysis
+            const gifAnalysis = await analyzeGifWithFrames(
+              imageUrl, 
+              message.content || "analyze this gif animation. react to the movement and sequence.",
+              process.env.IMAGE_SYSTEM_PROMPT
+            );
+            
+            if (gifAnalysis) {
+              // Store the GIF analysis and skip adding to userMessageContent
+              response = {
+                choices: [{
+                  message: {
+                    content: gifAnalysis
+                  }
+                }]
+              };
+              processedImages++;
+              break; // Process one GIF at a time for now
+            } else {
+              console.log("GIF frame extraction failed, falling back to single frame");
+              // Fall back to single frame processing
+              const base64Image = await convertImageToBase64(imageUrl);
+              userMessageContent.push({
+                type: "image_url",
+                image_url: {
+                  url: base64Image,
+                  detail: "auto"
+                }
+              });
+              processedImages++;
+            }
+          } else {
+            // Regular image processing
+            const base64Image = await convertImageToBase64(imageUrl);
+            userMessageContent.push({
+              type: "image_url",
+              image_url: {
+                url: base64Image,
+                detail: "auto"
+              }
+            });
+            processedImages++;
+          }
+        } catch (error) {
+          console.error("Failed to process image:", error);
+          // Skip this image and continue with others
+        }
+      }
+      
+      // If no images were successfully processed, fall back to text-only
+      if (processedImages === 0) {
+        const userContent = messageData.processedContent;
+        appendToConversation(message, "user", userContent);
+        
+        response = await xAI.chat.completions
+          .create({
+            model: "grok-3-mini-beta",
+            messages: [...context, { 
+              role: "user", 
+              content: userContent
+            }],
+          })
+          .catch((error) => {
+            message.reply("Model connection having issues");
+            console.log("xAI connection Error:\n", error);
+          });
+      } else if (!response) {
+        // Process with vision model (only if we don't already have a response from GIF processing)
+        visionMessages.push({
+          role: "user",
+          content: userMessageContent
+        });
+        
+        response = await openAI.chat.completions
+          .create({
+            model: "gpt-4o-mini",
+            messages: visionMessages,
+            max_tokens: 1000,
+          })
+          .catch((error) => {
+            message.reply("Image model connection having issues");
+            console.log("OpenAI Image Error:\n", error);
+          });
+      }
+      
+      // Store the processed message in conversation history
+      if (response) {
+        appendToConversation(message, "user", message.content + " [User shared an image]");
+      }
+    } else {
+      // Use xAI (Grok) for text-only messages
+      const userContent = messageData.processedContent;
+      appendToConversation(message, "user", userContent);
+
+      response = await xAI.chat.completions
+        .create({
+          model: "grok-3-mini-beta",
+          messages: [...context, { 
+            role: "user", 
+            content: userContent
+          }],
+        })
+        .catch((error) => {
+          message.reply("Model connection having issues");
+          console.log("xAI connection Error:\n", error);        });
+    }
 
     clearInterval(sendTypingInterval);
-    const response = await openAI.chat.completions
-      .create({
-        model: "grok-3-mini-beta",
-        messages: [...context, { role: "user", content: message.content }],
-        // temperature: 1.0,
-        // max_tokens: 500,
-        // top_p: 1,
-        // frequency_penalty: 0.5,
-        // presence_penalty: 0,
-      })
-      .catch((error) => {
-        message.reply("Model connection having issues");
-        console.log("LLM connection Error:\n", error);
-      });
-
 
     if (!response) {
       message.reply("No message recieved. I am struggling fr");
