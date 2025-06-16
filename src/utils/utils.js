@@ -147,6 +147,25 @@ export async function appendToConversation(message, role, content) {
   }
 }
 
+export async function getReferencedMessageContext(message) {
+  if (!message.reference) return null;
+  
+  try {
+    const referencedMessage = await message.fetchReference();
+    if (!referencedMessage) return null;
+    
+    return {
+      author: referencedMessage.author.username,
+      content: referencedMessage.content,
+      timestamp: referencedMessage.createdTimestamp,
+      isBot: referencedMessage.author.bot
+    };
+  } catch (error) {
+    console.error("Error fetching referenced message:", error);
+    return null;
+  }
+}
+
 export async function memeFilter(message) {
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * loveEmojis.length)];

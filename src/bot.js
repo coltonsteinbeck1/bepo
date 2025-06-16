@@ -16,7 +16,7 @@ import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
-import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore } from "./utils//utils.js";
+import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, getReferencedMessageContext } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 
 dotenv.config();
@@ -145,6 +145,35 @@ function startScheduledMessaging(client) {
   }, 60000); // Check every minute
 }
 
+// Helper function to determine if bot should respond to a reply
+async function shouldRespondToReply(message, client) {
+  if (!message.reference) return false;
+  
+  try {
+    const referencedMessage = await message.fetchReference();
+    
+    // Respond if the referenced message is from the bot
+    if (referencedMessage.author.id === client.user.id) {
+      return true;
+    }
+    
+    // Respond if the referenced message mentioned the bot
+    if (referencedMessage.mentions.has(client.user.id)) {
+      return true;
+    }
+    
+    // You can add more conditions here, for example:
+    // - Respond to replies in specific channels
+    // - Respond to replies to messages containing certain keywords
+    // - Respond based on user roles or permissions
+    
+    return false;
+  } catch (error) {
+    console.error("Error checking referenced message:", error);
+    return false;
+  }
+}
+
 // const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
@@ -224,7 +253,13 @@ client.on("messageCreate", async (message) => {
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
 
-  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
+  // Check if this is a reply to a bot message or if bot should respond
+  const shouldRespond = 
+    isBotMessageOrPrefix(message, BOT_PREFIX) || 
+    isBotMentioned(message, client) ||
+    (message.reference && await shouldRespondToReply(message, client));
+
+  if (shouldRespond) {
     const sendTypingInterval = await sendTypingIndicator(message);
     
     if (message.content.match(/^reset bot$/i)) {
@@ -237,8 +272,18 @@ client.on("messageCreate", async (message) => {
     // Process message and check for images
     const messageData = await processMessageWithImages(message);
     
-    // 1) get existing context (with system prompt on first run)
+    // Build context that includes the referenced message if it exists
     const context = await buildStreamlinedConversationContext(message);
+    
+    // Add referenced message context if it exists
+    if (message.reference) {
+      const referencedContext = await getReferencedMessageContext(message);
+      if (referencedContext && !referencedContext.isBot) {
+        // Add the referenced message as context
+        const referenceText = `[Replying to ${referencedContext.author}: "${referencedContext.content}"]`;
+        messageData.processedContent = referenceText + "\n" + messageData.processedContent;
+      }
+    }
     
     let response;
     
