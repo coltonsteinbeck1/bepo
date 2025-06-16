@@ -1,6 +1,8 @@
-import { Client, Collection, Guild } from "discord.js";
+import { Client, Collection, Guild, AttachmentBuilder } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
+import path from "path";
+import { fileURLToPath } from "url";
 import drawCommand from "./commands/fun/draw.js";
 import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
@@ -18,6 +20,9 @@ import { memeFilter, buildStreamlinedConversationContext, appendToConversation, 
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const client = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent", "GuildVoiceStates"],
@@ -49,6 +54,96 @@ const openAI = new OpenAI({
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
+const CHILLIN_CHANNEL = process.env.CHILLIN_CHANNEL;
+
+// Scheduled messaging configuration
+const lastSentMessages = {
+  gameTime: null,
+  sundayImage: null
+};
+
+// Function to check if it's time for game time message (8:30 PM EST, Monday-Friday)
+function isGameTime() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = easternTime.getDay(); // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+  const hour = easternTime.getHours();
+  const minute = easternTime.getMinutes();
+  
+  // Monday-Friday (1-5), 8:30 PM (20:30) - check for minute 30
+  return day >= 1 && day <= 5 && hour === 20 && minute === 30;
+}
+
+// Function to check if it's time for Sunday image (5:00 PM EST, Sunday)
+function isSundayImageTime() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = easternTime.getDay(); // 0 = Sunday
+  const hour = easternTime.getHours();
+  const minute = easternTime.getMinutes();
+  
+  // Sunday (0), 5:00 PM (17:00) - check for minute 0
+  return day === 0 && hour === 17 && minute === 0;
+}
+
+// Function to get current date string for tracking
+function getCurrentDateString() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  return easternTime.toDateString();
+}
+
+// Function to send game time message
+async function sendGameTimeMessage(client) {
+  try {
+    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
+    if (channel) {
+      await channel.send("It's game time (?) 🚂🚂🚂");
+      console.log("Sent game time message");
+    }
+  } catch (error) {
+    console.error("Error sending game time message:", error);
+  }
+}
+
+// Function to send Sunday image
+async function sendSundayImage(client) {
+  try {
+    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
+    if (channel) {
+      const imagePath = path.join(__dirname, "images", "sunday.jpeg");
+      const attachment = new AttachmentBuilder(imagePath);
+      await channel.send({ files: [attachment] });
+      console.log("Sent Sunday image");
+    }
+  } catch (error) {
+    console.error("Error sending Sunday image:", error);
+  }
+}
+
+// Function to start scheduled messaging
+function startScheduledMessaging(client) {
+  // Check every minute for scheduled messages
+  setInterval(() => {
+    const currentDate = getCurrentDateString();
+    
+    // Check for game time message
+    if (isGameTime()) {
+      if (lastSentMessages.gameTime !== currentDate) {
+        sendGameTimeMessage(client);
+        lastSentMessages.gameTime = currentDate;
+      }
+    }
+    
+    // Check for Sunday image
+    if (isSundayImageTime()) {
+      if (lastSentMessages.sundayImage !== currentDate) {
+        sendSundayImage(client);
+        lastSentMessages.sundayImage = currentDate;
+      }
+    }
+  }, 60000); // Check every minute
+}
 
 // const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
@@ -57,6 +152,8 @@ const markov = new MarkovChain();
 
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
+  startScheduledMessaging(client);
+  console.log("Scheduled messaging started");
 });
 
 client.on("interactionCreate", async (interaction) => {
