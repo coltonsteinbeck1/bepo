@@ -4,3 +4,7 @@ app.log
 nohup.out
 src/images/image.png
 temp/
+serverOutput.log
+start-bepo.sh
+stop-bepo.sh
+image.png
