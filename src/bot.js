@@ -98,7 +98,7 @@ async function sendGameTimeMessage(client) {
   try {
     const channel = await client.channels.fetch(CHILLIN_CHANNEL);
     if (channel) {
-      await channel.send("It's game time (?) 🚂🚂🚂");
+      await channel.send("The vibe train is departing!! 🚂🚂🚂");
       console.log("Sent game time message");
     }
   } catch (error) {
@@ -106,7 +106,6 @@ async function sendGameTimeMessage(client) {
   }
 }
 
-// Function to send Sunday image
 async function sendSundayImage(client) {
   try {
     const channel = await client.channels.fetch(CHILLIN_CHANNEL);
@@ -121,9 +120,7 @@ async function sendSundayImage(client) {
   }
 }
 
-// Function to start scheduled messaging
 function startScheduledMessaging(client) {
-  // Check every minute for scheduled messages
   setInterval(() => {
     const currentDate = getCurrentDateString();
     
@@ -142,7 +139,7 @@ function startScheduledMessaging(client) {
         lastSentMessages.sundayImage = currentDate;
       }
     }
-  }, 60000); // Check every minute
+  }, 60000);
 }
 
 // Helper function to determine if bot should respond to a reply
@@ -162,7 +159,7 @@ async function shouldRespondToReply(message, client) {
       return true;
     }
     
-    // You can add more conditions here, for example:
+    // add more conditions here, for example:
     // - Respond to replies in specific channels
     // - Respond to replies to messages containing certain keywords
     // - Respond based on user roles or permissions
@@ -174,7 +171,6 @@ async function shouldRespondToReply(message, client) {
   }
 }
 
-// const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
 const markov = new MarkovChain();
