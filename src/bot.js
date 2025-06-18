@@ -8,6 +8,11 @@ import playCommand from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import resetConversation from "./commands/fun/resetConversation.js";
+import continueCommand from "./commands/fun/continue.js";
+import reviewCommand from "./commands/fun/review.js";
+import memoryCommand from "./commands/fun/memory.js";
+import digestCommand from "./commands/fun/digest.js";
+import threadCommand from "./commands/fun/thread.js";
 import { getAllContext } from "../scripts/create-context.js";
 import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
@@ -16,9 +21,11 @@ import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
+import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory } from "./supabase/supabase.js";
 import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
     isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
-    sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime } from "./utils//utils.js";
+    sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads, 
+    updateThreadActivity, checkAndDeleteInactiveThreads } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 
 dotenv.config();
@@ -41,6 +48,11 @@ client.commands.set('minecraftserver', minecraftServer);
 client.commands.set('rolesupport', roleSupport);
 client.commands.set("reset", resetConversation);
 client.commands.set("cs2prices", cs2Prices);
+client.commands.set("continue", continueCommand);
+client.commands.set("review", reviewCommand);
+client.commands.set("memory", memoryCommand);
+client.commands.set("digest", digestCommand);
+client.commands.set("thread", threadCommand);
 
 // OpenAI API key for xAI (Grok)
 const xAI = new OpenAI({
@@ -78,7 +90,19 @@ function startScheduledMessaging(client) {
         lastSentMessages.sundayImage = currentDate;
       }
     }
+    
+    // Auto digest disabled - use /digest command manually
   }, 60000); // Check every minute
+  
+  // Clean up old bot-managed threads every hour
+  setInterval(() => {
+    cleanupOldBotThreads();
+  }, 60 * 60 * 1000); // Every hour
+  
+  // Check for inactive threads to delete every 30 minutes
+  setInterval(() => {
+    checkAndDeleteInactiveThreads(client);
+  }, 30 * 60 * 1000); // Every 30 minutes
 }
 
 // const chatContext = await getAllContext();
@@ -90,6 +114,18 @@ client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
+  
+  // Start memory cleanup task (runs every 6 hours)
+  setInterval(async () => {
+    try {
+      console.log('🧠 Running memory cleanup...');
+      const expiredCount = await cleanupExpiredMemories();
+      const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
+      console.log(`🧹 Cleaned up ${expiredCount} expired and ${oldCount} old memories`);
+    } catch (error) {
+      console.error('Memory cleanup error:', error);
+    }
+  }, 6 * 60 * 60 * 1000); // Every 6 hours
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -160,7 +196,15 @@ client.on("messageCreate", async (message) => {
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
 
-  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
+  // Check if message is in a bot-managed thread (auto-respond)
+  const isInBotThread = message.channel.isThread() && isBotManagedThread(message.channel.id);
+  
+  // Update thread activity if message is in a bot-managed thread
+  if (isInBotThread) {
+    updateThreadActivity(message.channel.id);
+  }
+  
+  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client) || isInBotThread) {
     const sendTypingInterval = await sendTypingIndicator(message);
     
     if (message.content.match(/^reset bot$/i)) {
@@ -328,6 +372,41 @@ client.on("messageCreate", async (message) => {
     const responseMessage = response.choices[0].message.content;
 
     appendToConversation(message, "assistant", responseMessage);
+    
+    // Store memory after successful conversation
+    try {
+      // Store the user's message as memory
+      await storeUserMemory(
+        message.author.id,
+        `User said: "${message.content}" in ${message.channel.name || 'DM'}`,
+        'conversation',
+        {
+          channel_id: message.channel.id,
+          guild_id: message.guild?.id,
+          timestamp: new Date().toISOString()
+        }
+      );
+      
+      // Store interesting parts of the bot's response as memory
+      if (responseMessage.length > 50) {
+        await storeUserMemory(
+          message.author.id,
+          `Bot responded: "${responseMessage.substring(0, 200)}${responseMessage.length > 200 ? '...' : ''}"`,
+          'conversation',
+          {
+            channel_id: message.channel.id,
+            guild_id: message.guild?.id,
+            timestamp: new Date().toISOString(),
+            response_length: responseMessage.length
+          }
+        );
+      }
+    } catch (memoryError) {
+      console.error('Error storing memory:', memoryError);
+      // Don't fail the response if memory storage fails
+    }
+
+    // Auto-thread creation disabled - threads can be created manually if needed
 
     const chunkSizeLimit = 2000;
 
@@ -335,6 +414,12 @@ client.on("messageCreate", async (message) => {
       const chunk = responseMessage.substring(i, i + chunkSizeLimit);
       await message.reply(chunk);
     }
+    
+    // Update thread activity after bot responds (if in bot-managed thread)
+    if (isInBotThread) {
+      updateThreadActivity(message.channel.id);
+    }
+    
     return;
   }
   if (markovChannelIds.includes(message.channelId.toString())) {

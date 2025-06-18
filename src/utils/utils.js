@@ -21,11 +21,13 @@ const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const prayEmojis = ["🙏", "🛐", "✝️", "☪️", "📿"];
 const probability = 0.18;
+const sillyProbability = 0.004; // 1/250 chance
 
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_PREFIX = process.env.PREFIX;
 
 export const convoStore = new Map();
+export const botThreadStore = new Map(); // Store for tracking bot-created threads
 export const EXPIRATION_MS = 1000 * 60 * 30;
 
 export const loadJSON = (path) =>
@@ -108,18 +110,50 @@ export async function buildConversationContext(message, chatContext) {
   return conversation;
 }
 
+export function generateThreadId() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
 export async function buildStreamlinedConversationContext(message) {
-  const key = `${message.channelId}:${message.author.id}`;
+  // Use thread parent channel for conversation key if in a thread
+  const channelId = message.channel.isThread() ? message.channel.parentId : message.channelId;
+  const key = `${channelId}:${message.author.id}`;
+  
   if (!convoStore.has(key)) {
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
+    
+    // Import buildMemoryContext here to avoid circular imports
+    const { buildMemoryContext } = await import('../supabase/supabase.js');
+    
+    // Build memory context for this user
+    const memoryContext = await buildMemoryContext(message.author.id, message.content);
+    
+    // Combine system message with memory context
+    let finalSystemMessage = systemMsg;
+    if (memoryContext.trim()) {
+      finalSystemMessage += `\n\n--- User Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
+    }
+    
     convoStore.set(key, {
-      history: [{ role: "system", content: systemMsg }],
+      history: [{ role: "system", content: finalSystemMessage }],
       timer: setTimeout(() => convoStore.delete(key), EXPIRATION_MS),
+      startTime: new Date(),
+      threadId: generateThreadId(),
+      messageCount: 0,
+      isInThread: message.channel.isThread(),
+      actualThreadId: message.channel.isThread() ? message.channel.id : null,
     });
   } else {
     // reset the timer on activity
     clearTimeout(convoStore.get(key).timer);
     convoStore.get(key).timer = setTimeout(() => convoStore.delete(key), EXPIRATION_MS);
+    
+    // Update thread status if we moved to/from a thread
+    const entry = convoStore.get(key);
+    entry.isInThread = message.channel.isThread();
+    if (message.channel.isThread()) {
+      entry.actualThreadId = message.channel.id;
+    }
   }
   return convoStore.get(key).history;
 }
@@ -137,12 +171,22 @@ export async function processMessageWithImages(message) {
 }
 
 export async function appendToConversation(message, role, content) {
-  const key = `${message.channelId}:${message.author.id}`;
+  // Use thread parent channel for conversation key if in a thread
+  const channelId = message.channel.isThread() ? message.channel.parentId : message.channelId;
+  const key = `${channelId}:${message.author.id}`;
   const entry = convoStore.get(key);
   if (!entry) return;
-  entry.history.push({ role, content });
   
-    // Trim conversation history if it gets too long (keep system message + last 10 exchanges)
+  entry.history.push({ 
+    role, 
+    content, 
+    timestamp: new Date(),
+    messageId: message.id 
+  });
+  
+  entry.messageCount = (entry.messageCount || 0) + 1;
+  
+  // Trim conversation history if it gets too long (keep system message + last 10 exchanges)
   if (entry.history.length > 21) { // 1 system + 20 messages (10 exchanges)
     const systemMessage = entry.history[0];
     entry.history = [systemMessage, ...entry.history.slice(-20)];
@@ -172,6 +216,31 @@ export async function memeFilter(message) {
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomPrayerEmoji = prayEmojis[Math.floor(Math.random() * prayEmojis.length)];
+
+  // Silly reaction - 1/250 chance on any message (using custom lickinglips emoji)
+  if (!message.author.bot && Math.random() < sillyProbability) {
+    setTimeout(async () => {
+      try {
+        // Try to find the custom lickinglips emoji
+        const lickingLipsEmoji = message.client.emojis.cache.find(emoji => emoji.name === 'lickinglips');
+        
+        if (lickingLipsEmoji) {
+          // Use the custom emoji
+          await message.react(lickingLipsEmoji);
+        } else {
+          // Fallback to Unicode emoji
+          await message.react("😋");
+        }
+      } catch (error) {
+        // Final fallback
+        try {
+          await message.react("😋");
+        } catch (fallbackError) {
+          // Silent failure - emoji reactions are not critical
+        }
+      }
+    }, Math.random() * 3000 + 1000); // Random delay between 1-4 seconds
+  }
 
   if (message.content.toLowerCase().includes("pex") && !message.author.bot) {
     setTimeout(async () => {
@@ -269,5 +338,90 @@ export async function sendSundayImage(client) {
     }
   } catch (error) {
     console.error("Error sending Sunday image:", error);
+  }
+}
+
+// Function to mark a thread as bot-managed (responds without @)
+export function markThreadAsBotManaged(threadId, userId, channelId) {
+  botThreadStore.set(threadId, {
+    userId,
+    channelId,
+    createdAt: Date.now(),
+    lastActivity: Date.now() // Track last activity for auto-deletion
+  });
+  console.log(`Marked thread ${threadId} as bot-managed for user ${userId}`);
+}
+
+// Function to update thread activity timestamp
+export function updateThreadActivity(threadId) {
+  const threadInfo = botThreadStore.get(threadId);
+  if (threadInfo) {
+    threadInfo.lastActivity = Date.now();
+    botThreadStore.set(threadId, threadInfo);
+  }
+}
+
+// Function to check if a thread is bot-managed
+export function isBotManagedThread(threadId) {
+  return botThreadStore.has(threadId);
+}
+
+// Function to get bot-managed thread info
+export function getBotManagedThreadInfo(threadId) {
+  return botThreadStore.get(threadId);
+}
+
+// Function to clean up old bot-managed threads (call periodically)
+export function cleanupOldBotThreads() {
+  const now = Date.now();
+  const maxAge = 7 * 24 * 60 * 60 * 1000; // 7 days
+  
+  for (const [threadId, info] of botThreadStore.entries()) {
+    if (now - info.createdAt > maxAge) {
+      botThreadStore.delete(threadId);
+      console.log(`Cleaned up old bot-managed thread: ${threadId}`);
+    }
+  }
+}
+
+// Function to check and delete inactive threads (1 hour)
+export async function checkAndDeleteInactiveThreads(client) {
+  const now = Date.now();
+  const inactivityThreshold = 1 * 60 * 60 * 1000; // 1 hour in milliseconds
+  
+  for (const [threadId, info] of botThreadStore.entries()) {
+    const timeSinceLastActivity = now - info.lastActivity;
+    
+    if (timeSinceLastActivity > inactivityThreshold) {
+      try {
+        // Fetch the thread
+        const thread = await client.channels.fetch(threadId);
+        
+        if (thread && thread.isThread()) {
+          // Send a final message before deletion
+          await thread.send("🧵 This thread has been inactive for 1 hour and will be automatically deleted. Thanks for chatting! ✨");
+          
+          // Wait a moment then delete the thread
+          setTimeout(async () => {
+            try {
+              await thread.delete('Auto-deletion due to 1 hour of inactivity');
+              console.log(`Auto-deleted inactive thread: ${threadId}`);
+            } catch (deleteError) {
+              console.error(`Error deleting thread ${threadId}:`, deleteError);
+            }
+          }, 5000); // 5 second delay
+          
+          // Remove from our tracking
+          botThreadStore.delete(threadId);
+        } else {
+          // Thread doesn't exist anymore, remove from tracking
+          botThreadStore.delete(threadId);
+        }
+      } catch (error) {
+        console.error(`Error checking thread ${threadId}:`, error);
+        // If we can't fetch it, it probably doesn't exist anymore
+        botThreadStore.delete(threadId);
+      }
+    }
   }
 }

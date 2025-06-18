@@ -8,3 +8,4 @@ serverOutput.log
 start-bepo.sh
 stop-bepo.sh
 image.png
+config.toml
