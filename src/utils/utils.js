@@ -2,6 +2,7 @@ import cp from "child_process";
 import fs from "fs";
 import path from "path";
 import url from "url";
+import { AttachmentBuilder } from "discord.js";
 import { randomizeReaction } from "../../scripts/create-context.js";
 import { getAllImagesFromMessage, analyzeImageWithVision } from "./imageUtils.js";
 import dotenv from "dotenv";
@@ -15,6 +16,7 @@ export const DALLE_DIR_PATH = path.join(__dirname, "..", "dalle");
 
 export const IMAGE_PATH = path.join(__dirname, "images/image.png")
 
+const CHILLIN_CHANNEL = process.env.CHILLIN_CHANNEL;
 const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const prayEmojis = ["🙏", "🛐", "✝️", "☪️", "📿"];
@@ -203,5 +205,69 @@ export async function memeFilter(message) {
         message.react(randomDislikeEmoji);
       }
     }, 2500);
+  }
+}
+// Scheduled messaging configuration
+export const lastSentMessages = {
+  gameTime: null,
+  sundayImage: null
+};
+
+// Function to check if it's time for game time message (8:30 PM EST, Monday-Friday)
+export function isGameTime() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = easternTime.getDay(); // 0 = Sunday, 1 = Monday, ... 6 = Saturday
+  const hour = easternTime.getHours();
+  const minute = easternTime.getMinutes();
+  
+  // Monday-Friday (1-5), 8:30 PM (20:30) - check for minute 30
+  return day >= 1 && day <= 5 && hour === 20 && minute === 30;
+}
+
+// Function to check if it's time for Sunday image (5:00 PM EST, Sunday)
+export function isSundayImageTime() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  const day = easternTime.getDay(); // 0 = Sunday
+  const hour = easternTime.getHours();
+  const minute = easternTime.getMinutes();
+  
+  // Sunday (0), 5:00 PM (17:00) - check for minute 0
+  return day === 0 && hour === 17 && minute === 0;
+}
+
+// Function to get current date string for tracking
+export function getCurrentDateString() {
+  const now = new Date();
+  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+  return easternTime.toDateString();
+}
+
+// Function to send game time message
+export async function sendGameTimeMessage(client) {
+  try {
+    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
+    if (channel) {
+      await channel.send("It's game time (?) 🚂🚂🚂");
+      console.log("Sent game time message");
+    }
+  } catch (error) {
+    console.error("Error sending game time message:", error);
+  }
+}
+
+// Function to send Sunday image
+export async function sendSundayImage(client) {
+  try {
+    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
+    if (channel) {
+      const imagePath = path.join(__dirname, "images", "sunday.jpeg");
+      const attachment = new AttachmentBuilder(imagePath);
+      await channel.send({ files: [attachment] });
+      console.log("Sent Sunday image");
+    }
+  } catch (error) {
+    console.error("Error sending Sunday image:", error);
   }
 }

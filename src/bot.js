@@ -16,7 +16,9 @@ import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
-import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, getReferencedMessageContext } from "./utils//utils.js";
+import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
+    isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
+    sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 
 dotenv.config();
@@ -54,73 +56,10 @@ const openAI = new OpenAI({
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_TOKEN = process.env.BOT_TOKEN;
 const BOT_PREFIX = process.env.PREFIX;
-const CHILLIN_CHANNEL = process.env.CHILLIN_CHANNEL;
 
-// Scheduled messaging configuration
-const lastSentMessages = {
-  gameTime: null,
-  sundayImage: null
-};
-
-// Function to check if it's time for game time message (8:30 PM EST, Monday-Friday)
-function isGameTime() {
-  const now = new Date();
-  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-  const day = easternTime.getDay(); // 0 = Sunday, 1 = Monday, ... 6 = Saturday
-  const hour = easternTime.getHours();
-  const minute = easternTime.getMinutes();
-  
-  // Monday-Friday (1-5), 8:30 PM (20:30) - check for minute 30
-  return day >= 1 && day <= 5 && hour === 20 && minute === 30;
-}
-
-// Function to check if it's time for Sunday image (5:00 PM EST, Sunday)
-function isSundayImageTime() {
-  const now = new Date();
-  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-  const day = easternTime.getDay(); // 0 = Sunday
-  const hour = easternTime.getHours();
-  const minute = easternTime.getMinutes();
-  
-  // Sunday (0), 5:00 PM (17:00) - check for minute 0
-  return day === 0 && hour === 17 && minute === 0;
-}
-
-// Function to get current date string for tracking
-function getCurrentDateString() {
-  const now = new Date();
-  const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-  return easternTime.toDateString();
-}
-
-// Function to send game time message
-async function sendGameTimeMessage(client) {
-  try {
-    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
-    if (channel) {
-      await channel.send("The vibe train is departing!! 🚂🚂🚂");
-      console.log("Sent game time message");
-    }
-  } catch (error) {
-    console.error("Error sending game time message:", error);
-  }
-}
-
-async function sendSundayImage(client) {
-  try {
-    const channel = await client.channels.fetch(CHILLIN_CHANNEL);
-    if (channel) {
-      const imagePath = path.join(__dirname, "images", "sunday.jpeg");
-      const attachment = new AttachmentBuilder(imagePath);
-      await channel.send({ files: [attachment] });
-      console.log("Sent Sunday image");
-    }
-  } catch (error) {
-    console.error("Error sending Sunday image:", error);
-  }
-}
-
+// Function to start scheduled messaging
 function startScheduledMessaging(client) {
+  // Check every minute for scheduled messages
   setInterval(() => {
     const currentDate = getCurrentDateString();
     
@@ -139,38 +78,10 @@ function startScheduledMessaging(client) {
         lastSentMessages.sundayImage = currentDate;
       }
     }
-  }, 60000);
+  }, 60000); // Check every minute
 }
 
-// Helper function to determine if bot should respond to a reply
-async function shouldRespondToReply(message, client) {
-  if (!message.reference) return false;
-  
-  try {
-    const referencedMessage = await message.fetchReference();
-    
-    // Respond if the referenced message is from the bot
-    if (referencedMessage.author.id === client.user.id) {
-      return true;
-    }
-    
-    // Respond if the referenced message mentioned the bot
-    if (referencedMessage.mentions.has(client.user.id)) {
-      return true;
-    }
-    
-    // add more conditions here, for example:
-    // - Respond to replies in specific channels
-    // - Respond to replies to messages containing certain keywords
-    // - Respond based on user roles or permissions
-    
-    return false;
-  } catch (error) {
-    console.error("Error checking referenced message:", error);
-    return false;
-  }
-}
-
+// const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
 const markov = new MarkovChain();
@@ -249,13 +160,7 @@ client.on("messageCreate", async (message) => {
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
 
-  // Check if this is a reply to a bot message or if bot should respond
-  const shouldRespond = 
-    isBotMessageOrPrefix(message, BOT_PREFIX) || 
-    isBotMentioned(message, client) ||
-    (message.reference && await shouldRespondToReply(message, client));
-
-  if (shouldRespond) {
+  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client)) {
     const sendTypingInterval = await sendTypingIndicator(message);
     
     if (message.content.match(/^reset bot$/i)) {
@@ -268,18 +173,8 @@ client.on("messageCreate", async (message) => {
     // Process message and check for images
     const messageData = await processMessageWithImages(message);
     
-    // Build context that includes the referenced message if it exists
+    // 1) get existing context (with system prompt on first run)
     const context = await buildStreamlinedConversationContext(message);
-    
-    // Add referenced message context if it exists
-    if (message.reference) {
-      const referencedContext = await getReferencedMessageContext(message);
-      if (referencedContext && !referencedContext.isBot) {
-        // Add the referenced message as context
-        const referenceText = `[Replying to ${referencedContext.author}: "${referencedContext.content}"]`;
-        messageData.processedContent = referenceText + "\n" + messageData.processedContent;
-      }
-    }
     
     let response;
     
