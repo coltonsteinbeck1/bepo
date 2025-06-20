@@ -12,6 +12,8 @@ import continueCommand from "./commands/fun/continue.js";
 import reviewCommand from "./commands/fun/review.js";
 import memoryCommand from "./commands/fun/memory.js";
 import serverMemoryCommand from "./commands/fun/serverMemory.js";
+import updateMemoryCommand from "./commands/fun/updateMemory.js";
+import updateServerMemoryCommand from "./commands/fun/updateServerMemory.js";
 import digestCommand from "./commands/fun/digest.js";
 import threadCommand from "./commands/fun/thread.js";
 import { getAllContext } from "../scripts/create-context.js";
@@ -52,7 +54,9 @@ client.commands.set("cs2prices", cs2Prices);
 client.commands.set("continue", continueCommand);
 client.commands.set("review", reviewCommand);
 client.commands.set("memory", memoryCommand);
+client.commands.set("updatememory", updateMemoryCommand);
 client.commands.set("servermemory", serverMemoryCommand);
+client.commands.set("updateservermemory", updateServerMemoryCommand);
 client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
 
