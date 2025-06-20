@@ -783,13 +783,19 @@ async function updateServerMemory(memoryId, updates = {}, userId = null) {
 }
 
 // Get a specific user memory by ID (for verification before update)
-async function getUserMemoryById(memoryId, userId) {
-    const { data, error } = await supabase
+async function getUserMemoryById(memoryId, userId = null) {
+    let query = supabase
         .from('user_memory')
         .select('*')
-        .eq('id', memoryId)
-        .eq('user_id', userId)
-        .single();
+        .eq('id', memoryId);
+    
+    // If userId is provided, filter by user (normal mode)
+    // If userId is null, get memory regardless of owner (admin mode)
+    if (userId) {
+        query = query.eq('user_id', userId);
+    }
+    
+    const { data, error } = await query.single();
     
     if (error) {
         console.error('Error fetching user memory:', error);

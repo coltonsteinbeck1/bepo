@@ -31,11 +31,24 @@ const updateMemoryCommand = {
         const userId = interaction.user.id;
 
         try {
-            // First, verify the memory exists and belongs to the user
-            const existingMemory = await getUserMemoryById(memoryId, userId);
+            // First, verify the memory exists
+            const isCodeMonkey = userId === process.env.CODE_MONKEY;
+            let existingMemory;
+            
+            if (isCodeMonkey) {
+                // CODE_MONKEY can update any user's memory - search across all users
+                existingMemory = await getUserMemoryById(memoryId);
+            } else {
+                // Regular users can only update their own memories
+                existingMemory = await getUserMemoryById(memoryId, userId);
+            }
+            
             if (!existingMemory) {
+                const errorMessage = isCodeMonkey 
+                    ? '❌ Memory not found with that ID.'
+                    : '❌ Memory not found or you don\'t have permission to update it.';
                 await interaction.reply({
-                    content: '❌ Memory not found or you don\'t have permission to update it.',
+                    content: errorMessage,
                     ephemeral: true
                 });
                 return;
@@ -69,6 +82,11 @@ const updateMemoryCommand = {
             let response = '✅ **Memory Updated Successfully!**\n\n';
             response += `**Memory ID:** \`${memoryId}\`\n`;
             
+            // Show admin indicator if CODE_MONKEY is updating someone else's memory
+            if (isCodeMonkey && existingMemory.user_id !== userId) {
+                response += `**Admin Update:** Updated memory for <@${existingMemory.user_id}>\n`;
+            }
+            
             if (newContent) {
                 response += `**Old Content:** ${existingMemory.memory_content}\n`;
                 response += `**New Content:** ${updatedMemory.memory_content}\n`;
@@ -80,6 +98,11 @@ const updateMemoryCommand = {
             }
             
             response += `\n*Last Updated:* <t:${Math.floor(new Date(updatedMemory.updated_at).getTime() / 1000)}:R>`;
+
+            // Add admin footer if CODE_MONKEY
+            if (isCodeMonkey) {
+                response += '\n\n*🔧 Admin privileges enabled*';
+            }
 
             await interaction.reply({
                 content: response,
