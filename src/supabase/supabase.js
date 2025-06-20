@@ -831,23 +831,30 @@ async function getServerMemoryById(memoryId, serverId = null) {
 async function getServerMemoryByPartialId(partialId, serverId = null) {
     let query = supabase
         .from('server_memory')
-        .select('*')
-        .ilike('id', `${partialId}%`);  // Match IDs that start with the partial ID
+        .select('*');
     
+    // Add server filter if provided  
     if (serverId) {
         query = query.eq('server_id', serverId);
     }
     
+    // Get all memories and filter in JavaScript
     const { data, error } = await query;
     
     if (error) {
-        console.error('Error fetching server memory by partial ID:', error);
+        console.error('Error fetching server memories for partial match:', error);
         return null;
     }
     
-    // If multiple matches, return the first one
-    // In practice, UUIDs are unique enough that 8 chars should be sufficient
-    return data.length > 0 ? data[0] : null;
+    // Filter by partial ID match in JavaScript (case-insensitive)
+    const matchingMemories = data.filter(memory => 
+        memory.id.toLowerCase().startsWith(partialId.toLowerCase())
+    );
+    
+    console.log(`Found ${matchingMemories.length} memories matching partial ID: ${partialId}`);
+    
+    // Return the first match
+    return matchingMemories.length > 0 ? matchingMemories[0] : null;
 }
 
 export { 
