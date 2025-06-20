@@ -79,7 +79,7 @@ export async function execute(interaction) {
 
       const memoryText = memories.slice(0, 10).map((memory, index) => {
         const timeAgo = getTimeAgo(new Date(memory.updated_at));
-        return `${index + 1}. **${memory.context_type}** (${timeAgo})\n   ${memory.memory_content.substring(0, 100)}${memory.memory_content.length > 100 ? '...' : ''}`;
+        return `${index + 1}. **${memory.context_type}** (${timeAgo}) \`ID: ${memory.id}\`\n   ${memory.memory_content.substring(0, 100)}${memory.memory_content.length > 100 ? '...' : ''}`;
       }).join('\n\n');
 
       return interaction.reply({

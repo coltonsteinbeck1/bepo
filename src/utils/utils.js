@@ -119,17 +119,17 @@ export async function buildStreamlinedConversationContext(message) {
   const channelId = message.channel.isThread() ? message.channel.parentId : message.channelId;
   const key = `${channelId}:${message.author.id}`;
   
+  // Import buildMemoryContext here to avoid circular imports
+  const { buildMemoryContext } = await import('../supabase/supabase.js');
+  
+  const serverId = message.guild?.id;
+  
   if (!convoStore.has(key)) {
-    const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
-    
-    // Import buildMemoryContext here to avoid circular imports
-    const { buildMemoryContext } = await import('../supabase/supabase.js');
-    
-    // Build memory context for this user, including server memories if in a guild
-    const serverId = message.guild?.id;
+    // Build initial memory context
     const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId);
     
     // Combine system message with memory context
+    const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
     let finalSystemMessage = systemMsg;
     if (memoryContext.trim()) {
       finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
@@ -143,6 +143,7 @@ export async function buildStreamlinedConversationContext(message) {
       messageCount: 0,
       isInThread: message.channel.isThread(),
       actualThreadId: message.channel.isThread() ? message.channel.id : null,
+      lastMemoryRefresh: new Date(),
     });
   } else {
     // reset the timer on activity
@@ -155,6 +156,33 @@ export async function buildStreamlinedConversationContext(message) {
     if (message.channel.isThread()) {
       entry.actualThreadId = message.channel.id;
     }
+    
+    // Refresh memory context every 5 minutes or every 10 messages to pick up new server memories
+    const now = new Date();
+    const timeSinceRefresh = now - (entry.lastMemoryRefresh || entry.startTime);
+    const shouldRefresh = timeSinceRefresh > 5 * 60 * 1000 || // 5 minutes
+                         entry.messageCount % 10 === 0; // every 10 messages
+    
+    if (shouldRefresh) {
+      console.log(`Refreshing memory context for ${key} (time: ${Math.floor(timeSinceRefresh/1000)}s, messages: ${entry.messageCount})`);
+      
+      // Build fresh memory context
+      const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId);
+      
+      // Update the system message with fresh context
+      const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
+      let finalSystemMessage = systemMsg;
+      if (memoryContext.trim()) {
+        finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
+      }
+      
+      // Update the system message in the conversation history
+      entry.history[0] = { role: "system", content: finalSystemMessage };
+      entry.lastMemoryRefresh = now;
+    }
+    
+    // Increment message count
+    entry.messageCount++;
   }
   return convoStore.get(key).history;
 }

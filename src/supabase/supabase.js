@@ -413,19 +413,66 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null) 
     // Get server memories if serverId is provided
     let relevantServerMemories = [];
     if (serverId) {
-      // Search server memories with the same keywords
+      // Get keyword-based server memories
       for (const term of searchTerms.slice(0, 3)) {
         const serverMemories = await searchServerMemories(serverId, term, null, 3);
         relevantServerMemories.push(...serverMemories);
       }
       
-      // Remove duplicates and limit results
-      relevantServerMemories = [...new Map(relevantServerMemories.map(m => [m.id, m])).values()];
+      // Also get recent server memories to ensure important server knowledge is included
+      const recentServerMemories = await getServerMemories(serverId, null, 5);
+      relevantServerMemories.push(...recentServerMemories);
       
-      // If no relevant server memories found, get recent ones
-      if (relevantServerMemories.length === 0) {
-        relevantServerMemories = await getServerMemories(serverId, null, 5);
-      }
+      // Remove duplicates and limit results to top 7 (balance between relevance and context size)
+      relevantServerMemories = [...new Map(relevantServerMemories.map(m => [m.id, m])).values()]
+        .slice(0, 7);
+      
+      // Sort by relevance: more specific matches first, then by recency
+      relevantServerMemories.sort((a, b) => {
+        // Calculate relevance scores for both memories
+        const getRelevanceScore = (memory) => {
+          let score = 0;
+          const content = (memory.memory_content || '').toLowerCase();
+          const title = (memory.memory_title || '').toLowerCase();
+          
+          // High priority keywords (entity names, specific concepts)
+          const highPriorityTerms = searchTerms.filter(term => 
+            term.length > 3 && !['who', 'what', 'when', 'where', 'how', 'the', 'and', 'for', 'with'].includes(term)
+          );
+          
+          // Medium priority keywords (question words, common terms)
+          const mediumPriorityTerms = searchTerms.filter(term => 
+            ['who', 'what', 'when', 'where', 'how', 'creator', 'created', 'make', 'maker'].includes(term)
+          );
+          
+          // Score high priority matches higher
+          highPriorityTerms.forEach(term => {
+            if (content.includes(term) || title.includes(term)) {
+              score += 10;
+            }
+          });
+          
+          // Score medium priority matches lower
+          mediumPriorityTerms.forEach(term => {
+            if (content.includes(term) || title.includes(term)) {
+              score += 3;
+            }
+          });
+          
+          return score;
+        };
+        
+        const aScore = getRelevanceScore(a);
+        const bScore = getRelevanceScore(b);
+        
+        // Sort by score first (higher scores first)
+        if (aScore !== bScore) {
+          return bScore - aScore;
+        }
+        
+        // If scores are equal, sort by recency
+        return new Date(b.updated_at) - new Date(a.updated_at);
+      });
     }
     
     // Build context string
@@ -649,6 +696,131 @@ async function cleanupExpiredServerMemories() {
     return data?.length || 0;
 }
 
+// Update user memory by ID
+async function updateUserMemory(memoryId, updates = {}) {
+    const allowedFields = ['memory_content', 'context_type', 'metadata', 'expires_at'];
+    const validUpdates = {};
+    
+    // Filter to only allow valid fields
+    Object.keys(updates).forEach(key => {
+        if (allowedFields.includes(key)) {
+            validUpdates[key] = updates[key];
+        }
+    });
+    
+    if (Object.keys(validUpdates).length === 0) {
+        console.error('No valid fields provided for update');
+        return null;
+    }
+    
+    // Add updated_at timestamp
+    validUpdates.updated_at = new Date().toISOString();
+    
+    const { data, error } = await supabase
+        .from('user_memory')
+        .update(validUpdates)
+        .eq('id', memoryId)
+        .select();
+    
+    if (error) {
+        console.error('Error updating user memory:', error);
+        return null;
+    }
+    
+    if (!data || data.length === 0) {
+        console.error('No memory found with that ID');
+        return null;
+    }
+    
+    return data[0];
+}
+
+// Update server memory by ID
+async function updateServerMemory(memoryId, updates = {}, userId = null) {
+    const allowedFields = ['memory_content', 'memory_title', 'context_type', 'metadata', 'expires_at'];
+    const validUpdates = {};
+    
+    // Filter to only allow valid fields
+    Object.keys(updates).forEach(key => {
+        if (allowedFields.includes(key)) {
+            validUpdates[key] = updates[key];
+        }
+    });
+    
+    if (Object.keys(validUpdates).length === 0) {
+        console.error('No valid fields provided for update');
+        return null;
+    }
+    
+    // Add updated_at timestamp
+    validUpdates.updated_at = new Date().toISOString();
+    
+    // Build query
+    let query = supabase
+        .from('server_memory')
+        .update(validUpdates)
+        .eq('id', memoryId);
+    
+    // If userId is provided, only allow updating memories created by that user
+    // (for permission control - regular users can only update their own memories)
+    if (userId) {
+        query = query.eq('user_id', userId);
+    }
+    
+    const { data, error } = await query.select();
+    
+    if (error) {
+        console.error('Error updating server memory:', error);
+        return null;
+    }
+    
+    if (!data || data.length === 0) {
+        console.error('No memory found with that ID or insufficient permissions');
+        return null;
+    }
+    
+    return data[0];
+}
+
+// Get a specific user memory by ID (for verification before update)
+async function getUserMemoryById(memoryId, userId) {
+    const { data, error } = await supabase
+        .from('user_memory')
+        .select('*')
+        .eq('id', memoryId)
+        .eq('user_id', userId)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching user memory:', error);
+        return null;
+    }
+    
+    return data;
+}
+
+// Get a specific server memory by ID (for verification before update)
+async function getServerMemoryById(memoryId, serverId = null) {
+    let query = supabase
+        .from('server_memory')
+        .select('*')
+        .eq('id', memoryId);
+    
+    // Optionally filter by server ID for additional security
+    if (serverId) {
+        query = query.eq('server_id', serverId);
+    }
+    
+    const { data, error } = await query.single();
+    
+    if (error) {
+        console.error('Error fetching server memory:', error);
+        return null;
+    }
+    
+    return data;
+}
+
 export { 
     getAllGuilds, 
     getMarkovChannels, 
@@ -682,6 +854,12 @@ export {
     deleteServerMemory,
     getServerMemoryStats,
     getUserServerMemories,
-    cleanupExpiredServerMemories
+    cleanupExpiredServerMemories,
+    // Update functions
+    updateUserMemory,
+    updateServerMemory,
+    // Get functions for verification
+    getUserMemoryById,
+    getServerMemoryById
 }
 

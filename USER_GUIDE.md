@@ -13,6 +13,7 @@ Bepo now remembers your conversations and preferences across all interactions.
 /memory clear <type>        # Clear specific types of memories
 /memory set <key> <value>   # Set personal preferences
 /memory stats               # View memory usage statistics
+/updatememory <id> [content] [context_type]  # Update existing memories
 ```
 
 **Examples:**
@@ -25,7 +26,15 @@ Bepo now remembers your conversations and preferences across all interactions.
 /memory set key:interests value:coding,gaming  # Set interests
 /memory clear type:conversations       # Clear conversation history
 /memory stats                          # View memory statistics
+/updatememory id:abc123 content:"Updated memory content"  # Update memory
+/updatememory id:def456 context_type:temporary            # Change memory type
 ```
+
+**Memory Update Features:**
+- ✅ **Update Content**: Change the text of any of your memories
+- ✅ **Change Type**: Convert between conversation, summary, temporary, or personal note
+- ✅ **ID-Based**: Use memory IDs shown in `/memory view` to target specific memories
+- ✅ **Safe Updates**: Only you can update your own memories
 
 ### Thread Management
 
@@ -81,6 +90,55 @@ Get AI-powered summaries of server activity.
 - `12h` - Last 12 hours
 - `1h` - Last hour
 
+### Server Memory System
+
+Store and access memories that are shared across the entire Discord server. All server members can view and search these memories.
+
+#### Server Memory Commands
+
+```
+/servermemory add <content> [title]     # Add a server memory
+/servermemory list [filter] [limit]     # View server memories
+/servermemory search <query>            # Search server memories
+/servermemory delete <memory_id>        # Delete your own memories
+/servermemory stats                     # View server memory statistics
+/servermemory my [limit]                # View your memories for this server
+/updateservermemory <id> [content] [title] [context_type]  # Update server memories
+```
+
+**Examples:**
+
+```
+/servermemory add content:"Server restart scheduled for Friday 8PM" title:"Maintenance"
+/servermemory list                      # View all server memories
+/servermemory search query:"restart"    # Find memories about restarts
+/servermemory stats                     # View server memory statistics
+/servermemory my                        # View your contributions
+/servermemory delete memory_id:abc123   # Delete your own memory (or any if admin)
+/updateservermemory id:abc123 content:"Updated maintenance info"  # Update content
+/updateservermemory id:def456 title:"New Title" context_type:important  # Update title & type
+```
+
+**Server Memory Update Features:**
+- ✅ **Update Content**: Modify the information in server memories
+- ✅ **Update Titles**: Change memory titles for better organization
+- ✅ **Change Context Types**: Set as server, rules, FAQ, or important
+- ✅ **Permission Control**: Update your own memories, admins can update any
+- ✅ **ID-Based**: Use memory IDs from `/servermemory list` to target specific memories
+
+#### Admin Features (CODE_MONKEY only)
+
+When CODE_MONKEY uses server memory commands, they get enhanced capabilities:
+- **Full Memory IDs**: `list` and `search` commands show complete UUIDs instead of short IDs
+- **Delete Any Memory**: Can delete any memory using its full ID, not just their own
+- **Admin Indicators**: Footer messages indicate admin privileges are available
+
+**Features:**
+- ✅ **Shared Knowledge**: All users can view and search server memories
+- ✅ **Smart Integration**: Bot references server memories in conversations
+- ✅ **User Attribution**: Shows who added each memory
+- ✅ **Conditional Admin**: Admin features only visible to CODE_MONKEY
+
 ### Funny Update
 
 Bepo now has some silly surprise reactions that might randomly appear in chat.
@@ -91,32 +149,29 @@ Bepo now has some silly surprise reactions that might randomly appear in chat.
 
 1. **Start chatting** with Bepo using `@Bepo` or the bot prefix
 2. **Your conversation is remembered** automatically in the memory system
-3. **Create a thread** using `/thread` or `/continue create_thread:true` for organized chats
-4. **Review history** anytime with `/review` or `/memory view`
-5. **Get server insights** with `/digest` commands
+3. **Create a thread** using `/thread` or `/continue create_thread:true`
+4. **Add server knowledge** using `/servermemory add` for information everyone should know
+5. **Update memories** as information changes using the update commands
 
-### Example Workflow
+### Finding Memory IDs for Updates
 
-```
-1. @Bepo help me with Python code     # Start conversation
-2. /thread name:Python Help           # Create organized thread
-3. [Continue chatting in thread]      # Bot auto-responds, no @ needed
-4. /memory set key:language value:Python  # Save your preference
-5. /review                            # Review full conversation later
-6. /digest period:daily               # See what happened on server today
-```
+To update a memory, you need its ID. Here's how to find them:
 
-### Memory Benefits
+**Personal Memories:**
+- Use `/memory view` to see your memories with their IDs
+- IDs are shown as `ID: abc123def456...` in the memory listings
 
-- **Personalized responses** based on your preferences and history
-- **Context continuity** across different chat sessions
-- **Learning from interactions** to provide better help over time
-- **User control** - view, manage, and clear your data anytime
+**Server Memories:**
+- Use `/servermemory list` to see server memories with their IDs
+- Regular users see short IDs (first 8 characters): `ID: abc123de`
+- Admins see full IDs for complete management capabilities
 
-### Thread Benefits
+**Example Workflow:**
+1. `/memory view` → Find memory with ID `abc123def456`
+2. `/updatememory id:abc123def456 content:"My updated memory"`
+3. Memory is updated with new content and timestamp
 
-- **Organized conversations** by topic
-- **Clean main channels** - long chats move to dedicated threads
+### Thread Features
 - **No @ mentions needed** in bot-created threads
 - **Auto-cleanup** prevents server clutter
 - **Smart naming** using AI topic detection
