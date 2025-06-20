@@ -45,27 +45,37 @@ const updateServerMemoryCommand = {
         }
 
         try {
-            // First, verify the memory exists
-            let existingMemory = await getServerMemoryById(memoryId, serverId);
-            
-            // If not found and user is CODE_MONKEY, try partial ID lookup
             const isCodeMonkey = userId === process.env.CODE_MONKEY;
-            if (!existingMemory && isCodeMonkey && memoryId.length <= 8) {
-                console.log(`CODE_MONKEY: Trying partial ID lookup for: ${memoryId}`);
+            let existingMemory = null;
+            let resolvedMemoryId = memoryId; // Use a mutable variable for the resolved ID
+            
+            // For short IDs (8 chars or less), try partial lookup first to avoid UUID validation errors
+            // This works for all users since they see short IDs in the list
+            if (memoryId.length <= 8) {
+                console.log(`Trying partial ID lookup for: ${memoryId}`);
                 existingMemory = await getServerMemoryByPartialId(memoryId, serverId);
                 if (existingMemory) {
                     console.log(`Found memory with partial ID, full ID: ${existingMemory.id}`);
-                    // Update memoryId to use the full ID for the update operation
-                    memoryId = existingMemory.id;
+                    // Update resolvedMemoryId to use the full ID for the update operation
+                    resolvedMemoryId = existingMemory.id;
+                }
+            } else {
+                // For full UUIDs, try exact match first
+                try {
+                    existingMemory = await getServerMemoryById(memoryId, serverId);
+                } catch (error) {
+                    // If UUID validation fails, try partial lookup as fallback
+                    console.log(`UUID validation failed, trying partial ID lookup`);
+                    existingMemory = await getServerMemoryByPartialId(memoryId, serverId);
+                    if (existingMemory) {
+                        resolvedMemoryId = existingMemory.id;
+                    }
                 }
             }
             
             if (!existingMemory) {
-                const errorMsg = isCodeMonkey && memoryId.length <= 8 
-                    ? '❌ Server memory not found. Make sure you\'re using the correct ID from `/servermemory list`.'
-                    : '❌ Server memory not found.';
                 await interaction.reply({
-                    content: errorMsg,
+                    content: '❌ Server memory not found. Make sure you\'re using the correct ID from `/servermemory list`.',
                     ephemeral: true
                 });
                 return;
@@ -95,7 +105,7 @@ const updateServerMemoryCommand = {
             }
 
             // Perform the update - pass userId only if not CODE_MONKEY (for permission control)
-            const updatedMemory = await updateServerMemory(memoryId, updates, isCodeMonkey ? null : userId);
+            const updatedMemory = await updateServerMemory(resolvedMemoryId, updates, isCodeMonkey ? null : userId);
             
             if (!updatedMemory) {
                 await interaction.reply({
@@ -107,7 +117,7 @@ const updateServerMemoryCommand = {
 
             // Create response showing what changed
             let response = '✅ **Server Memory Updated Successfully!**\n\n';
-            response += `**Memory ID:** \`${memoryId}\`\n`;
+            response += `**Memory ID:** \`${resolvedMemoryId}\`\n`;
             
             if (newContent) {
                 response += `**Old Content:** ${existingMemory.memory_content}\n`;

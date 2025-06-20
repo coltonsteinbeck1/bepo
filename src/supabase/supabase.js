@@ -784,6 +784,13 @@ async function updateServerMemory(memoryId, updates = {}, userId = null) {
 
 // Get a specific user memory by ID (for verification before update)
 async function getUserMemoryById(memoryId, userId = null) {
+    // Validate UUID format to prevent PostgreSQL errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memoryId)) {
+        console.log(`Invalid UUID format: ${memoryId}`);
+        return null; // Return null for invalid UUIDs instead of throwing error
+    }
+    
     let query = supabase
         .from('user_memory')
         .select('*')
@@ -807,6 +814,13 @@ async function getUserMemoryById(memoryId, userId = null) {
 
 // Get a specific server memory by ID (for verification before update)
 async function getServerMemoryById(memoryId, serverId = null) {
+    // Validate UUID format to prevent PostgreSQL errors
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(memoryId)) {
+        console.log(`Invalid UUID format: ${memoryId}`);
+        return null; // Return null for invalid UUIDs instead of throwing error
+    }
+    
     let query = supabase
         .from('server_memory')
         .select('*')
