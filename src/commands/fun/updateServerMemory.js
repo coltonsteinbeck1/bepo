@@ -1,5 +1,5 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { updateServerMemory, getServerMemoryById } from '../../supabase/supabase.js';
+import { updateServerMemory, getServerMemoryById, getServerMemoryByPartialId } from '../../supabase/supabase.js';
 
 const updateServerMemoryCommand = {
     data: new SlashCommandBuilder()
@@ -46,17 +46,32 @@ const updateServerMemoryCommand = {
 
         try {
             // First, verify the memory exists
-            const existingMemory = await getServerMemoryById(memoryId, serverId);
+            let existingMemory = await getServerMemoryById(memoryId, serverId);
+            
+            // If not found and user is CODE_MONKEY, try partial ID lookup
+            const isCodeMonkey = userId === process.env.CODE_MONKEY;
+            if (!existingMemory && isCodeMonkey && memoryId.length <= 8) {
+                console.log(`CODE_MONKEY: Trying partial ID lookup for: ${memoryId}`);
+                existingMemory = await getServerMemoryByPartialId(memoryId, serverId);
+                if (existingMemory) {
+                    console.log(`Found memory with partial ID, full ID: ${existingMemory.id}`);
+                    // Update memoryId to use the full ID for the update operation
+                    memoryId = existingMemory.id;
+                }
+            }
+            
             if (!existingMemory) {
+                const errorMsg = isCodeMonkey && memoryId.length <= 8 
+                    ? '❌ Server memory not found. Make sure you\'re using the correct ID from `/servermemory list`.'
+                    : '❌ Server memory not found.';
                 await interaction.reply({
-                    content: '❌ Server memory not found.',
+                    content: errorMsg,
                     ephemeral: true
                 });
                 return;
             }
 
             // Check permissions - CODE_MONKEY can update any memory, others can only update their own
-            const isCodeMonkey = userId === process.env.CODE_MONKEY;
             if (!isCodeMonkey && existingMemory.user_id !== userId) {
                 await interaction.reply({
                     content: '❌ You can only update server memories that you created. Admins can update any memory.',
