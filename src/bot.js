@@ -11,6 +11,7 @@ import resetConversation from "./commands/fun/resetConversation.js";
 import continueCommand from "./commands/fun/continue.js";
 import reviewCommand from "./commands/fun/review.js";
 import memoryCommand from "./commands/fun/memory.js";
+import serverMemoryCommand from "./commands/fun/serverMemory.js";
 import digestCommand from "./commands/fun/digest.js";
 import threadCommand from "./commands/fun/thread.js";
 import { getAllContext } from "../scripts/create-context.js";
@@ -21,7 +22,7 @@ import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import MarkovChain from "./utils/markovChaining.js";
-import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory } from "./supabase/supabase.js";
+import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
 import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
     isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
     sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads, 
@@ -51,6 +52,7 @@ client.commands.set("cs2prices", cs2Prices);
 client.commands.set("continue", continueCommand);
 client.commands.set("review", reviewCommand);
 client.commands.set("memory", memoryCommand);
+client.commands.set("servermemory", serverMemoryCommand);
 client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
 
@@ -121,7 +123,8 @@ client.on("ready", () => {
       console.log('🧠 Running memory cleanup...');
       const expiredCount = await cleanupExpiredMemories();
       const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
-      console.log(`🧹 Cleaned up ${expiredCount} expired and ${oldCount} old memories`);
+      const expiredServerCount = await cleanupExpiredServerMemories();
+      console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, and ${expiredServerCount} expired server memories`);
     } catch (error) {
       console.error('Memory cleanup error:', error);
     }

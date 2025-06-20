@@ -125,13 +125,14 @@ export async function buildStreamlinedConversationContext(message) {
     // Import buildMemoryContext here to avoid circular imports
     const { buildMemoryContext } = await import('../supabase/supabase.js');
     
-    // Build memory context for this user
-    const memoryContext = await buildMemoryContext(message.author.id, message.content);
+    // Build memory context for this user, including server memories if in a guild
+    const serverId = message.guild?.id;
+    const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId);
     
     // Combine system message with memory context
     let finalSystemMessage = systemMsg;
     if (memoryContext.trim()) {
-      finalSystemMessage += `\n\n--- User Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
+      finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
     }
     
     convoStore.set(key, {

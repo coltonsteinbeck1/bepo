@@ -384,7 +384,7 @@ async function storeConversation(userId, userMessage, botResponse, channelId, gu
   );
 }
 
-async function buildMemoryContext(userId, currentMessage = '') {
+async function buildMemoryContext(userId, currentMessage = '', serverId = null) {
   try {
     // Get relevant conversation memories
     const searchTerms = extractKeywords(currentMessage);
@@ -410,8 +410,37 @@ async function buildMemoryContext(userId, currentMessage = '') {
     // Get user preferences
     const preferences = await getUserPreferences(userId);
     
+    // Get server memories if serverId is provided
+    let relevantServerMemories = [];
+    if (serverId) {
+      // Search server memories with the same keywords
+      for (const term of searchTerms.slice(0, 3)) {
+        const serverMemories = await searchServerMemories(serverId, term, null, 3);
+        relevantServerMemories.push(...serverMemories);
+      }
+      
+      // Remove duplicates and limit results
+      relevantServerMemories = [...new Map(relevantServerMemories.map(m => [m.id, m])).values()];
+      
+      // If no relevant server memories found, get recent ones
+      if (relevantServerMemories.length === 0) {
+        relevantServerMemories = await getServerMemories(serverId, null, 5);
+      }
+    }
+    
     // Build context string
     let context = '';
+    
+    // Add server memories first (they're important for server context)
+    if (relevantServerMemories.length > 0) {
+      context += 'Server Knowledge & Information:\n';
+      relevantServerMemories.slice(0, 5).forEach(memory => {
+        const timeAgo = getTimeAgo(memory.updated_at);
+        const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
+        context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
+      });
+      context += '\n';
+    }
     
     if (uniqueMemories.length > 0) {
       context += 'Previous Conversations:\n';
@@ -464,6 +493,162 @@ async function storeTemporaryMemory(userId, content, hoursToExpire = 24, context
   return await storeUserMemory(userId, content, contextType, {}, expiresAt.toISOString());
 }
 
+// Server Memory functions
+async function storeServerMemory(serverId, userId, content, title = null, contextType = 'server', metadata = {}, expiresAt = null) {
+    const { data, error } = await supabase
+        .from('server_memory')
+        .insert([{
+            server_id: serverId,
+            user_id: userId,
+            memory_content: content,
+            memory_title: title,
+            context_type: contextType,
+            metadata: metadata,
+            expires_at: expiresAt
+        }])
+        .select();
+    
+    if (error) {
+        console.error('Error storing server memory:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function getServerMemories(serverId, contextType = null, limit = 20) {
+    let query = supabase
+        .from('server_memory')
+        .select('*')
+        .eq('server_id', serverId)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .order('updated_at', { ascending: false });
+    
+    if (contextType) {
+        query = query.eq('context_type', contextType);
+    }
+    
+    if (limit) {
+        query = query.limit(limit);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        console.error('Error fetching server memories:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function searchServerMemories(serverId, searchTerm, contextType = null, limit = 10) {
+    let query = supabase
+        .from('server_memory')
+        .select('*')
+        .eq('server_id', serverId)
+        .or(`memory_content.ilike.%${searchTerm}%,memory_title.ilike.%${searchTerm}%`)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .order('updated_at', { ascending: false });
+    
+    if (contextType) {
+        query = query.eq('context_type', contextType);
+    }
+    
+    if (limit) {
+        query = query.limit(limit);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        console.error('Error searching server memories:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function deleteServerMemory(memoryId, userId = null) {
+    let query = supabase
+        .from('server_memory')
+        .delete()
+        .eq('id', memoryId);
+    
+    // CODE_MONKEY can delete any server memory, others can only delete their own
+    if (userId && userId !== process.env.CODE_MONKEY) {
+        query = query.eq('user_id', userId);
+    }
+    
+    const { data, error } = await query.select();
+    
+    if (error) {
+        console.error('Error deleting server memory:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function getServerMemoryStats(serverId) {
+    const { data, error } = await supabase
+        .from('server_memory')
+        .select('context_type, created_at, user_id')
+        .eq('server_id', serverId)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+    
+    if (error) {
+        console.error('Error fetching server memory stats:', error);
+        return { total: 0, byType: {}, byUser: {} };
+    }
+    
+    const stats = { total: data?.length || 0, byType: {}, byUser: {} };
+    data?.forEach(memory => {
+        stats.byType[memory.context_type] = (stats.byType[memory.context_type] || 0) + 1;
+        stats.byUser[memory.user_id] = (stats.byUser[memory.user_id] || 0) + 1;
+    });
+    
+    // Find oldest memory
+    if (data && data.length > 0) {
+        const oldest = data.reduce((prev, current) => 
+            new Date(prev.created_at) < new Date(current.created_at) ? prev : current
+        );
+        stats.oldest = oldest.created_at;
+    }
+    
+    return stats;
+}
+
+async function getUserServerMemories(serverId, userId, limit = 10) {
+    const { data, error } = await supabase
+        .from('server_memory')
+        .select('*')
+        .eq('server_id', serverId)
+        .eq('user_id', userId)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString())
+        .order('updated_at', { ascending: false })
+        .limit(limit);
+    
+    if (error) {
+        console.error('Error fetching user server memories:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function cleanupExpiredServerMemories() {
+    const { data, error } = await supabase
+        .from('server_memory')
+        .delete()
+        .lt('expires_at', new Date().toISOString())
+        .not('expires_at', 'is', null)
+        .select();
+    
+    if (error) {
+        console.error('Error cleaning up expired server memories:', error);
+        return 0;
+    }
+    
+    console.log(`Cleaned up ${data?.length || 0} expired server memories`);
+    return data?.length || 0;
+}
+
 export { 
     getAllGuilds, 
     getMarkovChannels, 
@@ -489,6 +674,14 @@ export {
     storeConversationSummary,
     storeTemporaryMemory,
     extractKeywords,
-    getTimeAgo
+    getTimeAgo,
+    // Server memory functions
+    storeServerMemory,
+    getServerMemories,
+    searchServerMemories,
+    deleteServerMemory,
+    getServerMemoryStats,
+    getUserServerMemories,
+    cleanupExpiredServerMemories
 }
 
