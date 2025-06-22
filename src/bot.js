@@ -80,10 +80,18 @@ function startScheduledMessaging(client) {
   // Check every minute for scheduled messages
   setInterval(() => {
     const currentDate = getCurrentDateString();
+    const now = new Date();
+    const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
+    
+    // Log periodic check (every 10 minutes to avoid spam)
+    if (easternTime.getMinutes() % 10 === 0) {
+      console.log(`[${now.toISOString()}] Scheduled message check - Eastern Time: ${easternTime}`);
+    }
     
     // Check for game time message
     if (isGameTime()) {
       if (lastSentMessages.gameTime !== currentDate) {
+        console.log(`[${now.toISOString()}] Triggering game time message`);
         sendGameTimeMessage(client);
         lastSentMessages.gameTime = currentDate;
       }
@@ -92,8 +100,11 @@ function startScheduledMessaging(client) {
     // Check for Sunday image
     if (isSundayImageTime()) {
       if (lastSentMessages.sundayImage !== currentDate) {
+        console.log(`[${now.toISOString()}] Triggering Sunday image - Date: ${currentDate}`);
         sendSundayImage(client);
         lastSentMessages.sundayImage = currentDate;
+      } else {
+        console.log(`[${now.toISOString()}] Sunday image already sent today: ${currentDate}`);
       }
     }
     

@@ -331,8 +331,8 @@ export function isSundayImageTime() {
   const hour = easternTime.getHours();
   const minute = easternTime.getMinutes();
   
-  // Sunday (0), 5:00 PM (17:00) - check for minute 0
-  return day === 0 && hour === 17 && minute === 0;
+  // Sunday (0), 5:00-5:04 PM (17:00-17:04) - 5 minute window for reliability
+  return day === 0 && hour === 17 && minute >= 0 && minute <= 4;
 }
 
 // Function to get current date string for tracking
@@ -358,15 +358,18 @@ export async function sendGameTimeMessage(client) {
 // Function to send Sunday image
 export async function sendSundayImage(client) {
   try {
+    console.log(`[${new Date().toISOString()}] Attempting to send Sunday image`);
     const channel = await client.channels.fetch(CHILLIN_CHANNEL);
     if (channel) {
       const imagePath = path.join(__dirname, "images", "sunday.jpeg");
       const attachment = new AttachmentBuilder(imagePath);
       await channel.send({ files: [attachment] });
-      console.log("Sent Sunday image");
+      console.log(`[${new Date().toISOString()}] Successfully sent Sunday image`);
+    } else {
+      console.error(`[${new Date().toISOString()}] Channel not found: ${CHILLIN_CHANNEL}`);
     }
   } catch (error) {
-    console.error("Error sending Sunday image:", error);
+    console.error(`[${new Date().toISOString()}] Error sending Sunday image:`, error);
   }
 }
 
