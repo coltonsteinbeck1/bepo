@@ -23,6 +23,8 @@ import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
+import yapCommand from "./commands/fun/yap.js";
+import stopyapCommand from "./commands/fun/stopyap.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
 import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
@@ -59,6 +61,9 @@ client.commands.set("servermemory", serverMemoryCommand);
 client.commands.set("updateservermemory", updateServerMemoryCommand);
 client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
+client.commands.set("yap", yapCommand);
+client.commands.set("stopyap",stopyapCommand);
+
 
 // OpenAI API key for xAI (Grok)
 const xAI = new OpenAI({
