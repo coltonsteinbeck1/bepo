@@ -12,6 +12,7 @@ import { Readable } from 'stream';
 import prism from 'prism-media';
 import dotenv from "dotenv";
 import voiceSessionManager from '../../utils/voiceSessionManager.js';
+import { buildMemoryContext, storeUserMemory } from '../../supabase/supabase.js';
 dotenv.config();
 
 const yapCommand = {
@@ -99,6 +100,15 @@ class RealtimeSession {
         this.recordingStartTime = null;
         this.currentAudioStream = null;
 
+        // User identification and memory context
+        this.currentSpeakingUser = null;
+        this.userMemoryContext = null;
+        this.guildId = interaction.guild?.id;
+        this.channelId = interaction.channel?.id;
+        this.lastTranscript = null;
+        this.lastResponseText = null;
+        this.userSpeechCount = new Map(); // Track how many times each user has spoken
+
         // Auto-shutdown after inactivity
         this.lastAudioTime = Date.now();
         this.inactivityTimeout = 30000; // 30 seconds
@@ -154,8 +164,8 @@ class RealtimeSession {
                 console.log('Connected to OpenAI Realtime API with gpt-4o-mini');
                 this.isConnected = true;
 
-                // Send session configuration
-                await this.sendSessionUpdate();
+                // Send initial session configuration with general server context
+                await this.sendInitialSessionUpdate();
                 resolve();
             });
 
@@ -175,12 +185,31 @@ class RealtimeSession {
         });
     }
 
-    async sendSessionUpdate() {
+    async sendInitialSessionUpdate() {
+        // Build base system message
+        let instructions = process.env.MODEL_VOICE_SYSTEM_MESSAGE || process.env.MODEL_SYSTEM_MESSAGE;
+        
+        // Add voice-specific instructions if using the regular system message
+        if (!process.env.MODEL_VOICE_SYSTEM_MESSAGE) {
+            instructions += "\n\nYou are now in a Discord voice chat. Respond naturally and conversationally as if you're talking to friends. Keep your responses concise but engaging - this is voice chat, not a text wall. Use a casual, friendly tone that matches your personality.";
+        }
+        
+        // Load general server context (without specific user context initially)
+        try {
+            const serverContext = await buildMemoryContext(null, 'voice chat session', this.guildId);
+            if (serverContext && serverContext.trim()) {
+                instructions += `\n\n--- Server Context ---\n${serverContext}\n--- End Server Context ---`;
+                console.log('Loaded general server context for voice session');
+            }
+        } catch (error) {
+            console.error('Error loading server context:', error);
+        }
+
         const sessionConfig = {
             type: 'session.update',
             session: {
                 modalities: ['text', 'audio'],
-                instructions: process.env.MODEL_VOICE_SYSTEM_MESSAGE,
+                instructions: instructions,
                 voice: 'alloy',
                 input_audio_format: 'pcm16',
                 output_audio_format: 'pcm16',
@@ -195,7 +224,49 @@ class RealtimeSession {
             }
         };
 
-        console.log('Sending session configuration:', JSON.stringify(sessionConfig, null, 2));
+        console.log('Sending initial session configuration');
+        this.sendMessage(sessionConfig);
+    }
+
+    async sendSessionUpdate() {
+        // Build base system message with memory context if available
+        let instructions = process.env.MODEL_VOICE_SYSTEM_MESSAGE || process.env.MODEL_SYSTEM_MESSAGE;
+        
+        // Add voice-specific instructions if using the regular system message
+        if (!process.env.MODEL_VOICE_SYSTEM_MESSAGE) {
+            instructions += "\n\nYou are now in a Discord voice chat. Respond naturally and conversationally as if you're talking to friends. Keep your responses concise but engaging - this is voice chat, not a text wall. Use a casual, friendly tone that matches your personality.";
+        }            // Add current user context and memory
+            if (this.userMemoryContext) {
+                instructions += `\n\n=== CRITICAL USER CONTEXT ===\n${this.userMemoryContext}\n=== END USER CONTEXT ===`;
+                
+                // Add very specific and emphasized instructions
+                instructions += "\n\n🚨 CRITICAL INSTRUCTIONS FOR IDENTITY QUESTIONS:\n- When someone asks 'Who am I?' or similar identity questions, you MUST refer to the user information provided above\n- The user's Discord name and ID are clearly stated in the context\n- Use their Discord username (like 'CodeBreaker') when addressing them personally\n- Reference any memories or information from their context\n- DO NOT give generic responses like 'a user who wants to chat' - use the specific context provided\n- Always acknowledge their identity using the information given in the context above";
+                
+                console.log(`Session updated with user context: ${this.userMemoryContext.substring(0, 200)}...`);
+            } else {
+                console.log('No user context available for session update');
+            }
+
+        const sessionConfig = {
+            type: 'session.update',
+            session: {
+                modalities: ['text', 'audio'],
+                instructions: instructions,
+                voice: 'alloy',
+                input_audio_format: 'pcm16',
+                output_audio_format: 'pcm16',
+                input_audio_transcription: {
+                    model: 'whisper-1'
+                },
+                turn_detection: null, // Disable server VAD to use our client-side logic
+                tools: [],
+                tool_choice: 'auto',
+                temperature: 0.8,
+                max_response_output_tokens: 4096
+            }
+        };
+
+        console.log('Sending session configuration with user context and memory');
         this.sendMessage(sessionConfig);
     }
 
@@ -236,6 +307,74 @@ class RealtimeSession {
         console.log('Audio activity detected, resetting inactivity timer');
     }
 
+    async loadUserMemoryContext(userId) {
+        try {
+            console.log(`Loading memory context for user ${userId}`);
+            
+            // Get the Discord user info for better context
+            let userInfo = '';
+            try {
+                const guild = this.interaction.guild;
+                const member = await guild.members.fetch(userId);
+                if (member) {
+                    userInfo = `Currently speaking: ${member.displayName || member.user.username} (Discord ID: ${userId})`;
+                    console.log(`Voice chat with user: ${member.displayName || member.user.username} (${userId})`);
+                }
+            } catch (error) {
+                console.log('Could not fetch user info:', error.message);
+                userInfo = `Currently speaking: User ID ${userId}`;
+            }
+            
+            // Build memory context using the same function as text chat
+            const memoryContext = await buildMemoryContext(userId, 'voice chat conversation', this.guildId);
+            
+            // Combine user identification with memory context
+            this.userMemoryContext = userInfo;
+            if (memoryContext && memoryContext.trim()) {
+                this.userMemoryContext += '\n\n' + memoryContext;
+                console.log(`Loaded memory context (${memoryContext.length} chars) for user ${userId}`);
+            } else {
+                console.log(`No stored memory found for user ${userId}, but user is identified`);
+            }
+            
+            // Update the session with new user context
+            await this.sendSessionUpdate();
+            
+            // Also send a conversation item with the context to make it more prominent
+            await this.sendUserContextMessage();
+            
+        } catch (error) {
+            console.error('Error loading user memory context:', error);
+            this.userMemoryContext = `Currently speaking: User ID ${userId}`;
+            // Still try to update the session with basic user info
+            await this.sendSessionUpdate();
+        }
+    }
+
+    async sendUserContextMessage() {
+        try {
+            if (!this.userMemoryContext) return;
+            
+            const contextMessage = {
+                type: 'conversation.item.create',
+                item: {
+                    type: 'message',
+                    role: 'system',
+                    content: [{
+                        type: 'input_text',
+                        text: `CONTEXT UPDATE: ${this.userMemoryContext}\n\nIMPORTANT: Use this context information when answering questions about identity. If asked "Who am I?" or similar, use the specific details from the context above.`
+                    }]
+                }
+            };
+            
+            this.ws.send(JSON.stringify(contextMessage));
+            console.log('Sent user context as conversation item');
+            
+        } catch (error) {
+            console.error('Error sending user context message:', error);
+        }
+    }
+
     startRecording(userId) {
         if (this.isRecording) return;
 
@@ -243,6 +382,10 @@ class RealtimeSession {
         this.isRecording = true;
         this.audioBuffer = [];
         this.recordingStartTime = Date.now();
+        this.currentSpeakingUser = userId;
+
+        // Load memory context for this user when they start speaking
+        this.loadUserMemoryContext(userId);
 
         // Clear any existing silence timer
         if (this.silenceTimer) {
@@ -354,6 +497,7 @@ class RealtimeSession {
 
         this.isRecording = false;
         this.audioBuffer = [];
+        this.currentSpeakingUser = null; // Clear current speaking user
 
         // Clean up audio stream
         if (this.currentAudioStream) {
@@ -396,11 +540,13 @@ class RealtimeSession {
                 type: 'response.create',
                 response: {
                     modalities: ['audio', 'text'],
-                    instructions: 'Please respond to the user\'s audio input naturally and conversationally.'
+                    instructions: this.currentSpeakingUser ? 
+                        `The user speaking is Discord user ID ${this.currentSpeakingUser}. Use the context provided in your system instructions to identify them and respond appropriately. If they ask about their identity, refer to the user information and memory context. Be personal and reference any relevant information you have about them.` :
+                        'Please respond to the user\'s audio input naturally and conversationally.'
                 }
             };
 
-            console.log('Triggering response generation');
+            console.log('Triggering response generation with user context');
             this.sendMessage(responseMessage);
         } catch (error) {
             console.error('Error sending audio to OpenAI:', error);
@@ -410,6 +556,13 @@ class RealtimeSession {
     handleRealtimeMessage(message) {
         console.log(`Received message: ${message.type}`);
 
+        // Handle the message asynchronously to allow for async operations
+        this.handleRealtimeMessageAsync(message).catch(error => {
+            console.error('Error in async realtime message handler:', error);
+        });
+    }
+
+    async handleRealtimeMessageAsync(message) {
         try {
             switch (message.type) {
                 case 'session.created':
@@ -446,6 +599,29 @@ class RealtimeSession {
 
                 case 'conversation.item.input_audio_transcription.completed':
                     console.log('Audio transcription completed:', message.transcript);
+                    this.lastTranscript = message.transcript;
+                    // Store the user's voice input as memory
+                    if (this.currentSpeakingUser && message.transcript) {
+                        this.storeVoiceMemory(this.currentSpeakingUser, `Voice: "${message.transcript}"`, 'conversation');
+                        
+                        // Update speech count and potentially send a chat message for first time speakers
+                        const speechCount = (this.userSpeechCount.get(this.currentSpeakingUser) || 0) + 1;
+                        this.userSpeechCount.set(this.currentSpeakingUser, speechCount);
+                        
+                        if (speechCount === 1) {
+                            // First time this user has spoken in this session
+                            try {
+                                const guild = this.interaction.guild;
+                                const member = await guild.members.fetch(this.currentSpeakingUser);
+                                if (member) {
+                                    const followUpMessage = `🎙️ ${member.displayName || member.user.username} joined the voice conversation!`;
+                                    this.interaction.followUp(followUpMessage).catch(console.error);
+                                }
+                            } catch (error) {
+                                console.log('Could not send user join message:', error.message);
+                            }
+                        }
+                    }
                     break;
 
                 case 'response.created':
@@ -458,6 +634,17 @@ class RealtimeSession {
                     // Received audio response from OpenAI
                     console.log(`Received audio delta: ${message.delta ? 'data present' : 'no data'}`);
                     this.handleAudioResponse(message.delta);
+                    break;
+
+                case 'response.text.delta':
+                    // Capture text response for memory storage and debugging
+                    if (message.delta) {
+                        if (!this.lastResponseText) {
+                            this.lastResponseText = '';
+                        }
+                        this.lastResponseText += message.delta;
+                        console.log(`AI response text delta: "${message.delta}"`);
+                    }
                     break;
 
                 case 'response.audio.done':
@@ -484,6 +671,17 @@ class RealtimeSession {
 
                 case 'response.done':
                     console.log('Full response completed');
+                    // Log the complete AI response for debugging
+                    if (this.lastResponseText) {
+                        console.log(`COMPLETE AI RESPONSE: "${this.lastResponseText}"`);
+                    } else {
+                        console.log('WARNING: No response text captured');
+                    }
+                    // Store the bot's response as memory if we have text content
+                    if (this.currentSpeakingUser && this.lastResponseText) {
+                        this.storeVoiceMemory(this.currentSpeakingUser, `Voice Bot: "${this.lastResponseText}"`, 'conversation');
+                        this.lastResponseText = null; // Clear after storing
+                    }
                     break;
 
                 case 'error':
@@ -496,6 +694,25 @@ class RealtimeSession {
             }
         } catch (error) {
             console.error('Error handling realtime message:', error);
+        }
+    }
+
+    async storeVoiceMemory(userId, content, contextType) {
+        try {
+            await storeUserMemory(
+                userId,
+                content,
+                contextType,
+                {
+                    channel_id: this.channelId,
+                    guild_id: this.guildId,
+                    timestamp: new Date().toISOString(),
+                    voice_chat: true
+                }
+            );
+            console.log(`Stored voice memory for user ${userId}: ${content.substring(0, 50)}...`);
+        } catch (error) {
+            console.error('Error storing voice memory:', error);
         }
     }
 
@@ -591,6 +808,9 @@ class RealtimeSession {
         this.isRecording = false;
         this.audioBuffer = [];
         this.responseAudioBuffer = Buffer.alloc(0);
+        this.currentSpeakingUser = null;
+        this.userMemoryContext = null;
+        this.userSpeechCount.clear();
     }
 }
 

@@ -16,6 +16,7 @@ import updateMemoryCommand from "./commands/fun/updateMemory.js";
 import updateServerMemoryCommand from "./commands/fun/updateServerMemory.js";
 import digestCommand from "./commands/fun/digest.js";
 import threadCommand from "./commands/fun/thread.js";
+import debugMemoryCommand from "./commands/fun/debugMemory.js";
 import { getAllContext } from "../scripts/create-context.js";
 import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
@@ -63,6 +64,7 @@ client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
 client.commands.set("yap", yapCommand);
 client.commands.set("stopyap",stopyapCommand);
+client.commands.set("debug-memory", debugMemoryCommand);
 
 
 // OpenAI API key for xAI (Grok)
