@@ -384,7 +384,7 @@ async function storeConversation(userId, userMessage, botResponse, channelId, gu
   );
 }
 
-async function buildMemoryContext(userId, currentMessage = '', serverId = null) {
+async function buildMemoryContext(userId, currentMessage = '', serverId = null, client = null) {
   try {
     // Get relevant conversation memories
     const searchTerms = extractKeywords(currentMessage);
@@ -481,11 +481,45 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null) 
     // Add server memories first (they're important for server context)
     if (relevantServerMemories.length > 0) {
       context += 'Server Knowledge & Information:\n';
-      relevantServerMemories.slice(0, 5).forEach(memory => {
-        const timeAgo = getTimeAgo(memory.updated_at);
-        const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
-        context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
-      });
+      
+      // If client is available, resolve usernames for server memories and clean mentions
+      if (client) {
+        try {
+          // Import the username resolution and mention cleaning functions
+          const { getUsernamesFromIds, cleanDiscordMentions } = await import('../utils/utils.js');
+          
+          // Get unique user IDs from server memories
+          const uniqueUserIds = [...new Set(relevantServerMemories.map(m => m.user_id))];
+          const usernames = await getUsernamesFromIds(client, uniqueUserIds);
+          
+          for (const memory of relevantServerMemories.slice(0, 5)) {
+            const timeAgo = getTimeAgo(memory.updated_at);
+            const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
+            const username = usernames[memory.user_id] || 'Unknown User';
+            
+            // Clean Discord mentions from the memory content
+            const cleanedContent = await cleanDiscordMentions(memory.memory_content, client);
+            
+            context += `- ${title}${cleanedContent} (added by ${username} ${timeAgo})\n`;
+          }
+        } catch (error) {
+          console.error('Error resolving usernames for server memories:', error);
+          // Fallback to original format if username resolution fails
+          relevantServerMemories.slice(0, 5).forEach(memory => {
+            const timeAgo = getTimeAgo(memory.updated_at);
+            const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
+            context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
+          });
+        }
+      } else {
+        // Fallback when no client is available
+        relevantServerMemories.slice(0, 5).forEach(memory => {
+          const timeAgo = getTimeAgo(memory.updated_at);
+          const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
+          context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
+        });
+      }
+      
       context += '\n';
     }
     

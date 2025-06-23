@@ -126,7 +126,7 @@ export async function buildStreamlinedConversationContext(message) {
   
   if (!convoStore.has(key)) {
     // Build initial memory context
-    const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId);
+    const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
     
     // Combine system message with memory context
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
@@ -167,7 +167,7 @@ export async function buildStreamlinedConversationContext(message) {
       console.log(`Refreshing memory context for ${key} (time: ${Math.floor(timeSinceRefresh/1000)}s, messages: ${entry.messageCount})`);
       
       // Build fresh memory context
-      const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId);
+      const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
       
       // Update the system message with fresh context
       const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
@@ -456,4 +456,72 @@ export async function checkAndDeleteInactiveThreads(client) {
       }
     }
   }
+}
+
+// Helper function to resolve user ID to username
+export async function getUsernameFromId(client, userId) {
+  try {
+    const user = await client.users.fetch(userId);
+    return user.username;
+  } catch (error) {
+    console.error('Failed to fetch user:', error);
+    return `User(${userId.substring(0, 8)})`;
+  }
+}
+
+// Helper function to resolve multiple user IDs to usernames in bulk
+export async function getUsernamesFromIds(client, userIds) {
+  const usernames = {};
+  
+  for (const userId of userIds) {
+    try {
+      const user = await client.users.fetch(userId);
+      usernames[userId] = user.username;
+    } catch (error) {
+      console.error(`Failed to fetch user ${userId}:`, error);
+      usernames[userId] = `User(${userId.substring(0, 8)})`;
+    }
+  }
+  
+  return usernames;
+}
+
+// Helper function to clean Discord mentions from text and replace with usernames
+export async function cleanDiscordMentions(text, client) {
+  if (!client || !text) return text;
+  
+  // Regex to find Discord user mentions <@123456789>
+  const mentionRegex = /<@!?(\d+)>/g;
+  let cleanedText = text;
+  
+  try {
+    const matches = text.match(mentionRegex);
+    if (matches) {
+      // Get unique user IDs from mentions
+      const userIds = [...new Set(matches.map(match => {
+        const idMatch = match.match(/\d+/);
+        return idMatch ? idMatch[0] : null;
+      }).filter(Boolean))];
+      
+      // Resolve user IDs to usernames
+      const usernames = await getUsernamesFromIds(client, userIds);
+      
+      // Replace each mention with the username
+      cleanedText = cleanedText.replace(mentionRegex, (match) => {
+        const idMatch = match.match(/\d+/);
+        if (idMatch) {
+          const userId = idMatch[0];
+          const username = usernames[userId];
+          return username ? `@${username}` : match; // Keep original if username not found
+        }
+        return match;
+      });
+    }
+  } catch (error) {
+    console.error('Error cleaning Discord mentions:', error);
+    // Return original text if cleaning fails
+    return text;
+  }
+  
+  return cleanedText;
 }

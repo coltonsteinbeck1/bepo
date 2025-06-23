@@ -196,7 +196,7 @@ class RealtimeSession {
         
         // Load general server context (without specific user context initially)
         try {
-            const serverContext = await buildMemoryContext(null, 'voice chat session', this.guildId);
+            const serverContext = await buildMemoryContext(null, 'voice chat session', this.guildId, this.interaction.client);
             if (serverContext && serverContext.trim()) {
                 instructions += `\n\n--- Server Context ---\n${serverContext}\n--- End Server Context ---`;
                 console.log('Loaded general server context for voice session');
@@ -326,7 +326,7 @@ class RealtimeSession {
             }
             
             // Build memory context using the same function as text chat
-            const memoryContext = await buildMemoryContext(userId, 'voice chat conversation', this.guildId);
+            const memoryContext = await buildMemoryContext(userId, 'voice chat conversation', this.guildId, this.interaction.client);
             
             // Combine user identification with memory context
             this.userMemoryContext = userInfo;

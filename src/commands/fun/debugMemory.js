@@ -30,7 +30,7 @@ const debugMemoryCommand = {
             console.log(`Debug: Loading memory context for user ${userId} in guild ${guildId}`);
 
             // Build memory context using the same function as the voice chat
-            const memoryContext = await buildMemoryContext(userId, 'voice chat conversation', guildId);
+            const memoryContext = await buildMemoryContext(userId, 'voice chat conversation', guildId, interaction.client);
 
             let response = `**Memory Debug for ${targetUser.displayName || targetUser.username}:**\n`;
             response += `Discord ID: \`${userId}\`\n`;

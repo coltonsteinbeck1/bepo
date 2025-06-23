@@ -8,6 +8,7 @@ import {
   getUserServerMemories,
   getTimeAgo 
 } from '../../supabase/supabase.js';
+import { getUsernamesFromIds } from '../../utils/utils.js';
 
 export const data = new SlashCommandBuilder()
   .setName('servermemory')
@@ -102,6 +103,10 @@ export async function execute(interaction) {
         });
       }
 
+      // Get username for the person who added the memory
+      const usernames = await getUsernamesFromIds(interaction.client, [userId]);
+      const username = usernames[userId] || 'Unknown User';
+
       const embed = new EmbedBuilder()
         .setColor(0x00AE86)
         .setTitle('📝 Server Memory Added')
@@ -109,7 +114,7 @@ export async function execute(interaction) {
         .addFields(
           { name: 'Content', value: content.substring(0, 500) + (content.length > 500 ? '...' : '') },
           { name: 'Memory ID', value: memory.id, inline: true },
-          { name: 'Added by', value: `<@${userId}>`, inline: true }
+          { name: 'Added by', value: username, inline: true }
         )
         .setTimestamp();
 
@@ -133,6 +138,10 @@ export async function execute(interaction) {
         });
       }
 
+      // Get unique user IDs and resolve them to usernames
+      const uniqueUserIds = [...new Set(memories.map(m => m.user_id))];
+      const usernames = await getUsernamesFromIds(interaction.client, uniqueUserIds);
+
       const embed = new EmbedBuilder()
         .setColor(0x5865F2)
         .setTitle(`📚 Server Memories - ${interaction.guild.name}`)
@@ -144,13 +153,14 @@ export async function execute(interaction) {
         const title = memory.memory_title || `Memory ${index + 1}`;
         const content = memory.memory_content.substring(0, 100) + (memory.memory_content.length > 100 ? '...' : '');
         const isCodeMonkey = userId === process.env.CODE_MONKEY;
+        const username = usernames[memory.user_id] || 'Unknown User';
         
         // Show full ID for CODE_MONKEY, short ID for others
         const displayId = isCodeMonkey ? memory.id : memory.id.substring(0, 8);
         
         embed.addFields({
           name: `${index + 1}. ${title}`,
-          value: `${content}\n*Added by <@${memory.user_id}> • ${timeAgo} • ID: \`${displayId}\`*`,
+          value: `${content}\n*Added by ${username} • ${timeAgo} • ID: \`${displayId}\`*`,
           inline: false
         });
       });
@@ -174,6 +184,10 @@ export async function execute(interaction) {
         });
       }
 
+      // Get unique user IDs and resolve them to usernames
+      const uniqueUserIds = [...new Set(memories.map(m => m.user_id))];
+      const usernames = await getUsernamesFromIds(interaction.client, uniqueUserIds);
+
       const embed = new EmbedBuilder()
         .setColor(0x57F287)
         .setTitle(`🔍 Search Results - "${query}"`)
@@ -185,13 +199,14 @@ export async function execute(interaction) {
         const title = memory.memory_title || `Memory ${index + 1}`;
         const content = memory.memory_content.substring(0, 150) + (memory.memory_content.length > 150 ? '...' : '');
         const isCodeMonkey = userId === process.env.CODE_MONKEY;
+        const username = usernames[memory.user_id] || 'Unknown User';
         
         // Show full ID for CODE_MONKEY, short ID for others
         const displayId = isCodeMonkey ? memory.id : memory.id.substring(0, 8);
         
         embed.addFields({
           name: `${title}`,
-          value: `${content}\n*Added by <@${memory.user_id}> • ${timeAgo} • ID: \`${displayId}\`*`,
+          value: `${content}\n*Added by ${username} • ${timeAgo} • ID: \`${displayId}\`*`,
           inline: false
         });
       });
@@ -243,14 +258,20 @@ export async function execute(interaction) {
         });
       }
 
+      // Get usernames for the original creator and the deleter
+      const userIds = [deletedMemory.user_id, userId];
+      const usernames = await getUsernamesFromIds(interaction.client, userIds);
+      const originalUsername = usernames[deletedMemory.user_id] || 'Unknown User';
+      const deleterUsername = usernames[userId] || 'Unknown User';
+
       const embed = new EmbedBuilder()
         .setColor(0xED4245)
         .setTitle('🗑️ Memory Deleted')
         .setDescription(`**${deletedMemory.memory_title || 'Memory'}** has been deleted from ${interaction.guild.name}`)
         .addFields(
           { name: 'Content', value: deletedMemory.memory_content.substring(0, 200) + (deletedMemory.memory_content.length > 200 ? '...' : '') },
-          { name: 'Originally Added By', value: `<@${deletedMemory.user_id}>`, inline: true },
-          { name: 'Deleted By', value: isCodeMonkey ? `<@${userId}> (Admin)` : `<@${userId}>`, inline: true }
+          { name: 'Originally Added By', value: originalUsername, inline: true },
+          { name: 'Deleted By', value: isCodeMonkey ? `${deleterUsername} (Admin)` : deleterUsername, inline: true }
         )
         .setTimestamp();
 
@@ -277,10 +298,19 @@ export async function execute(interaction) {
       }
 
       if (Object.keys(stats.byUser).length > 0) {
+        // Get top 5 contributor user IDs
+        const topContributorIds = Object.entries(stats.byUser)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 5)
+          .map(([userId]) => userId);
+        
+        // Resolve user IDs to usernames
+        const usernames = await getUsernamesFromIds(interaction.client, topContributorIds);
+        
         const topContributors = Object.entries(stats.byUser)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 5)
-          .map(([userId, count]) => `<@${userId}>: ${count}`)
+          .map(([userId, count]) => `${usernames[userId] || 'Unknown User'}: ${count}`)
           .join('\n');
         embed.addFields({ name: '🏆 Top Contributors', value: topContributors, inline: true });
       }
