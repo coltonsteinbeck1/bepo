@@ -4,7 +4,7 @@ import { OpenAI } from "openai";
 import path from "path";
 import { fileURLToPath } from "url";
 import drawCommand from "./commands/fun/draw.js";
-import playCommand from "./commands/fun/play.js";
+import playCommand, { handleMusicInteraction } from "./commands/fun/play.js";
 import pollCommand from "./commands/fun/poll.js";
 import pingCommand from "./commands/fun/ping.js";
 import resetConversation from "./commands/fun/resetConversation.js";
@@ -165,7 +165,10 @@ client.on("interactionCreate", async (interaction) => {
 
       await command.execute(interaction);
     } else if (interaction.isButton()) {
-      if (interaction.customId.startsWith("roleToggle:")) {
+      if (interaction.customId.startsWith("music_")) {
+        // Handle music control buttons
+        await handleMusicInteraction(interaction);
+      } else if (interaction.customId.startsWith("roleToggle:")) {
         const roleId = interaction.customId.split(":")[1];
         const member = interaction.member;
 
