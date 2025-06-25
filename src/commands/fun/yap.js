@@ -12,6 +12,7 @@ import { Readable } from 'stream';
 import prism from 'prism-media';
 import dotenv from "dotenv";
 import voiceSessionManager from '../../utils/voiceSessionManager.js';
+import voiceActivityManager from '../../utils/voiceActivityManager.js';
 import { buildMemoryContext, storeUserMemory } from '../../supabase/supabase.js';
 dotenv.config();
 
@@ -32,6 +33,22 @@ const yapCommand = {
         if (!channel || channel.type !== ChannelType.GuildVoice) {
             return await interaction.reply({
                 content: 'Please provide a valid voice channel.',
+                ephemeral: true
+            });
+        }
+
+        // Check for conflicting voice activities
+        const guildId = interaction.guild.id;
+        const conflictCheck = voiceActivityManager.canStartActivity(guildId, 'yap');
+        if (!conflictCheck.canStart) {
+            const errorMessage = voiceActivityManager.getBlockedMessage(
+                'yap', 
+                conflictCheck.conflictType, 
+                conflictCheck.channelId, 
+                interaction.client
+            );
+            return await interaction.reply({
+                content: errorMessage,
                 ephemeral: true
             });
         }
@@ -67,6 +84,9 @@ const yapCommand = {
             // Create Realtime API session
             const realtimeSession = new RealtimeSession(connection, interaction);
             await realtimeSession.start();
+
+            // Register yap activity
+            voiceActivityManager.startActivity(guildId, 'yap', channel.id, realtimeSession);
 
             await interaction.editReply(`🎤 Connected to ${channel.name} and ready to chat! Say something to start the conversation.`);
 
@@ -799,6 +819,11 @@ class RealtimeSession {
 
         if (this.connection) {
             this.connection.destroy();
+        }
+
+        // Unregister yap activity
+        if (this.guildId) {
+            voiceActivityManager.stopActivity(this.guildId, 'yap');
         }
 
         // Remove from session manager
