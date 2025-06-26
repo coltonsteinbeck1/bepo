@@ -451,7 +451,7 @@ client.on("messageCreate", async (message) => {
     return;
   }
   if (markovChannelIds.includes(message.channelId.toString())) {
-    if (Math.random() < 0.0025) {
+    if (Math.random() < 0.0033) {
       const generatedText = markov.generate(null, Math.floor(Math.random() * 30) + 20); // Randomize length between 20-50
       if (generatedText.trim().length > 0) {
         await message.reply(generatedText);

@@ -21,7 +21,7 @@ const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const prayEmojis = ["🙏", "🛐", "✝️", "☪️", "📿"];
 const probability = 0.18;
-const sillyProbability = 0.004; // 1/250 chance
+const sillyProbability = 0.0033; // 1/250 chance
 
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_PREFIX = process.env.PREFIX;
