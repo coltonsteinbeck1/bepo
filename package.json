@@ -6,7 +6,7 @@
     "@supabase/supabase-js": "^2.44.0",
     "aws-sdk": "^2.1691.0",
     "axios": "^1.6.2",
-    "discord.js": "^14.14.1",
+    "discord.js": "^14.21.0",
     "dotenv": "^16.3.1",
     "gifwrap": "^0.10.1",
     "libsodium-wrappers": "^0.7.13",
