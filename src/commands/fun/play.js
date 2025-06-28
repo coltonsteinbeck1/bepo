@@ -850,7 +850,123 @@ const createMusicEmbed = (song, queue, isPlaying = true) => {
     return embed;
 };
 
-// Create control buttons
+// Create enhanced queue addition embed
+const createQueueAddedEmbed = (addedSong, queueData) => {
+    const embedColor = addedSong.isSpotifyTrack ? '#1DB954' : '#00ff00';
+    const embedTitle = addedSong.isSpotifyTrack ? '🎵 Added Spotify Track to Queue' : '➕ Added to Queue';
+    
+    const embed = new EmbedBuilder()
+        .setColor(embedColor)
+        .setTitle(embedTitle)
+        .setDescription(`**${addedSong.title}**`)
+        .addFields(
+            { name: '👤 Artist/Channel', value: addedSong.channel || 'Unknown', inline: true },
+            { name: '📍 Position in Queue', value: `${queueData.songs.length}`, inline: true },
+            { name: '📋 Total Songs', value: `${queueData.songs.length} songs`, inline: true }
+        )
+        .setThumbnail(addedSong.thumbnail)
+        .setTimestamp();
+
+    // Show currently playing song
+    if (queueData.currentIndex >= 0 && queueData.currentIndex < queueData.songs.length) {
+        const currentSong = queueData.songs[queueData.currentIndex];
+        embed.addFields({
+            name: '🎵 Currently Playing',
+            value: `**${currentSong.title}** ${currentSong.isSpotifyTrack ? '🎵' : ''}`,
+            inline: false
+        });
+    }
+
+    // Show next few songs in queue (including the one just added)
+    const upcomingSongs = queueData.songs.slice(queueData.currentIndex + 1);
+    if (upcomingSongs.length > 0) {
+        const queueList = upcomingSongs.slice(0, 5) // Show up to 5 upcoming songs
+            .map((song, index) => {
+                const position = queueData.currentIndex + 2 + index; // +2 because currentIndex is 0-based and we want next songs
+                const isNewlyAdded = position === queueData.songs.length; // Check if this is the song we just added
+                const prefix = isNewlyAdded ? '**➤' : `${position}.`;
+                const suffix = isNewlyAdded ? ' ← NEW**' : '';
+                return `${prefix} ${song.title}${song.isSpotifyTrack ? ' 🎵' : ''}${suffix}`;
+            })
+            .join('\n');
+        
+        const moreCount = upcomingSongs.length > 5 ? ` (+${upcomingSongs.length - 5} more)` : '';
+        embed.addFields({
+            name: '🔜 Up Next',
+            value: queueList + moreCount,
+            inline: false
+        });
+    }
+
+    if (addedSong.isSpotifyTrack && addedSong.originalSpotifyUrl) {
+        embed.setFooter({ text: '🎵 Converted from Spotify • Added to queue' });
+    }
+
+    return embed;
+};
+
+// Create enhanced Spotify album/playlist addition embed
+const createSpotifyAlbumAddedEmbed = (spotifyData, queueData, startPosition) => {
+    const embed = new EmbedBuilder()
+        .setColor('#1DB954') // Spotify green
+        .setTitle(`🎵 Added Spotify ${spotifyData.type === 'album' ? 'Album' : 'Playlist'} to Queue`)
+        .setDescription(`**${spotifyData.name}**\n*Converted from Spotify and added to queue*`)
+        .addFields(
+            { name: '📀 Tracks Added', value: `${spotifyData.tracks.length}`, inline: true },
+            { name: '📋 Total Queue', value: `${queueData.songs.length} songs`, inline: true },
+            { name: '📍 Starting Position', value: `${startPosition}`, inline: true }
+        )
+        .setThumbnail(spotifyData.tracks[0]?.thumbnail)
+        .setTimestamp();
+
+    // Show currently playing song
+    if (queueData.currentIndex >= 0 && queueData.currentIndex < queueData.songs.length) {
+        const currentSong = queueData.songs[queueData.currentIndex];
+        embed.addFields({
+            name: '🎵 Currently Playing',
+            value: `**${currentSong.title}** ${currentSong.isSpotifyTrack ? '🎵' : ''}`,
+            inline: false
+        });
+    }
+
+    // Show some of the newly added tracks
+    const newlyAddedTracks = spotifyData.tracks.slice(0, 4) // Show first 4 tracks from the album/playlist
+        .map((track, index) => {
+            const position = startPosition + index;
+            return `${position}. ${track.title} 🎵`;
+        })
+        .join('\n');
+    
+    const moreCount = spotifyData.tracks.length > 4 ? ` (+${spotifyData.tracks.length - 4} more tracks)` : '';
+    embed.addFields({
+        name: '🎶 Added Tracks Preview',
+        value: newlyAddedTracks + moreCount,
+        inline: false
+    });
+
+    embed.setFooter({ text: '🎵 Converted from Spotify • All tracks added to queue' });
+
+    return embed;
+};
+
+// Create control buttons for queue additions
+const createQueueAddedButtons = () => {
+    return new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId('music_queue')
+                .setLabel('📋 View Full Queue')
+                .setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder()
+                .setCustomId('music_skip')
+                .setLabel('⏭️ Skip Current')
+                .setStyle(ButtonStyle.Primary),
+            new ButtonBuilder()
+                .setCustomId('music_stop')
+                .setLabel('⏹️ Stop')
+                .setStyle(ButtonStyle.Danger)
+        );
+};
 const createControlButtons = (hasQueue = false) => {
     const row = new ActionRowBuilder()
         .addComponents(
@@ -892,30 +1008,43 @@ const playNextSong = async (guildId, interaction = null) => {
     if (!queueData || !connection || !queueData.player) return;
 
     if (queueData.currentIndex >= queueData.songs.length - 1) {
-        // End of queue - don't set player to null, just update the message
+        // End of queue - keep connection alive but show finished status
+        console.log('[PLAYER] Queue finished, keeping connection alive');
+        
         if (interaction) {
             await interaction.editReply({
-                embeds: [new EmbedBuilder().setColor('#ff0000').setTitle('🔚 Queue Finished').setDescription('All songs have been played!')],
-                components: []
+                embeds: [new EmbedBuilder()
+                    .setColor('#ff9900')
+                    .setTitle('🔚 Queue Finished')
+                    .setDescription('All songs have been played! Use `/play` to add more music or the Stop button to disconnect.')
+                ],
+                components: [new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('music_stop')
+                        .setLabel('⏹️ Disconnect')
+                        .setStyle(ButtonStyle.Danger)
+                )]
             });
         } else if (queueData.lastMessage) {
             // Update the last message to show queue finished
             await queueData.lastMessage.edit({
-                embeds: [new EmbedBuilder().setColor('#ff0000').setTitle('🔚 Queue Finished').setDescription('All songs have been played!')],
-                components: []
+                embeds: [new EmbedBuilder()
+                    .setColor('#ff9900')
+                    .setTitle('🔚 Queue Finished')
+                    .setDescription('All songs have been played! Use `/play` to add more music or the Stop button to disconnect.')
+                ],
+                components: [new ActionRowBuilder().addComponents(
+                    new ButtonBuilder()
+                        .setCustomId('music_stop')
+                        .setLabel('⏹️ Disconnect')
+                        .setStyle(ButtonStyle.Danger)
+                )]
             });
         }
         
-        // Clean up when queue is finished
-        musicQueues.delete(guildId);
-        const connection = connections.get(guildId);
-        if (connection) {
-            connection.destroy();
-            connections.delete(guildId);
-        }
-        
-        // Unregister music activity
-        voiceActivityManager.stopActivity(guildId, 'music');
+        // Keep the connection alive but mark queue as finished
+        // Don't delete the queue data or connection - let user manually stop or add more songs
+        queueData.isFinished = true;
         
         return;
     }
@@ -1165,6 +1294,9 @@ const playCommand = {
                         return; // Exit here to avoid falling through to general queue logic
                     } else {
                         console.log('[MAIN] Adding tracks to existing queue...');
+                        // Store the starting position for the new tracks
+                        const startPosition = queueData.songs.length + 1;
+                        
                         // Add all tracks to existing queue
                         for (const track of spotifyData.tracks) {
                             queueData.songs.push({
@@ -1178,17 +1310,13 @@ const playCommand = {
                             });
                         }
 
+                        // Create enhanced embed with queue info and controls
+                        const embed = createSpotifyAlbumAddedEmbed(spotifyData, queueData, startPosition);
+                        const buttons = createQueueAddedButtons();
+
                         await interaction.editReply({
-                            embeds: [new EmbedBuilder()
-                                .setColor('#1DB954') // Spotify green
-                                .setTitle(`🎵 Added Spotify ${spotifyData.type === 'album' ? 'Album' : 'Playlist'} to Queue`)
-                                .setDescription(`**${spotifyData.name}**\n*Note: This is a simplified conversion from Spotify. Songs may not match exactly.*`)
-                                .addFields(
-                                    { name: 'Tracks Added', value: `${spotifyData.tracks.length}`, inline: true },
-                                    { name: 'Queue Length', value: `${queueData.songs.length} songs`, inline: true }
-                                )
-                                .setThumbnail(spotifyData.tracks[0]?.thumbnail)
-                            ]
+                            embeds: [embed],
+                            components: [buttons]
                         });
                         return;
                     }
@@ -1265,26 +1393,50 @@ const playCommand = {
             let connection = connections.get(guildId);
 
             console.log('[MAIN] Checking for existing queue...');
-            if (!queueData) {
-                console.log('[MAIN] No existing queue, creating new one...');
-                // Create new queue
-                queueData = {
-                    songs: [songData],
-                    currentIndex: 0,
-                    player: createAudioPlayer(),
-                    isPaused: false,
-                    lastMessage: null
-                };
-                musicQueues.set(guildId, queueData);
+            if (!queueData || queueData.isFinished) {
+                if (queueData?.isFinished) {
+                    console.log('[MAIN] Reusing finished queue...');
+                    // Reset the finished queue for new songs
+                    queueData.songs = [songData];
+                    queueData.currentIndex = 0;
+                    queueData.isPaused = false;
+                    queueData.isFinished = false;
+                    // Keep existing player and connection, but make sure connection is still valid
+                    const existingConnection = connections.get(guildId);
+                    if (!existingConnection || existingConnection.state.status === 'destroyed') {
+                        console.log('[MAIN] Recreating voice connection for finished queue...');
+                        connection = joinVoiceChannel({
+                            channelId: channel.id,
+                            guildId: channel.guild.id,
+                            adapterCreator: channel.guild.voiceAdapterCreator,
+                            selfDeaf: false,
+                        });
+                        connections.set(guildId, connection);
+                    } else {
+                        connection = existingConnection;
+                    }
+                } else {
+                    console.log('[MAIN] No existing queue, creating new one...');
+                    // Create new queue
+                    queueData = {
+                        songs: [songData],
+                        currentIndex: 0,
+                        player: createAudioPlayer(),
+                        isPaused: false,
+                        lastMessage: null,
+                        isFinished: false
+                    };
+                    musicQueues.set(guildId, queueData);
 
-                // Create voice connection
-                connection = joinVoiceChannel({
-                    channelId: channel.id,
-                    guildId: channel.guild.id,
-                    adapterCreator: channel.guild.voiceAdapterCreator,
-                    selfDeaf: false,
-                });
-                connections.set(guildId, connection);
+                    // Create voice connection
+                    connection = joinVoiceChannel({
+                        channelId: channel.id,
+                        guildId: channel.guild.id,
+                        adapterCreator: channel.guild.voiceAdapterCreator,
+                        selfDeaf: false,
+                    });
+                    connections.set(guildId, connection);
+                }
 
                 // Register music activity
                 voiceActivityManager.startActivity(guildId, 'music', channel.id, queueData);
@@ -1309,25 +1461,29 @@ const playCommand = {
 
                 connection.subscribe(queueData.player);
             } else {
-                console.log('[MAIN] Adding to existing queue...');
-                // Add to existing queue
-                queueData.songs.push(songData);
-                const embedColor = songData.isSpotifyTrack ? '#1DB954' : '#00ff00';
-                const embedTitle = songData.isSpotifyTrack ? '🎵 Added Spotify Track to Queue' : '➕ Added to Queue';
-                
-                await interaction.editReply({
-                    embeds: [new EmbedBuilder()
-                        .setColor(embedColor)
-                        .setTitle(embedTitle)
-                        .setDescription(`**${songData.title}**`)
-                        .addFields(
-                            { name: 'Position', value: `${queueData.songs.length}`, inline: true },
-                            { name: 'Queue Length', value: `${queueData.songs.length} songs`, inline: true }
-                        )
-                        .setThumbnail(songData.thumbnail)
-                    ]
-                });
-                return;
+                if (queueData.isFinished) {
+                    console.log('[MAIN] Queue was finished, restarting with new song...');
+                    // Reset the finished queue and start playing immediately
+                    queueData.songs = [songData];
+                    queueData.currentIndex = 0;
+                    queueData.isPaused = false;
+                    queueData.isFinished = false;
+                    // Will continue to playback logic below
+                } else {
+                    console.log('[MAIN] Adding to existing queue...');
+                    // Add to existing queue
+                    queueData.songs.push(songData);
+                    
+                    // Create enhanced embed with queue info and controls
+                    const embed = createQueueAddedEmbed(songData, queueData);
+                    const buttons = createQueueAddedButtons();
+                    
+                    await interaction.editReply({
+                        embeds: [embed],
+                        components: [buttons]
+                    });
+                    return;
+                }
             }
 
             console.log('[MAIN] Starting playback for:', youtubeUrl);
@@ -1399,15 +1555,69 @@ export const handleMusicInteraction = async (interaction) => {
 
     // Additional safety check for queue button (doesn't need player)
     if (interaction.customId === 'music_queue') {
+        const currentSong = queueData.songs[queueData.currentIndex];
+        const upcomingSongs = queueData.songs.slice(queueData.currentIndex + 1);
+        const previousSongs = queueData.songs.slice(0, queueData.currentIndex);
+        
         const queueEmbed = new EmbedBuilder()
             .setColor('#0099ff')
             .setTitle('📋 Current Queue')
-            .setDescription(
-                queueData.songs.map((song, index) => 
-                    `${index === queueData.currentIndex ? '**➤' : `${index + 1}.`} ${song.title}${index === queueData.currentIndex ? '**' : ''}`
-                ).join('\n') || 'Queue is empty'
+            .addFields(
+                { name: '📊 Queue Stats', value: `Total: ${queueData.songs.length} songs\nPosition: ${queueData.currentIndex + 1}/${queueData.songs.length}`, inline: true },
+                { name: '⏱️ Status', value: queueData.isPaused ? '⏸️ Paused' : (queueData.isFinished ? '🔚 Finished' : '▶️ Playing'), inline: true },
+                { name: '🎵 Spotify Songs', value: `${queueData.songs.filter(s => s.isSpotifyTrack).length}`, inline: true }
             )
-            .addFields({ name: 'Total Songs', value: `${queueData.songs.length}`, inline: true });
+            .setTimestamp();
+
+        // Show currently playing song
+        if (currentSong) {
+            queueEmbed.addFields({
+                name: '🎵 Currently Playing',
+                value: `**${currentSong.title}** ${currentSong.isSpotifyTrack ? '🎵' : ''}\n*by ${currentSong.channel || 'Unknown'}*`,
+                inline: false
+            });
+        }
+
+        // Show previous songs (last 3)
+        if (previousSongs.length > 0) {
+            const prevList = previousSongs.slice(-3)
+                .map((song, index) => {
+                    const position = queueData.currentIndex - (3 - index - 1);
+                    return `${position}. ${song.title} ${song.isSpotifyTrack ? '🎵' : ''}`;
+                })
+                .join('\n');
+            
+            queueEmbed.addFields({
+                name: '⏮️ Recently Played',
+                value: prevList,
+                inline: false
+            });
+        }
+
+        // Show upcoming songs (next 8)
+        if (upcomingSongs.length > 0) {
+            const queueList = upcomingSongs.slice(0, 8)
+                .map((song, index) => {
+                    const position = queueData.currentIndex + 2 + index;
+                    return `${position}. ${song.title} ${song.isSpotifyTrack ? '🎵' : ''}`;
+                })
+                .join('\n');
+            
+            const moreCount = upcomingSongs.length > 8 ? `\n*...and ${upcomingSongs.length - 8} more songs*` : '';
+            queueEmbed.addFields({
+                name: '🔜 Up Next',
+                value: queueList + moreCount,
+                inline: false
+            });
+        } else if (!queueData.isFinished) {
+            queueEmbed.addFields({
+                name: '🔜 Up Next',
+                value: '*No more songs in queue*\nUse `/play` to add more!',
+                inline: false
+            });
+        }
+
+        queueEmbed.setFooter({ text: '🎵 = Spotify Track • Use buttons to control playback' });
             
         await interaction.reply({ embeds: [queueEmbed], ephemeral: true });
         return;
