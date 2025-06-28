@@ -77,7 +77,17 @@ export function isBotMessageOrPrefix(message) {
 }
 
 export function isBotMentioned(message, client) {
-  return message.mentions.has(client.user.id);
+  // Check for direct bot mention
+  if (message.mentions.has(client.user.id)) {
+    return true;
+  }
+  
+  // Check for role mention (HOMONCULUS role)
+  if (process.env.HOMONCULUS && message.mentions.roles.has(process.env.HOMONCULUS)) {
+    return true;
+  }
+  
+  return false;
 }
 
 export async function sendTypingIndicator(message) {
