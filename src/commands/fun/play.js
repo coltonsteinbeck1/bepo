@@ -13,6 +13,56 @@ const connections = new Map(); // guildId -> voice connection
 // Export the musicQueues for use in other commands
 export { musicQueues };
 
+// Helper function to detect YouTube URL types
+const analyzeYouTubeUrl = (url) => {
+    const result = {
+        isLivestream: false,
+        isPlaylist: false,
+        isValid: false,
+        type: 'unknown'
+    };
+
+    try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase();
+        const pathname = urlObj.pathname;
+        const searchParams = urlObj.searchParams;
+
+        // Check if it's a YouTube URL
+        if (!hostname.includes('youtube.com') && !hostname.includes('youtu.be')) {
+            return result;
+        }
+
+        result.isValid = true;
+
+        // Check for playlist indicators
+        if (pathname.includes('/playlist') || searchParams.has('list')) {
+            result.isPlaylist = true;
+            result.type = 'playlist';
+            return result;
+        }
+
+        // Check for livestream indicators
+        if (pathname.includes('/live/') || 
+            searchParams.get('live') === '1' || 
+            searchParams.has('live')) {
+            result.isLivestream = true;
+            result.type = 'livestream';
+            return result;
+        }
+
+        // If it's a regular video
+        if (pathname.includes('/watch') || hostname.includes('youtu.be')) {
+            result.type = 'video';
+        }
+
+        return result;
+    } catch (error) {
+        console.error('Error analyzing YouTube URL:', error);
+        return result;
+    }
+};
+
 // Queue management functions
 export const addToQueue = (guildId, songData) => {
     const queueData = musicQueues.get(guildId);
@@ -875,11 +925,33 @@ const playNextSong = async (guildId, interaction = null) => {
     
     try {
         // Get audio URL
-        const audioUrl = await youtubedl(song.url, {
-            format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
-            getUrl: true,
-            quiet: true
-        });
+        let audioUrl;
+        try {
+            audioUrl = await youtubedl(song.url, {
+                format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
+                getUrl: true,
+                quiet: true
+            });
+        } catch (youtubeDlError) {
+            console.error('YouTube-dl error in playNextSong:', youtubeDlError);
+            // Skip this song and try the next one
+            if (queueData.currentIndex < queueData.songs.length - 1) {
+                console.log('Skipping problematic song and trying next...');
+                playNextSong(guildId, interaction);
+                return;
+            } else {
+                console.log('Last song failed, ending queue');
+                // Clean up when queue is finished due to errors
+                musicQueues.delete(guildId);
+                const connection = connections.get(guildId);
+                if (connection) {
+                    connection.destroy();
+                    connections.delete(guildId);
+                }
+                voiceActivityManager.stopActivity(guildId, 'music');
+                return;
+            }
+        }
 
         // Create audio resource
         const response = await fetch(audioUrl);
@@ -1054,11 +1126,18 @@ const playCommand = {
                         // Now proceed to play the first track - don't fall through to general queue logic
                         console.log('[MAIN] Starting playback for album first track:', youtubeUrl);
                         // Get audio URL and play (use YouTube URL for both YouTube and Spotify)
-                        const audioUrl = await youtubedl(youtubeUrl, {
-                            format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
-                            getUrl: true,
-                            quiet: true
-                        });
+                        let audioUrl;
+                        try {
+                            audioUrl = await youtubedl(youtubeUrl, {
+                                format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
+                                getUrl: true,
+                                quiet: true
+                            });
+                        } catch (youtubeDlError) {
+                            console.error('YouTube-dl error for album track:', youtubeDlError);
+                            await interaction.editReply('❌ Failed to process the first track from the album/playlist. Please try a different Spotify link or individual YouTube videos.');
+                            return;
+                        }
 
                         console.log('[MAIN] Got audio URL, creating stream...');
                         const response = await fetch(audioUrl);
@@ -1136,16 +1215,49 @@ const playCommand = {
                     return;
                 }
 
-                const info = await playdl.video_info(link);
-                songData = {
-                    url: link,
-                    title: info.video_details.title,
-                    channel: info.video_details.channel?.name || 'Unknown',
-                    duration: info.video_details.durationRaw || 'Unknown',
-                    thumbnail: info.video_details.thumbnails?.[0]?.url || null,
-                    isSpotifyTrack: false
-                };
-                youtubeUrl = link; // Make sure we use the original YouTube link
+                // Analyze the YouTube URL for type detection
+                const urlAnalysis = analyzeYouTubeUrl(link);
+                
+                if (urlAnalysis.isLivestream) {
+                    await interaction.editReply('❌ Livestreams are not supported. Please provide a regular YouTube video URL.');
+                    return;
+                }
+
+                if (urlAnalysis.isPlaylist) {
+                    await interaction.editReply('❌ YouTube playlists are not directly supported. Please provide individual video URLs or use a Spotify playlist instead.');
+                    return;
+                }
+
+                // Additional check for livestreams using playdl
+                try {
+                    const info = await playdl.video_info(link);
+                    
+                    // Check if it's a livestream
+                    if (info.video_details.live) {
+                        await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
+                        return;
+                    }
+
+                    // Check if duration is unavailable (common for livestreams)
+                    if (!info.video_details.durationInSec || info.video_details.durationInSec === 0) {
+                        await interaction.editReply('❌ This video appears to be a livestream or has no duration, which is not supported. Please provide a regular YouTube video URL.');
+                        return;
+                    }
+
+                    songData = {
+                        url: link,
+                        title: info.video_details.title,
+                        channel: info.video_details.channel?.name || 'Unknown',
+                        duration: info.video_details.durationRaw || 'Unknown',
+                        thumbnail: info.video_details.thumbnails?.[0]?.url || null,
+                        isSpotifyTrack: false
+                    };
+                    youtubeUrl = link; // Make sure we use the original YouTube link
+                } catch (videoInfoError) {
+                    console.error('Error getting video info:', videoInfoError);
+                    await interaction.editReply('❌ Failed to get video information. This might be a livestream, playlist, or invalid URL. Please try a different YouTube video URL.');
+                    return;
+                }
             }
 
             // Initialize or get existing queue
@@ -1220,11 +1332,28 @@ const playCommand = {
 
             console.log('[MAIN] Starting playback for:', youtubeUrl);
             // Get audio URL and play (use YouTube URL for both YouTube and Spotify)
-            const audioUrl = await youtubedl(youtubeUrl, {
-                format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
-                getUrl: true,
-                quiet: true
-            });
+            let audioUrl;
+            try {
+                audioUrl = await youtubedl(youtubeUrl, {
+                    format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Prefer webm, fallback to m4a, then any
+                    getUrl: true,
+                    quiet: true
+                });
+            } catch (youtubeDlError) {
+                console.error('YouTube-dl error:', youtubeDlError);
+                const errorMessage = youtubeDlError.message?.toLowerCase() || '';
+                
+                if (errorMessage.includes('live') || errorMessage.includes('stream')) {
+                    await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
+                } else if (errorMessage.includes('playlist')) {
+                    await interaction.editReply('❌ This appears to be a playlist URL, which is not directly supported. Please provide individual video URLs.');
+                } else if (errorMessage.includes('private') || errorMessage.includes('unavailable')) {
+                    await interaction.editReply('❌ This video is private or unavailable. Please provide a different YouTube video URL.');
+                } else {
+                    await interaction.editReply('❌ Failed to process the video URL. This might be a livestream, playlist, or the video might be unavailable. Please try a different YouTube video URL.');
+                }
+                return;
+            }
 
             console.log('[MAIN] Got audio URL, creating stream...');
             const response = await fetch(audioUrl);
