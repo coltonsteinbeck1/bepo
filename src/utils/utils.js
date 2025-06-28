@@ -125,7 +125,7 @@ export async function buildStreamlinedConversationContext(message) {
   const serverId = message.guild?.id;
   
   if (!convoStore.has(key)) {
-    // Build initial memory context
+    // Build initial memory context - ALWAYS include server ID
     const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
     
     // Combine system message with memory context
@@ -134,6 +134,8 @@ export async function buildStreamlinedConversationContext(message) {
     if (memoryContext.trim()) {
       finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
     }
+    
+    console.log(`Creating new conversation with memory context (${memoryContext.length} chars) for ${key}`);
     
     convoStore.set(key, {
       history: [{ role: "system", content: finalSystemMessage }],
@@ -157,16 +159,16 @@ export async function buildStreamlinedConversationContext(message) {
       entry.actualThreadId = message.channel.id;
     }
     
-    // Refresh memory context every 5 minutes or every 10 messages to pick up new server memories
+    // Refresh memory context more frequently for server memories (every 2 minutes or every 5 messages)
     const now = new Date();
     const timeSinceRefresh = now - (entry.lastMemoryRefresh || entry.startTime);
-    const shouldRefresh = timeSinceRefresh > 5 * 60 * 1000 || // 5 minutes
-                         entry.messageCount % 10 === 0; // every 10 messages
+    const shouldRefresh = timeSinceRefresh > 2 * 60 * 1000 || // 2 minutes (reduced from 5)
+                         entry.messageCount % 5 === 0; // every 5 messages (reduced from 10)
     
     if (shouldRefresh) {
       console.log(`Refreshing memory context for ${key} (time: ${Math.floor(timeSinceRefresh/1000)}s, messages: ${entry.messageCount})`);
       
-      // Build fresh memory context
+      // Build fresh memory context - ALWAYS include server ID
       const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
       
       // Update the system message with fresh context
@@ -179,6 +181,8 @@ export async function buildStreamlinedConversationContext(message) {
       // Update the system message in the conversation history
       entry.history[0] = { role: "system", content: finalSystemMessage };
       entry.lastMemoryRefresh = now;
+      
+      console.log(`Updated system message with memory context (${memoryContext.length} chars)`);
     }
     
     // Increment message count

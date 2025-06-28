@@ -335,15 +335,38 @@ async function getUserMemoryStats(userId) {
 function extractKeywords(message) {
   if (!message || typeof message !== 'string') return [];
   
+  // Remove Discord mentions first
+  let cleanMessage = message.replace(/<@!?\d+>/g, '').trim();
+  
+  // If the message is too short after cleaning, provide some default search terms
+  if (cleanMessage.length < 3) {
+    console.log(`Message too short after cleaning mentions: "${cleanMessage}" - using fallback terms`);
+    return ['creator', 'who', 'what', 'plays', 'game']; // Common fallback terms
+  }
+  
   // Remove common words and extract meaningful terms
   const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'is', 'was', 'are', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might'];
   
-  const words = message.toLowerCase()
+  // Extract important question words and concepts that are likely in server memories
+  const importantTerms = ['who', 'what', 'when', 'where', 'how', 'why', 'creator', 'created', 'made', 'maker', 'plays', 'playing', 'game', 'games', 'final', 'fantasy', 'ff', 'bot', 'developer', 'built', 'coded', 'programming', 'most'];
+  
+  const words = cleanMessage.toLowerCase()
     .replace(/[^\w\s]/g, ' ')
     .split(/\s+/)
-    .filter(word => word.length > 2 && !commonWords.includes(word))
-    .slice(0, 5); // Limit to 5 keywords
+    .filter(word => {
+      // Include important terms even if they're short, exclude common words
+      if (importantTerms.includes(word)) return true;
+      return word.length > 2 && !commonWords.includes(word);
+    })
+    .slice(0, 7); // Increased to 7 keywords to capture more context
   
+  // If no meaningful words found, add some common search terms
+  if (words.length === 0) {
+    console.log(`No meaningful keywords found in "${cleanMessage}" - using fallback terms`);
+    return ['creator', 'who', 'what', 'plays', 'game'];
+  }
+  
+  console.log(`Extracted keywords from "${cleanMessage}": [${words.join(', ')}]`);
   return words;
 }
 
@@ -413,19 +436,53 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
     // Get server memories if serverId is provided
     let relevantServerMemories = [];
     if (serverId) {
-      // Get keyword-based server memories
-      for (const term of searchTerms.slice(0, 3)) {
-        const serverMemories = await searchServerMemories(serverId, term, null, 3);
+      // Get keyword-based server memories - use more search terms
+      for (const term of searchTerms.slice(0, 5)) { // Increased from 3 to 5
+        const serverMemories = await searchServerMemories(serverId, term, null, 4); // Increased limit
         relevantServerMemories.push(...serverMemories);
       }
       
+      // Add fallback searches for common question patterns
+      const questionPatterns = [];
+      const messageWords = searchTerms.join(' ');
+      
+      // Check for creator/who questions
+      if (messageWords.includes('creator') || messageWords.includes('who') || messageWords.includes('made') || messageWords.includes('built') || searchTerms.length === 0) {
+        questionPatterns.push('creator', 'made', 'built', 'developer', 'author');
+      }
+      
+      // Check for game-related questions  
+      if (messageWords.includes('plays') || messageWords.includes('playing') || messageWords.includes('game') || messageWords.includes('final') || messageWords.includes('fantasy')) {
+        questionPatterns.push('plays', 'playing', 'game', 'final fantasy', 'ff');
+      }
+      
+      // Check for "bitch made" questions (handle variations) - search by phrase, not keyword
+      if (currentMessage.toLowerCase().includes('bitch made') || 
+          currentMessage.toLowerCase().includes('bitch-made') || 
+          currentMessage.toLowerCase().includes('most bitch') ||
+          (messageWords.includes('most') && currentMessage.toLowerCase().includes('bitch'))) {
+        questionPatterns.push('bitch made', 'bitch-made', 'most bitch');
+      }
+      
+      // If no specific patterns detected, search for common server info
+      if (questionPatterns.length === 0 || searchTerms.length === 0) {
+        questionPatterns.push('creator', 'plays', 'game', 'made', 'developer');
+      }
+      
+      // Search for fallback patterns
+      for (const pattern of questionPatterns) {
+        const fallbackMemories = await searchServerMemories(serverId, pattern, null, 3);
+        relevantServerMemories.push(...fallbackMemories);
+      }
+      
       // Also get recent server memories to ensure important server knowledge is included
-      const recentServerMemories = await getServerMemories(serverId, null, 5);
+      const recentServerMemories = await getServerMemories(serverId, null, 8); // Increased from 5
       relevantServerMemories.push(...recentServerMemories);
       
-      // Remove duplicates and limit results to top 7 (balance between relevance and context size)
+      // Remove duplicates and limit results to top 12 (increased from 10)
+      const uniqueCount = relevantServerMemories.length;
       relevantServerMemories = [...new Map(relevantServerMemories.map(m => [m.id, m])).values()]
-        .slice(0, 7);
+        .slice(0, 12);
       
       // Sort by relevance: more specific matches first, then by recency
       relevantServerMemories.sort((a, b) => {
@@ -473,6 +530,8 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
         // If scores are equal, sort by recency
         return new Date(b.updated_at) - new Date(a.updated_at);
       });
+    } else {
+      console.log(`No server ID provided, skipping server memories`);
     }
     
     // Build context string
@@ -480,7 +539,8 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
     
     // Add server memories first (they're important for server context)
     if (relevantServerMemories.length > 0) {
-      context += 'Server Knowledge & Information:\n';
+      context += '=== SERVER KNOWLEDGE & FACTS ===\n';
+      context += 'The following information is stored server knowledge that you MUST reference when answering questions:\n\n';
       
       // If client is available, resolve usernames for server memories and clean mentions
       if (client) {
@@ -492,7 +552,7 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
           const uniqueUserIds = [...new Set(relevantServerMemories.map(m => m.user_id))];
           const usernames = await getUsernamesFromIds(client, uniqueUserIds);
           
-          for (const memory of relevantServerMemories.slice(0, 5)) {
+          for (const memory of relevantServerMemories.slice(0, 10)) { // Increased from 8 to 10
             const timeAgo = getTimeAgo(memory.updated_at);
             const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
             const username = usernames[memory.user_id] || 'Unknown User';
@@ -500,27 +560,29 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
             // Clean Discord mentions from the memory content
             const cleanedContent = await cleanDiscordMentions(memory.memory_content, client);
             
-            context += `- ${title}${cleanedContent} (added by ${username} ${timeAgo})\n`;
+            context += `• ${title}${cleanedContent} (verified by ${username} ${timeAgo})\n`;
           }
         } catch (error) {
           console.error('Error resolving usernames for server memories:', error);
           // Fallback to original format if username resolution fails
-          relevantServerMemories.slice(0, 5).forEach(memory => {
+          relevantServerMemories.slice(0, 10).forEach(memory => { // Increased from 8 to 10
             const timeAgo = getTimeAgo(memory.updated_at);
             const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
-            context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
+            context += `• ${title}${memory.memory_content} (added ${timeAgo})\n`;
           });
         }
       } else {
         // Fallback when no client is available
-        relevantServerMemories.slice(0, 5).forEach(memory => {
+        relevantServerMemories.slice(0, 10).forEach(memory => { // Increased from 8 to 10
           const timeAgo = getTimeAgo(memory.updated_at);
           const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
-          context += `- ${title}${memory.memory_content} (added ${timeAgo})\n`;
+          context += `• ${title}${memory.memory_content} (added ${timeAgo})\n`;
         });
       }
       
-      context += '\n';
+      context += '\nIMPORTANT: Use this server knowledge to answer questions accurately. If someone asks about something covered in the server knowledge, reference it directly.\n\n';
+    } else {
+      console.log('No server memories found or no server ID provided');
     }
     
     if (uniqueMemories.length > 0) {
