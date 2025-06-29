@@ -23,6 +23,7 @@ import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
+import cs2NotifyCommand from "./commands/fun/cs2notify.js"
 import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import yapCommand from "./commands/fun/yap.js";
@@ -37,6 +38,7 @@ import { memeFilter, buildStreamlinedConversationContext, appendToConversation, 
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import healthMonitor from "./utils/healthMonitor.js";
+import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
 
 
 dotenv.config();
@@ -113,6 +115,7 @@ client.commands.set("draw", drawCommand);
 client.commands.set("ping", pingCommand);
 client.commands.set('maprotation', apexMapCommand);
 client.commands.set('cs2', cs2Command);
+client.commands.set('cs2notify', cs2NotifyCommand);
 client.commands.set('minecraftserver', minecraftServer);
 client.commands.set('rolesupport', roleSupport);
 client.commands.set("reset", resetConversation);
@@ -233,11 +236,14 @@ const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
 const markov = new MarkovChain();
 
-client.on("ready", () => {
+client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
   console.log(`🏥 Health monitoring started`);
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
+  
+  // Initialize CS2 patch note monitoring
+  await initializeCS2Monitoring(client);
   
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {

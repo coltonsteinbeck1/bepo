@@ -2,7 +2,7 @@
  * API Utilities for external service integrations
  * Handles Steam API, Apex API, and other external data sources
  */
-import fetch from "node-fetch";
+// Using built-in fetch (Node.js 18+)
 import { safeAsync } from "./errorHandler.js";
 
 /**

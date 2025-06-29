@@ -375,7 +375,7 @@ export async function sendSundayImage(client) {
     console.log(`[${new Date().toISOString()}] Attempting to send Sunday image`);
     const channel = await client.channels.fetch(CHILLIN_CHANNEL);
     if (channel) {
-      const imagePath = path.join(__dirname, "images", "sunday.jpeg");
+      const imagePath = path.join(__dirname, "..", "images", "sunday.jpeg");
       const attachment = new AttachmentBuilder(imagePath);
       await channel.send({ files: [attachment] });
       console.log(`[${new Date().toISOString()}] Successfully sent Sunday image`);

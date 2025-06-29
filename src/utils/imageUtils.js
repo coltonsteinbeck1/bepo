@@ -1,5 +1,5 @@
 import { OpenAI } from "openai";
-import fetch from "node-fetch";
+// Using built-in fetch (Node.js 18+)
 import sharp from "sharp";
 import { GifUtil, GifFrame, BitmapImage } from "gifwrap";
 import fs from "fs";

@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { writeFileSync } from "fs";
-import fetch from "node-fetch";
+// Using built-in fetch (Node.js 18+)
 import { OpenAI } from "openai";
 import ora from "ora";
 import path from "path";
@@ -25,7 +25,8 @@ try {
   console.log(result.data);
   spinner.text = "Processing results";
   const imgResult = await fetch(result.data[0].url);
-  const buffer = await imgResult.buffer();
+  const arrayBuffer = await imgResult.arrayBuffer();
+  const buffer = Buffer.from(arrayBuffer);
 
   ensureDir(path.join(__dirname, "images"));
   writeFileSync(path.join(__dirname, "images", "image.png"), buffer);

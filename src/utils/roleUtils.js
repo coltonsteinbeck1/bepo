@@ -11,6 +11,28 @@ import { safeAsync } from './errorHandler.js';
  */
 export class RoleManager {
   /**
+   * Check if a member has admin permissions
+   * @param {GuildMember} member - Discord guild member
+   * @returns {boolean} True if member has admin permissions
+   */
+  static isAdmin(member) {
+    if (!member) return false;
+    
+    // Check if user has Discord Administrator permission
+    if (member.permissions.has('Administrator')) {
+      return true;
+    }
+    
+    // Check if user is the CODE_MONKEY admin
+    const codeMonkeyId = process.env.CODE_MONKEY;
+    if (codeMonkeyId && member.user.id === codeMonkeyId) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
    * Get available roles for adding (not banned, not managed, user doesn't have)
    */
   static async getAvailableRoles(guild, member) {
@@ -196,6 +218,28 @@ export class RoleManager {
         assignable: assignableRoles.size
       };
     }, { total: 0, managed: 0, banned: 0, assignable: 0 }, 'get_role_stats');
+  }
+
+  /**
+   * Check if a member has admin permissions
+   * @param {GuildMember} member - Discord guild member
+   * @returns {boolean} True if member has admin permissions
+   */
+  static isAdmin(member) {
+    if (!member) return false;
+    
+    // Check if user has Discord Administrator permission
+    if (member.permissions.has('Administrator')) {
+      return true;
+    }
+    
+    // Check if user is the CODE_MONKEY admin
+    const codeMonkeyId = process.env.CODE_MONKEY;
+    if (codeMonkeyId && member.user.id === codeMonkeyId) {
+      return true;
+    }
+    
+    return false;
   }
 }
 
