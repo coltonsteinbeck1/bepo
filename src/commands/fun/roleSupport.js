@@ -1,129 +1,101 @@
-import { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
-import { getBZBannedRoles } from "../../supabase/supabase.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
+import { RoleManager, RoleUtils } from "../../utils/roleUtils.js";
 
 const roleSupport = {
-    data: new SlashCommandBuilder()
-        .setName("rolesupport")
-        .setDescription("Manage your self-assignable roles")
-        .addStringOption(option =>
-            option
-                .setName("action")
-                .setDescription("Choose to add or remove roles")
-                .setRequired(true)
-                .addChoices(
-                    { name: "Add Role", value: "add" },
-                    { name: "Remove Role", value: "remove" }
-                )
-        ),
-    async execute(interaction) {
-        const action = interaction.options.getString('action');
+  data: new SlashCommandBuilder()
+    .setName("rolesupport")
+    .setDescription("Manage your self-assignable roles")
+    .addStringOption(option =>
+      option
+        .setName("action")
+        .setDescription("Choose to add or remove roles")
+        .setRequired(true)
+        .addChoices(
+          { name: "Add Role", value: "add" },
+          { name: "Remove Role", value: "remove" }
+        )
+    ),
+    
+  async execute(interaction) {
+    const action = interaction.options.getString('action');
 
-        try {
-            const guild = interaction.guild;
-            if (!guild) {
-                return interaction.reply({ content: "This command can only be used in a server.", ephemeral: true });
-            }
-            if (guild.id !== process.env.GUILD_BZ) {
-                return interaction.reply({ content: "This command is not enabled in this server.", ephemeral: true });
-            }
-            await guild.roles.fetch();
+    try {
+      const guild = interaction.guild;
+      const member = interaction.member;
 
-            if (action === 'add') {
-                // Fetch and log banned role IDs for debugging
-                const bzRolesData = await getBZBannedRoles();
+      if (!guild) {
+        return interaction.reply({ 
+          content: "This command can only be used in a server.", 
+          flags: MessageFlags.Ephemeral 
+        });
+      }
 
-                // Convert role IDs to Number for proper comparison
-                const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+      if (!RoleManager.isRoleCommandAllowed(guild.id)) {
+        return interaction.reply({ 
+          content: "This command is not enabled in this server.", 
+          flags: MessageFlags.Ephemeral 
+        });
+      }
 
-                // Get all roles and filter out managed roles, @everyone, and roles with banned IDs
-                const availableRoles = guild.roles.cache.filter(role => {
-                    try {
-                        const roleId = Number(role.id);
-                        const isBanned = bannedRolesSet.has(roleId);
-
-                        return !role.managed &&
-                            role.id !== guild.id &&
-                            !isBanned;
-                    } catch (error) {
-                        return false; // Skip this role if there's an error
-                    }
-                });
-
-                const member = interaction.member;
-                const filteredRoles = availableRoles.filter(role => !member.roles.cache.has(role.id));
-
-                const buttons = filteredRoles.map(role =>
-                    new ButtonBuilder()
-                        .setCustomId(`roleToggle:${role.id}`)
-                        .setLabel(role.name)
-                        .setStyle(ButtonStyle.Primary)
-                );
-
-                const rows = [];
-                for (let i = 0; i < buttons.length; i += 5) {
-                    rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-                }
-
-                await interaction.reply({
-                    content: "Select the roles you want to toggle:",
-                    components: rows,
-                    ephemeral: true,
-                });
-            } else if (action === 'remove') {
-                const member = interaction.member;
-                const bzRolesData = await getBZBannedRoles();
-                const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
-
-                // Filter to only show roles that the user actually has
-                const currentRoles = guild.roles.cache.filter(role => {
-                    try {
-                        const roleId = Number(role.id);
-                        const isBanned = bannedRolesSet.has(roleId);
-
-                        return !role.managed &&
-                            role.id !== guild.id &&
-                            !isBanned &&
-                            member.roles.cache.has(role.id); // Only include roles the user has
-                    } catch (error) {
-                        return false; // Skip this role if there's an error
-                    }
-                });
-
-                const buttons = currentRoles.map(role =>
-                    new ButtonBuilder()
-                        .setCustomId(`removeRole:${role.id}`)
-                        .setLabel(role.name)
-                        .setStyle(ButtonStyle.Danger)
-                );
-
-                const rows = [];
-                for (let i = 0; i < buttons.length; i += 5) {
-                    rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
-                }
-
-                await interaction.reply({
-                    content: "Select the roles you want to remove:",
-                    components: rows,
-                    ephemeral: true,
-                });
-            } else {
-                await interaction.reply({ content: "Invalid action. Please choose 'add' or 'remove'.", ephemeral: true });
-            }
-        } catch (error) {
-            console.error("Error executing roleSupport command:", error);
-            if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({
-                    content: "An error occurred while executing the command.",
-                    ephemeral: true,
-                });
-            } else {
-                await interaction.reply({
-                    content: "An error occurred while executing the command.",
-                    ephemeral: true,
-                });
-            }
+      if (action === 'add') {
+        const availableRoles = await RoleManager.getAvailableRoles(guild, member);
+        
+        if (availableRoles.length === 0) {
+          return interaction.reply({
+            content: "No roles available to add. You either have all assignable roles or no roles are available.",
+            flags: MessageFlags.Ephemeral,
+          });
         }
-    },
+
+        const rows = RoleManager.createRoleButtons(availableRoles, 'add');
+
+        await interaction.reply({
+          content: "Select the roles you want to add:",
+          components: rows,
+          flags: MessageFlags.Ephemeral,
+        });
+
+      } else if (action === 'remove') {
+        const removableRoles = await RoleManager.getRemovableRoles(guild, member);
+        
+        if (removableRoles.length === 0) {
+          return interaction.reply({
+            content: "You don't have any assignable roles to remove.",
+            flags: MessageFlags.Ephemeral,
+          });
+        }
+
+        const rows = RoleManager.createRoleButtons(removableRoles, 'remove');
+
+        await interaction.reply({
+          content: "Select the roles you want to remove:",
+          components: rows,
+          flags: MessageFlags.Ephemeral,
+        });
+
+      } else {
+        await interaction.reply({ 
+          content: "Invalid action. Please choose 'add' or 'remove'.", 
+          flags: MessageFlags.Ephemeral 
+        });
+      }
+
+    } catch (error) {
+      console.error("Error executing roleSupport command:", error);
+      
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: "An error occurred while executing the command.",
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          content: "An error occurred while executing the command.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    }
+  },
 };
 
 export default roleSupport;

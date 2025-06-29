@@ -1,4 +1,4 @@
-import { Client, Collection, Guild, AttachmentBuilder } from "discord.js";
+import { Client, Collection, Guild, AttachmentBuilder, MessageFlags } from "discord.js";
 import dotenv from "dotenv";
 import { OpenAI } from "openai";
 import path from "path";
@@ -17,6 +17,7 @@ import updateServerMemoryCommand from "./commands/fun/updateServerMemory.js";
 import digestCommand from "./commands/fun/digest.js";
 import threadCommand from "./commands/fun/thread.js";
 import debugMemoryCommand from "./commands/fun/debugMemory.js";
+import healthCommand from "./commands/fun/health.js";
 import { getAllContext } from "../scripts/create-context.js";
 import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
@@ -31,8 +32,12 @@ import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExp
 import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
     isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
     sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads, 
-    updateThreadActivity, checkAndDeleteInactiveThreads } from "./utils//utils.js";
+    updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences, 
+    getBotManagedThreadInfo } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
+import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
+import healthMonitor from "./utils/healthMonitor.js";
+
 
 dotenv.config();
 
@@ -41,6 +46,64 @@ const __dirname = path.dirname(__filename);
 
 const client = new Client({
   intents: ["Guilds", "GuildMembers", "GuildMessages", "MessageContent", "GuildVoiceStates"],
+});
+
+// Enhanced error handling for Discord client
+client.on('error', (error) => {
+  console.error('❌ Discord Client Error:', error);
+  handleDiscordError(error, null, 'client');
+});
+
+client.on('warn', (warning) => {
+  console.warn('⚠️ Discord Client Warning:', warning);
+});
+
+client.on('debug', (info) => {
+  // Only log critical debug info to reduce noise
+  if (info.includes('Session') && info.includes('READY')) {
+    console.log('🔍 Discord Session Ready');
+  }
+});
+
+client.on('shardError', (error, shardId) => {
+  console.error(`❌ Shard ${shardId} Error:`, error);
+  handleDiscordError(error, null, `shard_${shardId}`);
+});
+
+client.on('shardDisconnect', (event, shardId) => {
+  console.warn(`🔌 Shard ${shardId} Disconnected:`, event);
+});
+
+client.on('shardReconnecting', (shardId) => {
+  // Reduced logging - only log if multiple reconnections
+});
+
+// Add graceful shutdown handler
+process.on('SHUTDOWN', async (error) => {
+  console.log('🛑 Bot shutting down gracefully...');
+  
+  try {
+    // Stop scheduled tasks
+    console.log('⏹️ Stopping scheduled tasks...');
+    
+    // Cleanup voice connections
+    console.log('🎵 Cleaning up voice connections...');
+    // This will be handled by individual command cleanup
+    
+    // Close database connections
+    console.log('🗄️ Closing database connections...');
+    // Supabase client will handle this automatically
+    
+    // Destroy Discord client
+    console.log('🤖 Destroying Discord client...');
+    if (client.readyState !== 'DESTROYED') {
+      client.destroy();
+    }
+    
+    console.log('✅ Graceful shutdown completed');
+  } catch (shutdownError) {
+    console.error('❌ Error during graceful shutdown:', shutdownError);
+  }
 });
 
 client.commands = new Collection();
@@ -65,6 +128,8 @@ client.commands.set("thread", threadCommand);
 client.commands.set("yap", yapCommand);
 client.commands.set("stopyap",stopyapCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
+client.commands.set("health", healthCommand);
+
 
 
 // OpenAI API key for xAI (Grok)
@@ -127,6 +192,40 @@ function startScheduledMessaging(client) {
   setInterval(() => {
     checkAndDeleteInactiveThreads(client);
   }, 30 * 60 * 1000); // Every 30 minutes
+  
+  // Validate and cleanup stale thread references every 2 hours
+  setInterval(async () => {
+    await safeAsync(async () => {
+      console.log('🧵 Validating bot-managed threads...');
+      const staleThreads = cleanupStaleThreadReferences();
+      let validatedCount = 0;
+      let cleanedCount = 0;
+      
+      for (const threadId of staleThreads) {
+        const threadInfo = getBotManagedThreadInfo(threadId);
+        if (threadInfo) {
+          const validation = await validateBotManagedThread(
+            client, 
+            threadId, 
+            threadInfo.userId, 
+            threadInfo.channelId
+          );
+          
+          if (validation.exists) {
+            validatedCount++;
+          } else {
+            cleanedCount++;
+          }
+        }
+      }
+      
+      if (validatedCount > 0 || cleanedCount > 0) {
+        console.log(`🧹 Thread validation complete: ${validatedCount} validated, ${cleanedCount} cleaned up`);
+      }
+    }, (error) => {
+      console.error('Thread validation error - will retry next cycle:', error);
+    }, 'thread_validation_cleanup');
+  }, 2 * 60 * 60 * 1000); // Every 2 hours
 }
 
 // const chatContext = await getAllContext();
@@ -136,83 +235,132 @@ const markov = new MarkovChain();
 
 client.on("ready", () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
+  console.log(`🏥 Health monitoring started`);
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
   
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {
-    try {
+    await safeAsync(async () => {
       console.log('🧠 Running memory cleanup...');
       const expiredCount = await cleanupExpiredMemories();
       const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
       const expiredServerCount = await cleanupExpiredServerMemories();
       console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, and ${expiredServerCount} expired server memories`);
-    } catch (error) {
-      console.error('Memory cleanup error:', error);
-    }
+    }, (error) => {
+      handleDatabaseError(error, 'memory_cleanup');
+      console.error('Memory cleanup error - will retry next cycle:', error);
+    }, 'memory_cleanup');
   }, 6 * 60 * 60 * 1000); // Every 6 hours
 });
 
 client.on("interactionCreate", async (interaction) => {
-  try {
+  const retryWrapper = createRetryWrapper(2, 1000); // 2 retries with 1 second base delay
+  
+  await safeAsync(async () => {
     if (interaction.isCommand()) {
       const command = client.commands.get(interaction.commandName);
 
       if (!command) {
         console.error(`Command not found: ${interaction.commandName}`);
+        if (!interaction.replied) {
+          await interaction.reply({
+            content: '❌ Command not found or temporarily unavailable.',
+            flags: MessageFlags.Ephemeral
+          });
+        }
         return;
       }
 
-      await command.execute(interaction);
+      // Execute command with retry wrapper for transient failures
+      await retryWrapper(async () => {
+        await command.execute(interaction);
+      }, `command_${interaction.commandName}`);
+
     } else if (interaction.isButton()) {
       if (interaction.customId.startsWith("music_")) {
-        // Handle music control buttons
-        await handleMusicInteraction(interaction);
+        // Handle music control buttons with retry
+        await retryWrapper(async () => {
+          await handleMusicInteraction(interaction);
+        }, 'music_interaction');
       } else if (interaction.customId.startsWith("roleToggle:")) {
         const roleId = interaction.customId.split(":")[1];
         const member = interaction.member;
 
         if (!member) {
-          return interaction.reply({ content: "Member not found.", ephemeral: true });
+          return interaction.reply({ content: "Member not found.", flags: MessageFlags.Ephemeral });
         }
 
-        if (!member.roles.cache.has(roleId)) {
-          await member.roles.add(roleId);
-          await interaction.reply({ content: "Role added.", ephemeral: true });
-        } else {
-          await member.roles.remove(roleId);
-          await interaction.reply({ content: "Role removed.", ephemeral: true });
-        }
+        await safeAsync(async () => {
+          if (!member.roles.cache.has(roleId)) {
+            await member.roles.add(roleId);
+            await interaction.reply({ content: "Role added.", flags: MessageFlags.Ephemeral });
+          } else {
+            await member.roles.remove(roleId);
+            await interaction.reply({ content: "Role removed.", flags: MessageFlags.Ephemeral });
+          }
+        }, async (error) => {
+          console.error('Role toggle error:', error);
+          if (!interaction.replied) {
+            await interaction.reply({ 
+              content: "❌ Failed to toggle role. I might not have the required permissions.", 
+              flags: MessageFlags.Ephemeral 
+            });
+          }
+        }, 'role_toggle');
+        
       } else if (interaction.customId.startsWith("removeRole:")) {
         const roleId = interaction.customId.split(":")[1];
         const member = interaction.member;
 
         if (!member) {
-          return interaction.reply({ content: "Member not found.", ephemeral: true });
+          return interaction.reply({ content: "Member not found.", flags: MessageFlags.Ephemeral });
         }
 
-        if (member.roles.cache.has(roleId)) {
-          await member.roles.remove(roleId);
-          await interaction.reply({ content: "Role removed.", ephemeral: true });
-        } else {
-          await interaction.reply({ content: "You do not have this role.", ephemeral: true });
-        }
+        await safeAsync(async () => {
+          if (member.roles.cache.has(roleId)) {
+            await member.roles.remove(roleId);
+            await interaction.reply({ content: "Role removed.", flags: MessageFlags.Ephemeral });
+          } else {
+            await interaction.reply({ content: "You do not have this role.", flags: MessageFlags.Ephemeral });
+          }
+        }, async (error) => {
+          console.error('Role remove error:', error);
+          if (!interaction.replied) {
+            await interaction.reply({ 
+              content: "❌ Failed to remove role. I might not have the required permissions.", 
+              flags: MessageFlags.Ephemeral 
+            });
+          }
+        }, 'role_remove');
       }
     }
-  } catch (error) {
+  }, async (error) => {
+    // Global interaction error fallback
     console.error("Error during interaction:", error);
-    if (interaction.replied || interaction.deferred) {
-      await interaction.followUp({
-        content: "There was an error while executing this interaction!",
-        ephemeral: true,
-      });
-    } else {
-      await interaction.reply({
-        content: "There was an error while executing this interaction!",
-        ephemeral: true,
-      });
+    const isDiscordError = handleDiscordError(error, interaction, 'interaction');
+    
+    // Try to respond to the user if we haven't already
+    const errorMessage = isDiscordError && error.code === 50013 
+      ? "❌ I don't have the required permissions to perform this action."
+      : "❌ Something went wrong while processing your request. Please try again.";
+    
+    try {
+      if (interaction.replied || interaction.deferred) {
+        await interaction.followUp({
+          content: errorMessage,
+          flags: MessageFlags.Ephemeral,
+        });
+      } else {
+        await interaction.reply({
+          content: errorMessage,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+    } catch (replyError) {
+      console.error('Failed to send error reply:', replyError);
     }
-  }
+  }, 'interaction_handler');
 });
 
 client.on("messageCreate", async (message) => {
@@ -226,6 +374,23 @@ client.on("messageCreate", async (message) => {
 
   // Check if message is in a bot-managed thread (auto-respond)
   const isInBotThread = message.channel.isThread() && isBotManagedThread(message.channel.id);
+  
+  // If message is in a thread but not tracked, check if it should be tracked
+  if (message.channel.isThread() && !isInBotThread) {
+    // Check if this might be a thread we created but lost tracking for
+    const threadInfo = await safeAsync(async () => {
+      return await validateBotManagedThread(
+        client, 
+        message.channel.id, 
+        message.author.id, 
+        message.channel.parentId
+      );
+    }, null, 'thread_validation');
+    
+    if (threadInfo && threadInfo.exists && !threadInfo.archived) {
+      console.log(`Recovered tracking for thread ${message.channel.id} after name change or restart`);
+    }
+  }
   
   // Update thread activity if message is in a bot-managed thread
   if (isInBotThread) {
@@ -336,19 +501,29 @@ client.on("messageCreate", async (message) => {
       if (processedImages === 0) {
         const userContent = messageData.processedContent;
         appendToConversation(message, "user", userContent);
+           response = await safeAsync(async () => {
+        return await xAI.chat.completions.create({
+          model: "grok-3-mini-beta",
+          messages: [...context, { 
+            role: "user", 
+            content: userContent
+          }],
+        });
+      }, async (error) => {
+        const aiErrorResult = handleAIError(error, 'xai');
+        console.log("xAI connection Error:", error);
         
-        response = await xAI.chat.completions
-          .create({
-            model: "grok-3-mini-beta",
-            messages: [...context, { 
-              role: "user", 
-              content: userContent
-            }],
-          })
-          .catch((error) => {
-            message.reply("Model connection having issues");
-            console.log("xAI connection Error:\n", error);
-          });
+        if (aiErrorResult.retry) {
+          // For retryable errors, return null so the retry can happen
+          return null;
+        } else {
+          // For non-retryable errors, send user message and return null
+          await safeAsync(async () => {
+            await message.reply("Model connection having issues - please try again in a moment");
+          }, null, 'ai_error_reply');
+          return null;
+        }
+      }, 'xai_api_call');
       } else if (!response) {
         // Process with vision model (only if we don't already have a response from GIF processing)
         visionMessages.push({
@@ -356,16 +531,21 @@ client.on("messageCreate", async (message) => {
           content: userMessageContent
         });
         
-        response = await openAI.chat.completions
-          .create({
+        response = await safeAsync(async () => {
+          return await openAI.chat.completions.create({
             model: "gpt-4o-mini",
             messages: visionMessages,
             max_tokens: 1000,
-          })
-          .catch((error) => {
-            message.reply("Image model connection having issues");
-            console.log("OpenAI Image Error:\n", error);
           });
+        }, async (error) => {
+          const aiErrorResult = handleAIError(error, 'openai');
+          console.log("OpenAI Image Error:", error);
+          
+          await safeAsync(async () => {
+            await message.reply("Image model connection having issues - please try again in a moment");
+          }, null, 'vision_error_reply');
+          return null;
+        }, 'openai_vision_call');
       }
       
       // Store the processed message in conversation history
@@ -377,17 +557,23 @@ client.on("messageCreate", async (message) => {
       const userContent = messageData.processedContent;
       appendToConversation(message, "user", userContent);
 
-      response = await xAI.chat.completions
-        .create({
+      response = await safeAsync(async () => {
+        return await xAI.chat.completions.create({
           model: "grok-3-mini-beta",
           messages: [...context, { 
             role: "user", 
             content: userContent
           }],
-        })
-        .catch((error) => {
-          message.reply("Model connection having issues");
-          console.log("xAI connection Error:\n", error);        });
+        });
+      }, async (error) => {
+        const aiErrorResult = handleAIError(error, 'xai');
+        console.log("xAI connection Error:", error);
+        
+        await safeAsync(async () => {
+          await message.reply("Model connection having issues - please try again in a moment");
+        }, null, 'ai_error_reply');
+        return null;
+      }, 'xai_fallback_call');
     }
 
     clearInterval(sendTypingInterval);
@@ -402,7 +588,7 @@ client.on("messageCreate", async (message) => {
     appendToConversation(message, "assistant", responseMessage);
     
     // Store memory after successful conversation
-    try {
+    await safeAsync(async () => {
       // Store the user's message as memory
       await storeUserMemory(
         message.author.id,
@@ -429,10 +615,11 @@ client.on("messageCreate", async (message) => {
           }
         );
       }
-    } catch (memoryError) {
-      console.error('Error storing memory:', memoryError);
-      // Don't fail the response if memory storage fails
-    }
+    }, (error) => {
+      handleDatabaseError(error, 'memory_storage');
+      // Don't fail the response if memory storage fails - this is graceful degradation
+      return null;
+    }, 'memory_storage');
 
     // Auto-thread creation disabled - threads can be created manually if needed
 
@@ -440,7 +627,19 @@ client.on("messageCreate", async (message) => {
 
     for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
       const chunk = responseMessage.substring(i, i + chunkSizeLimit);
-      await message.reply(chunk);
+      await safeAsync(async () => {
+        await message.reply(chunk);
+      }, async (error) => {
+        console.error('Failed to send message chunk:', error);
+        handleDiscordError(error, null, 'message_reply');
+        
+        // Try to send a shorter error message instead
+        if (i === 0) { // Only send error on first chunk to avoid spam
+          await safeAsync(async () => {
+            await message.reply("❌ I encountered an error while sending my response. Please try again.");
+          }, null, 'error_reply_fallback');
+        }
+      }, `message_reply_chunk_${i}`);
     }
     
     // Update thread activity after bot responds (if in bot-managed thread)

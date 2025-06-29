@@ -1,5 +1,5 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
-import { convoStore, markThreadAsBotManaged } from "../../utils/utils.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
+import { convoStore, markThreadAsBotManaged, isBotManagedThread, getBotManagedThreadInfo } from "../../utils/utils.js";
 import { createConversationThread, generateTopicHint } from "../../utils/threadUtils.js";
 
 const threadCommand = {
@@ -21,22 +21,86 @@ const threadCommand = {
         if (!conversation || conversation.history.length <= 1) {
             await interaction.reply({ 
                 content: "Start a conversation with me first, then I can create a thread for us! Just mention me or use my prefix to chat.", 
-                ephemeral: true 
+                flags: MessageFlags.Ephemeral 
             });
             return;
         }
 
-        // Check if thread already exists for this conversation
-        if (conversation.threadCreated) {
-            await interaction.reply({ 
-                content: "A thread already exists for our conversation! Look for it in the channel's thread list.", 
-                ephemeral: true 
-            });
+        // Enhanced thread existence check with safeguards
+        let existingThreadId = conversation.threadId;
+        let threadExists = false;
+        let existingThread = null;
+
+        // First check: If we have a threadId recorded, verify it still exists
+        if (existingThreadId) {
+            try {
+                existingThread = await interaction.client.channels.fetch(existingThreadId);
+                if (existingThread && existingThread.isThread() && !existingThread.archived) {
+                    threadExists = true;
+                    
+                    // Ensure the thread is still properly tracked as bot-managed
+                    if (!isBotManagedThread(existingThreadId)) {
+                        console.log(`Re-marking thread ${existingThreadId} as bot-managed after title change or restart`);
+                        markThreadAsBotManaged(existingThreadId, interaction.user.id, interaction.channelId);
+                    }
+                }
+            } catch (error) {
+                console.log(`Thread ${existingThreadId} no longer exists or is inaccessible:`, error.message);
+                // Clean up stale reference
+                conversation.threadCreated = false;
+                conversation.threadId = null;
+                existingThreadId = null;
+            }
+        }
+
+        // Second check: Look for any bot-managed threads by this user in this channel
+        if (!threadExists) {
+            try {
+                const guild = interaction.guild;
+                const channel = interaction.channel;
+                
+                // Fetch active threads in the channel
+                const threadManager = channel.threads;
+                const activeThreads = await threadManager.fetchActive();
+                
+                // Look for threads that might belong to this user
+                for (const [threadId, thread] of activeThreads.threads) {
+                    const threadInfo = getBotManagedThreadInfo(threadId);
+                    if (threadInfo && threadInfo.userId === interaction.user.id && threadInfo.channelId === interaction.channelId) {
+                        console.log(`Found existing bot-managed thread ${threadId} for user ${interaction.user.id}`);
+                        existingThread = thread;
+                        existingThreadId = threadId;
+                        threadExists = true;
+                        
+                        // Update conversation record
+                        conversation.threadCreated = true;
+                        conversation.threadId = threadId;
+                        break;
+                    }
+                }
+            } catch (error) {
+                console.error('Error searching for existing threads:', error);
+                // Continue with thread creation if search fails
+            }
+        }
+
+        if (threadExists && existingThread) {
+            const embed = new EmbedBuilder()
+                .setColor('#ffaa00')
+                .setTitle('🧵 Thread Already Exists!')
+                .setDescription(`You already have a thread called **${existingThread.name}** for our conversation.`)
+                .addFields({
+                    name: '🔍 Where is it?',
+                    value: `Look for it in this channel's thread list, or click here: <#${existingThreadId}>`
+                })
+                .setTimestamp();
+
+            await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             return;
         }
 
         try {
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             // Generate thread name
             let threadName;
@@ -70,11 +134,13 @@ const threadCommand = {
 
                 await interaction.editReply({ embeds: [embed] });
 
-                // Send welcome message to the thread
+                // Send welcome message to the thread with enhanced info
                 try {
-                    await thread.send({
-                        content: `🧵 **Welcome to your conversation thread!**\n\n${interaction.user}, I've created this thread for our ongoing conversation. We can chat here without interrupting the main channel.\n\n${customName ? `**Topic: ${customName}**\n\n` : ''}I'll respond to all your messages in this thread automatically - no need to @ me!\n\n⏰ *This thread will auto-delete after 1 hour of inactivity to keep things tidy.* 🤖`
-                    });
+                    const welcomeMessage = customName 
+                        ? `🧵 **Welcome to your conversation thread!**\n\n${interaction.user}, I've created this thread for our ongoing conversation about **${customName}**.\n\nWe can chat here without interrupting the main channel, and I'll respond to all your messages automatically - no need to @ me!\n\n💡 **Thread Features:**\n• Auto-responses (no @ needed)\n• Conversation history preserved\n• Easy to find in thread list\n• Won't clutter main channel\n\n⏰ *This thread will auto-delete after 1 hour of inactivity to keep things tidy.* 🤖\n\n*PS: Feel free to rename this thread anytime - I'll still recognize it as ours!* ✨`
+                        : `🧵 **Welcome to your conversation thread!**\n\n${interaction.user}, I've created this thread for our ongoing conversation.\n\nWe can chat here without interrupting the main channel, and I'll respond to all your messages automatically - no need to @ me!\n\n💡 **Thread Features:**\n• Auto-responses (no @ needed)\n• Conversation history preserved\n• Easy to find in thread list\n• Won't clutter main channel\n\n⏰ *This thread will auto-delete after 1 hour of inactivity to keep things tidy.* 🤖\n\n*PS: Feel free to rename this thread anytime - I'll still recognize it as ours!* ✨`;
+
+                    await thread.send({ content: welcomeMessage });
                 } catch (error) {
                     console.error('Error sending thread welcome message:', error);
                 }

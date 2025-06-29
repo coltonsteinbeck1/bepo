@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 import { convoStore } from "../../utils/utils.js";
 
 const resetConversation = {
@@ -8,9 +8,9 @@ const resetConversation = {
     async execute(interaction) {
         const key = `${interaction.channelId}:${interaction.user.id}`;
         if (convoStore.delete(key)) {
-            await interaction.reply({ content: "✅ Conversation reset.", ephemeral: true });
+            await interaction.reply({ content: "✅ Conversation reset.", flags: MessageFlags.Ephemeral });
         } else {
-            await interaction.reply({ content: "ℹ️ No active conversation to reset.", ephemeral: true });
+            await interaction.reply({ content: "ℹ️ No active conversation to reset.", flags: MessageFlags.Ephemeral });
         }
     },
 };

@@ -1,5 +1,5 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { updateServerMemory, getServerMemoryById, getServerMemoryByPartialId } from '../../supabase/supabase.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+import { ServerMemoryManager } from '../../utils/memoryUtils.js';
 
 const updateServerMemoryCommand = {
     data: new SlashCommandBuilder()
@@ -39,57 +39,12 @@ const updateServerMemoryCommand = {
         if (!serverId) {
             await interaction.reply({
                 content: '❌ This command can only be used in a server.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
             return;
         }
 
         try {
-            const isCodeMonkey = userId === process.env.CODE_MONKEY;
-            let existingMemory = null;
-            let resolvedMemoryId = memoryId; // Use a mutable variable for the resolved ID
-            
-            // For short IDs (8 chars or less), try partial lookup first to avoid UUID validation errors
-            // This works for all users since they see short IDs in the list
-            if (memoryId.length <= 8) {
-                console.log(`Trying partial ID lookup for: ${memoryId}`);
-                existingMemory = await getServerMemoryByPartialId(memoryId, serverId);
-                if (existingMemory) {
-                    console.log(`Found memory with partial ID, full ID: ${existingMemory.id}`);
-                    // Update resolvedMemoryId to use the full ID for the update operation
-                    resolvedMemoryId = existingMemory.id;
-                }
-            } else {
-                // For full UUIDs, try exact match first
-                try {
-                    existingMemory = await getServerMemoryById(memoryId, serverId);
-                } catch (error) {
-                    // If UUID validation fails, try partial lookup as fallback
-                    console.log(`UUID validation failed, trying partial ID lookup`);
-                    existingMemory = await getServerMemoryByPartialId(memoryId, serverId);
-                    if (existingMemory) {
-                        resolvedMemoryId = existingMemory.id;
-                    }
-                }
-            }
-            
-            if (!existingMemory) {
-                await interaction.reply({
-                    content: '❌ Server memory not found. Make sure you\'re using the correct ID from `/servermemory list`.',
-                    ephemeral: true
-                });
-                return;
-            }
-
-            // Check permissions - CODE_MONKEY can update any memory, others can only update their own
-            if (!isCodeMonkey && existingMemory.user_id !== userId) {
-                await interaction.reply({
-                    content: '❌ You can only update server memories that you created. Admins can update any memory.',
-                    ephemeral: true
-                });
-                return;
-            }
-
             // Build update object with only provided fields
             const updates = {};
             if (newContent) updates.memory_content = newContent;
@@ -99,59 +54,66 @@ const updateServerMemoryCommand = {
             if (Object.keys(updates).length === 0) {
                 await interaction.reply({
                     content: '❌ Please provide at least one field to update (content, title, or context_type).',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
 
-            // Perform the update - pass userId only if not CODE_MONKEY (for permission control)
-            const updatedMemory = await updateServerMemory(resolvedMemoryId, updates, isCodeMonkey ? null : userId);
+            // Check if user is admin (CODE_MONKEY)
+            const isCodeMonkey = userId === process.env.CODE_MONKEY;
+
+            // Update the memory using memoryUtils
+            const result = await ServerMemoryManager.updateMemory(memoryId, updates, userId, serverId, isCodeMonkey);
             
-            if (!updatedMemory) {
+            if (!result.success) {
                 await interaction.reply({
-                    content: '❌ Failed to update server memory. Please check permissions and try again.',
-                    ephemeral: true
+                    content: result.error || '❌ Failed to update server memory.',
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
 
-            // Create response showing what changed
             let response = '✅ **Server Memory Updated Successfully!**\n\n';
-            response += `**Memory ID:** \`${resolvedMemoryId}\`\n`;
+            response += `**Memory ID:** \`${result.displayId || memoryId}\`\n`;
+            
+            // Show admin indicator if CODE_MONKEY is updating someone else's memory
+            if (isCodeMonkey && result.wasAdminUpdate) {
+                response += `**Admin Update:** Updated memory created by <@${result.originalUserId}>\n`;
+            }
             
             if (newContent) {
-                response += `**Old Content:** ${existingMemory.memory_content}\n`;
-                response += `**New Content:** ${updatedMemory.memory_content}\n`;
+                response += `**Updated Content:** ${newContent}\n`;
             }
             
             if (newTitle) {
-                response += `**Old Title:** ${existingMemory.memory_title || '(none)'}\n`;
-                response += `**New Title:** ${updatedMemory.memory_title}\n`;
+                response += `**Updated Title:** ${newTitle}\n`;
             }
             
             if (newContextType) {
-                response += `**Old Type:** ${existingMemory.context_type}\n`;
-                response += `**New Type:** ${updatedMemory.context_type}\n`;
+                response += `**Updated Type:** ${newContextType}\n`;
             }
             
-            response += `\n*Last Updated:* <t:${Math.floor(new Date(updatedMemory.updated_at).getTime() / 1000)}:R>`;
+            response += `\n*Last Updated:* <t:${Math.floor(Date.now() / 1000)}:R>`;
 
-            // Send confirmation - make it visible if it's an important server memory update
-            const isPublic = isCodeMonkey || newContextType === 'important' || newContextType === 'rules';
-            
+            // Add admin footer if CODE_MONKEY
+            if (isCodeMonkey) {
+                response += '\n\n*🔧 Admin privileges enabled*';
+            }
+
             await interaction.reply({
                 content: response,
-                ephemeral: !isPublic
+                flags: MessageFlags.Ephemeral
             });
 
         } catch (error) {
             console.error('Error updating server memory:', error);
             await interaction.reply({
-                content: '❌ An error occurred while updating the server memory.',
-                ephemeral: true
+                content: '❌ An error occurred while updating the server memory. Please try again.',
+                flags: MessageFlags.Ephemeral
             });
         }
     }
 };
 
 export default updateServerMemoryCommand;
+

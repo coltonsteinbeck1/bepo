@@ -1,0 +1,3401 @@
+{
+  "type": "UNCAUGHT_EXCEPTION",
+  "message": "TEST: Uncaught exception triggered by test-errors command",
+  "stack": "Error: TEST: Uncaught exception triggered by test-errors command\n    at Timeout._onTimeout (file:///Users/coltonsteinbeck/dev/bepo/src/commands/fun/testErrors.js:33:31)\n    at listOnTimeout (node:internal/timers:573:17)\n    at process.processTimers (node:internal/timers:514:7)",
+  "timestamp": "2025-06-29T17:28:48.305Z",
+  "process": {
+    "pid": 73376,
+    "uptime": 13.016262291,
+    "memoryUsage": {
+      "rss": 155729920,
+      "heapTotal": 37371904,
+      "heapUsed": 35701904,
+      "external": 20413852,
+      "arrayBuffers": 147281
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:47:21.436Z",
+  "process": {
+    "pid": 77485,
+    "uptime": 0.195278209,
+    "memoryUsage": {
+      "rss": 70303744,
+      "heapTotal": 19791872,
+      "heapUsed": 12197424,
+      "external": 2139105,
+      "arrayBuffers": 19752
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:47:21.653Z",
+  "process": {
+    "pid": 77484,
+    "uptime": 0.414004625,
+    "memoryUsage": {
+      "rss": 99172352,
+      "heapTotal": 39321600,
+      "heapUsed": 23814528,
+      "external": 4223845,
+      "arrayBuffers": 146056
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:47:21.725Z",
+  "process": {
+    "pid": 77483,
+    "uptime": 0.486263459,
+    "memoryUsage": {
+      "rss": 111525888,
+      "heapTotal": 61358080,
+      "heapUsed": 29926712,
+      "external": 8428417,
+      "arrayBuffers": 256901
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:49:36.903Z",
+  "process": {
+    "pid": 78240,
+    "uptime": 0.392907208,
+    "memoryUsage": {
+      "rss": 101941248,
+      "heapTotal": 39387136,
+      "heapUsed": 25400464,
+      "external": 4223845,
+      "arrayBuffers": 146056
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:49:36.963Z",
+  "process": {
+    "pid": 78238,
+    "uptime": 0.451040958,
+    "memoryUsage": {
+      "rss": 111706112,
+      "heapTotal": 60899328,
+      "heapUsed": 29259768,
+      "external": 8692351,
+      "arrayBuffers": 122599
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:49:40.709Z",
+  "process": {
+    "pid": 78239,
+    "uptime": 4.19762075,
+    "memoryUsage": {
+      "rss": 71008256,
+      "heapTotal": 19038208,
+      "heapUsed": 12862800,
+      "external": 2216324,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:50:12.807Z",
+  "process": {
+    "pid": 78478,
+    "uptime": 0.284256625,
+    "memoryUsage": {
+      "rss": 100089856,
+      "heapTotal": 39649280,
+      "heapUsed": 25006064,
+      "external": 4223756,
+      "arrayBuffers": 146055
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:50:12.869Z",
+  "process": {
+    "pid": 78477,
+    "uptime": 0.348304041,
+    "memoryUsage": {
+      "rss": 113213440,
+      "heapTotal": 60899328,
+      "heapUsed": 29228680,
+      "external": 8692380,
+      "arrayBuffers": 122598
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:50:16.709Z",
+  "process": {
+    "pid": 78476,
+    "uptime": 4.188622834,
+    "memoryUsage": {
+      "rss": 70811648,
+      "heapTotal": 19038208,
+      "heapUsed": 12900272,
+      "external": 2216322,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:53:46.356Z",
+  "process": {
+    "pid": 79267,
+    "uptime": 4.185881041,
+    "memoryUsage": {
+      "rss": 68501504,
+      "heapTotal": 18513920,
+      "heapUsed": 13406624,
+      "external": 2216249,
+      "arrayBuffers": 88840
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:54:23.358Z",
+  "process": {
+    "pid": 79542,
+    "uptime": 4.181937417,
+    "memoryUsage": {
+      "rss": 69517312,
+      "heapTotal": 18513920,
+      "heapUsed": 13455656,
+      "external": 2216427,
+      "arrayBuffers": 89018
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "test_context",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:54:51.030Z",
+  "process": {
+    "pid": 79815,
+    "uptime": 4.169995542,
+    "memoryUsage": {
+      "rss": 69386240,
+      "heapTotal": 18251776,
+      "heapUsed": 13457080,
+      "external": 2219804,
+      "arrayBuffers": 91900
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:123:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:55:46.682Z",
+  "process": {
+    "pid": 80447,
+    "uptime": 0.171266,
+    "memoryUsage": {
+      "rss": 64176128,
+      "heapTotal": 17989632,
+      "heapUsed": 11623824,
+      "external": 2172050,
+      "arrayBuffers": 46740
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:57:12.687Z",
+  "process": {
+    "pid": 81058,
+    "uptime": 4.173072041,
+    "memoryUsage": {
+      "rss": 68009984,
+      "heapTotal": 18513920,
+      "heapUsed": 13379248,
+      "external": 2216513,
+      "arrayBuffers": 89104
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:57:12.689Z",
+  "process": {
+    "pid": 81058,
+    "uptime": 4.175066791,
+    "memoryUsage": {
+      "rss": 68354048,
+      "heapTotal": 18513920,
+      "heapUsed": 13405944,
+      "external": 2216513,
+      "arrayBuffers": 89104
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:57:26.556Z",
+  "process": {
+    "pid": 81248,
+    "uptime": 0.379648375,
+    "memoryUsage": {
+      "rss": 99958784,
+      "heapTotal": 39124992,
+      "heapUsed": 23617408,
+      "external": 4223767,
+      "arrayBuffers": 146066
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:57:26.617Z",
+  "process": {
+    "pid": 81247,
+    "uptime": 0.443497459,
+    "memoryUsage": {
+      "rss": 111575040,
+      "heapTotal": 60899328,
+      "heapUsed": 30114760,
+      "external": 8466549,
+      "arrayBuffers": 188364
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:57:30.366Z",
+  "process": {
+    "pid": 81250,
+    "uptime": 4.191667667,
+    "memoryUsage": {
+      "rss": 67665920,
+      "heapTotal": 18251776,
+      "heapUsed": 13269832,
+      "external": 2225578,
+      "arrayBuffers": 98169
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:57:30.367Z",
+  "process": {
+    "pid": 81250,
+    "uptime": 4.192647209,
+    "memoryUsage": {
+      "rss": 67796992,
+      "heapTotal": 18251776,
+      "heapUsed": 13346936,
+      "external": 2225578,
+      "arrayBuffers": 98169
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:58:05.430Z",
+  "process": {
+    "pid": 81688,
+    "uptime": 0.266983875,
+    "memoryUsage": {
+      "rss": 101187584,
+      "heapTotal": 55640064,
+      "heapUsed": 25247528,
+      "external": 4223856,
+      "arrayBuffers": 146067
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T17:58:05.480Z",
+  "process": {
+    "pid": 81686,
+    "uptime": 0.320683584,
+    "memoryUsage": {
+      "rss": 111673344,
+      "heapTotal": 60637184,
+      "heapUsed": 29296576,
+      "external": 8692784,
+      "arrayBuffers": 122603
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:58:09.341Z",
+  "process": {
+    "pid": 81687,
+    "uptime": 4.180503167,
+    "memoryUsage": {
+      "rss": 68501504,
+      "heapTotal": 18776064,
+      "heapUsed": 11836776,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T17:58:09.342Z",
+  "process": {
+    "pid": 81687,
+    "uptime": 4.181476542,
+    "memoryUsage": {
+      "rss": 69025792,
+      "heapTotal": 18776064,
+      "heapUsed": 11981736,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:00:32.936Z",
+  "process": {
+    "pid": 82244,
+    "uptime": 0.385537417,
+    "memoryUsage": {
+      "rss": 100728832,
+      "heapTotal": 39387136,
+      "heapUsed": 23722016,
+      "external": 4223762,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:00:32.992Z",
+  "process": {
+    "pid": 82242,
+    "uptime": 0.437673625,
+    "memoryUsage": {
+      "rss": 109314048,
+      "heapTotal": 60637184,
+      "heapUsed": 29487048,
+      "external": 8470033,
+      "arrayBuffers": 191390
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:00:32.993Z",
+  "process": {
+    "pid": 82242,
+    "uptime": 0.438033375,
+    "memoryUsage": {
+      "rss": 109363200,
+      "heapTotal": 60637184,
+      "heapUsed": 29700696,
+      "external": 8470033,
+      "arrayBuffers": 191390
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:00:36.751Z",
+  "process": {
+    "pid": 82243,
+    "uptime": 4.20031,
+    "memoryUsage": {
+      "rss": 67207168,
+      "heapTotal": 18251776,
+      "heapUsed": 13093880,
+      "external": 2218730,
+      "arrayBuffers": 91321
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:00:36.752Z",
+  "process": {
+    "pid": 82243,
+    "uptime": 4.201124,
+    "memoryUsage": {
+      "rss": 67715072,
+      "heapTotal": 18251776,
+      "heapUsed": 13238888,
+      "external": 2218730,
+      "arrayBuffers": 91321
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:01:02.790Z",
+  "process": {
+    "pid": 82468,
+    "uptime": 0.282222583,
+    "memoryUsage": {
+      "rss": 100401152,
+      "heapTotal": 39124992,
+      "heapUsed": 23694528,
+      "external": 4223759,
+      "arrayBuffers": 146058
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:01:02.839Z",
+  "process": {
+    "pid": 82466,
+    "uptime": 0.331077917,
+    "memoryUsage": {
+      "rss": 111099904,
+      "heapTotal": 60637184,
+      "heapUsed": 30126368,
+      "external": 8474884,
+      "arrayBuffers": 195313
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:01:02.840Z",
+  "process": {
+    "pid": 82466,
+    "uptime": 0.331472417,
+    "memoryUsage": {
+      "rss": 111149056,
+      "heapTotal": 60637184,
+      "heapUsed": 30218672,
+      "external": 8474884,
+      "arrayBuffers": 195313
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:01:06.692Z",
+  "process": {
+    "pid": 82467,
+    "uptime": 4.182314042,
+    "memoryUsage": {
+      "rss": 67321856,
+      "heapTotal": 18513920,
+      "heapUsed": 13141568,
+      "external": 2216524,
+      "arrayBuffers": 89115
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:01:06.693Z",
+  "process": {
+    "pid": 82467,
+    "uptime": 4.18302275,
+    "memoryUsage": {
+      "rss": 67829760,
+      "heapTotal": 18513920,
+      "heapUsed": 13286640,
+      "external": 2216524,
+      "arrayBuffers": 89115
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:41.835Z",
+  "process": {
+    "pid": 83120,
+    "uptime": 0.262351208,
+    "memoryUsage": {
+      "rss": 99270656,
+      "heapTotal": 38862848,
+      "heapUsed": 24734168,
+      "external": 4223850,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:03:41.889Z",
+  "process": {
+    "pid": 83119,
+    "uptime": 0.319621917,
+    "memoryUsage": {
+      "rss": 109953024,
+      "heapTotal": 60899328,
+      "heapUsed": 30461536,
+      "external": 8596132,
+      "arrayBuffers": 315785
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:03:41.890Z",
+  "process": {
+    "pid": 83119,
+    "uptime": 0.319959958,
+    "memoryUsage": {
+      "rss": 110018560,
+      "heapTotal": 60899328,
+      "heapUsed": 30553840,
+      "external": 8596132,
+      "arrayBuffers": 315785
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:45.750Z",
+  "process": {
+    "pid": 83118,
+    "uptime": 4.181611875,
+    "memoryUsage": {
+      "rss": 67682304,
+      "heapTotal": 18251776,
+      "heapUsed": 13344536,
+      "external": 2229313,
+      "arrayBuffers": 101904
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:45.751Z",
+  "process": {
+    "pid": 83118,
+    "uptime": 4.182779084,
+    "memoryUsage": {
+      "rss": 68222976,
+      "heapTotal": 18251776,
+      "heapUsed": 13489496,
+      "external": 2229313,
+      "arrayBuffers": 101904
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:46.355Z",
+  "process": {
+    "pid": 83209,
+    "uptime": 0.274590625,
+    "memoryUsage": {
+      "rss": 100564992,
+      "heapTotal": 39124992,
+      "heapUsed": 23687576,
+      "external": 4223763,
+      "arrayBuffers": 146062
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:03:46.399Z",
+  "process": {
+    "pid": 83208,
+    "uptime": 0.31719925,
+    "memoryUsage": {
+      "rss": 111362048,
+      "heapTotal": 59850752,
+      "heapUsed": 34487168,
+      "external": 8693205,
+      "arrayBuffers": 411930
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:03:46.399Z",
+  "process": {
+    "pid": 83208,
+    "uptime": 0.31758775,
+    "memoryUsage": {
+      "rss": 111525888,
+      "heapTotal": 59850752,
+      "heapUsed": 34579472,
+      "external": 8693205,
+      "arrayBuffers": 411930
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:50.266Z",
+  "process": {
+    "pid": 83207,
+    "uptime": 4.185687625,
+    "memoryUsage": {
+      "rss": 67846144,
+      "heapTotal": 18513920,
+      "heapUsed": 13121560,
+      "external": 2225867,
+      "arrayBuffers": 98458
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:03:50.267Z",
+  "process": {
+    "pid": 83207,
+    "uptime": 4.186514208,
+    "memoryUsage": {
+      "rss": 68435968,
+      "heapTotal": 18513920,
+      "heapUsed": 13491400,
+      "external": 2225867,
+      "arrayBuffers": 98458
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:11.397Z",
+  "process": {
+    "pid": 83898,
+    "uptime": 0.295682375,
+    "memoryUsage": {
+      "rss": 101548032,
+      "heapTotal": 39387136,
+      "heapUsed": 23844848,
+      "external": 4223758,
+      "arrayBuffers": 146057
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:05:11.450Z",
+  "process": {
+    "pid": 83897,
+    "uptime": 0.349400292,
+    "memoryUsage": {
+      "rss": 112197632,
+      "heapTotal": 59588608,
+      "heapUsed": 34161336,
+      "external": 8693213,
+      "arrayBuffers": 411938
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:05:11.450Z",
+  "process": {
+    "pid": 83897,
+    "uptime": 0.349811084,
+    "memoryUsage": {
+      "rss": 112345088,
+      "heapTotal": 59588608,
+      "heapUsed": 34259816,
+      "external": 8693213,
+      "arrayBuffers": 411938
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:15.277Z",
+  "process": {
+    "pid": 83896,
+    "uptime": 4.176999584,
+    "memoryUsage": {
+      "rss": 67878912,
+      "heapTotal": 18776064,
+      "heapUsed": 11992592,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:15.277Z",
+  "process": {
+    "pid": 83896,
+    "uptime": 4.177535875,
+    "memoryUsage": {
+      "rss": 68337664,
+      "heapTotal": 18776064,
+      "heapUsed": 12137552,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:15.865Z",
+  "process": {
+    "pid": 83987,
+    "uptime": 0.266204084,
+    "memoryUsage": {
+      "rss": 99450880,
+      "heapTotal": 39649280,
+      "heapUsed": 23628600,
+      "external": 4223766,
+      "arrayBuffers": 146065
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:05:15.908Z",
+  "process": {
+    "pid": 83986,
+    "uptime": 0.306817167,
+    "memoryUsage": {
+      "rss": 108707840,
+      "heapTotal": 61161472,
+      "heapUsed": 30305304,
+      "external": 8595469,
+      "arrayBuffers": 315765
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:05:15.908Z",
+  "process": {
+    "pid": 83986,
+    "uptime": 0.307186375,
+    "memoryUsage": {
+      "rss": 108756992,
+      "heapTotal": 61161472,
+      "heapUsed": 30397608,
+      "external": 8595469,
+      "arrayBuffers": 315765
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:19.783Z",
+  "process": {
+    "pid": 83985,
+    "uptime": 4.182334375,
+    "memoryUsage": {
+      "rss": 68370432,
+      "heapTotal": 18776064,
+      "heapUsed": 11933704,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:05:19.784Z",
+  "process": {
+    "pid": 83985,
+    "uptime": 4.18318925,
+    "memoryUsage": {
+      "rss": 68911104,
+      "heapTotal": 18776064,
+      "heapUsed": 12078664,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:17:47.124Z",
+  "process": {
+    "pid": 86175,
+    "uptime": 0.415248375,
+    "memoryUsage": {
+      "rss": 99778560,
+      "heapTotal": 38862848,
+      "heapUsed": 24860912,
+      "external": 4223850,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:17:47.184Z",
+  "process": {
+    "pid": 86174,
+    "uptime": 0.475821917,
+    "memoryUsage": {
+      "rss": 111689728,
+      "heapTotal": 60637184,
+      "heapUsed": 30271520,
+      "external": 8595441,
+      "arrayBuffers": 315737
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:17:47.185Z",
+  "process": {
+    "pid": 86174,
+    "uptime": 0.47622675,
+    "memoryUsage": {
+      "rss": 111804416,
+      "heapTotal": 60637184,
+      "heapUsed": 30363824,
+      "external": 8595441,
+      "arrayBuffers": 315737
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:17:50.916Z",
+  "process": {
+    "pid": 86173,
+    "uptime": 4.207966083,
+    "memoryUsage": {
+      "rss": 66830336,
+      "heapTotal": 18513920,
+      "heapUsed": 13352792,
+      "external": 2216495,
+      "arrayBuffers": 89086
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:17:50.916Z",
+  "process": {
+    "pid": 86173,
+    "uptime": 4.208328083,
+    "memoryUsage": {
+      "rss": 67403776,
+      "heapTotal": 18513920,
+      "heapUsed": 13424976,
+      "external": 2216495,
+      "arrayBuffers": 89086
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:23:07.479Z",
+  "process": {
+    "pid": 87354,
+    "uptime": 0.418773834,
+    "memoryUsage": {
+      "rss": 98729984,
+      "heapTotal": 39124992,
+      "heapUsed": 23593464,
+      "external": 4223766,
+      "arrayBuffers": 146065
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:23:07.540Z",
+  "process": {
+    "pid": 87353,
+    "uptime": 0.488099667,
+    "memoryUsage": {
+      "rss": 109953024,
+      "heapTotal": 60899328,
+      "heapUsed": 29595720,
+      "external": 8474015,
+      "arrayBuffers": 194569
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:23:07.540Z",
+  "process": {
+    "pid": 87353,
+    "uptime": 0.48845575,
+    "memoryUsage": {
+      "rss": 110002176,
+      "heapTotal": 60899328,
+      "heapUsed": 29688024,
+      "external": 8474015,
+      "arrayBuffers": 194569
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:23:11.275Z",
+  "process": {
+    "pid": 87352,
+    "uptime": 4.225264709,
+    "memoryUsage": {
+      "rss": 68141056,
+      "heapTotal": 18776064,
+      "heapUsed": 11905392,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:23:11.276Z",
+  "process": {
+    "pid": 87352,
+    "uptime": 4.22626525,
+    "memoryUsage": {
+      "rss": 68648960,
+      "heapTotal": 18776064,
+      "heapUsed": 12050496,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:25.020Z",
+  "process": {
+    "pid": 87706,
+    "uptime": 0.408121333,
+    "memoryUsage": {
+      "rss": 100532224,
+      "heapTotal": 39387136,
+      "heapUsed": 23639720,
+      "external": 4223762,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:24:25.074Z",
+  "process": {
+    "pid": 87705,
+    "uptime": 0.466512667,
+    "memoryUsage": {
+      "rss": 113672192,
+      "heapTotal": 59588608,
+      "heapUsed": 34730648,
+      "external": 8693210,
+      "arrayBuffers": 411935
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:24:25.074Z",
+  "process": {
+    "pid": 87705,
+    "uptime": 0.466843959,
+    "memoryUsage": {
+      "rss": 113819648,
+      "heapTotal": 59588608,
+      "heapUsed": 34822952,
+      "external": 8693210,
+      "arrayBuffers": 411935
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:28.820Z",
+  "process": {
+    "pid": 87704,
+    "uptime": 4.209773125,
+    "memoryUsage": {
+      "rss": 67616768,
+      "heapTotal": 18776064,
+      "heapUsed": 11989680,
+      "external": 2133756,
+      "arrayBuffers": 14403
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:28.821Z",
+  "process": {
+    "pid": 87704,
+    "uptime": 4.210539083,
+    "memoryUsage": {
+      "rss": 68403200,
+      "heapTotal": 18776064,
+      "heapUsed": 12134664,
+      "external": 2133756,
+      "arrayBuffers": 14403
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:51.264Z",
+  "process": {
+    "pid": 87926,
+    "uptime": 0.332633584,
+    "memoryUsage": {
+      "rss": 100827136,
+      "heapTotal": 38862848,
+      "heapUsed": 24043040,
+      "external": 4223851,
+      "arrayBuffers": 146062
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:24:51.306Z",
+  "process": {
+    "pid": 87925,
+    "uptime": 0.371302625,
+    "memoryUsage": {
+      "rss": 113164288,
+      "heapTotal": 59850752,
+      "heapUsed": 34619408,
+      "external": 8693173,
+      "arrayBuffers": 411898
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:24:51.307Z",
+  "process": {
+    "pid": 87925,
+    "uptime": 0.37173525,
+    "memoryUsage": {
+      "rss": 113311744,
+      "heapTotal": 59850752,
+      "heapUsed": 34711712,
+      "external": 8693173,
+      "arrayBuffers": 411898
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:55.162Z",
+  "process": {
+    "pid": 87924,
+    "uptime": 4.227568,
+    "memoryUsage": {
+      "rss": 68468736,
+      "heapTotal": 18776064,
+      "heapUsed": 12058584,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:24:55.162Z",
+  "process": {
+    "pid": 87924,
+    "uptime": 4.228283333,
+    "memoryUsage": {
+      "rss": 69009408,
+      "heapTotal": 18776064,
+      "heapUsed": 12203536,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:25:55.082Z",
+  "process": {
+    "pid": 88242,
+    "uptime": 0.419814709,
+    "memoryUsage": {
+      "rss": 100466688,
+      "heapTotal": 38862848,
+      "heapUsed": 23977144,
+      "external": 4223842,
+      "arrayBuffers": 146053
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:25:55.138Z",
+  "process": {
+    "pid": 88241,
+    "uptime": 0.475894708,
+    "memoryUsage": {
+      "rss": 112197632,
+      "heapTotal": 60375040,
+      "heapUsed": 29402992,
+      "external": 8469656,
+      "arrayBuffers": 191109
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:25:55.138Z",
+  "process": {
+    "pid": 88241,
+    "uptime": 0.476210542,
+    "memoryUsage": {
+      "rss": 112263168,
+      "heapTotal": 60375040,
+      "heapUsed": 29495296,
+      "external": 8469656,
+      "arrayBuffers": 191109
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:25:58.879Z",
+  "process": {
+    "pid": 88240,
+    "uptime": 4.217362541,
+    "memoryUsage": {
+      "rss": 67256320,
+      "heapTotal": 18251776,
+      "heapUsed": 13102752,
+      "external": 2216507,
+      "arrayBuffers": 89098
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:25:58.880Z",
+  "process": {
+    "pid": 88240,
+    "uptime": 4.218058375,
+    "memoryUsage": {
+      "rss": 67796992,
+      "heapTotal": 18251776,
+      "heapUsed": 13414232,
+      "external": 2216507,
+      "arrayBuffers": 89098
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:26:17.917Z",
+  "process": {
+    "pid": 88472,
+    "uptime": 0.313238625,
+    "memoryUsage": {
+      "rss": 102875136,
+      "heapTotal": 56164352,
+      "heapUsed": 25245456,
+      "external": 4223844,
+      "arrayBuffers": 146055
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:26:17.972Z",
+  "process": {
+    "pid": 88471,
+    "uptime": 0.366375417,
+    "memoryUsage": {
+      "rss": 112607232,
+      "heapTotal": 61161472,
+      "heapUsed": 29712720,
+      "external": 8472045,
+      "arrayBuffers": 193053
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:26:17.973Z",
+  "process": {
+    "pid": 88471,
+    "uptime": 0.366753417,
+    "memoryUsage": {
+      "rss": 112656384,
+      "heapTotal": 61161472,
+      "heapUsed": 29805024,
+      "external": 8472045,
+      "arrayBuffers": 193053
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:26:21.814Z",
+  "process": {
+    "pid": 88470,
+    "uptime": 4.207279458,
+    "memoryUsage": {
+      "rss": 67272704,
+      "heapTotal": 18251776,
+      "heapUsed": 13401304,
+      "external": 2216156,
+      "arrayBuffers": 88938
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:26:21.815Z",
+  "process": {
+    "pid": 88470,
+    "uptime": 4.208066625,
+    "memoryUsage": {
+      "rss": 67469312,
+      "heapTotal": 18251776,
+      "heapUsed": 13451840,
+      "external": 2216156,
+      "arrayBuffers": 88938
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:26:56.140Z",
+  "process": {
+    "pid": 88755,
+    "uptime": 0.295312125,
+    "memoryUsage": {
+      "rss": 102088704,
+      "heapTotal": 55902208,
+      "heapUsed": 25072256,
+      "external": 4223842,
+      "arrayBuffers": 146053
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:26:56.185Z",
+  "process": {
+    "pid": 88754,
+    "uptime": 0.339874666,
+    "memoryUsage": {
+      "rss": 115179520,
+      "heapTotal": 59850752,
+      "heapUsed": 34186168,
+      "external": 8693166,
+      "arrayBuffers": 411891
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:26:56.185Z",
+  "process": {
+    "pid": 88754,
+    "uptime": 0.340344375,
+    "memoryUsage": {
+      "rss": 115539968,
+      "heapTotal": 59850752,
+      "heapUsed": 34284304,
+      "external": 8693166,
+      "arrayBuffers": 411891
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:00.041Z",
+  "process": {
+    "pid": 88753,
+    "uptime": 4.197368709,
+    "memoryUsage": {
+      "rss": 68485120,
+      "heapTotal": 18513920,
+      "heapUsed": 11935392,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:00.042Z",
+  "process": {
+    "pid": 88753,
+    "uptime": 4.198246584,
+    "memoryUsage": {
+      "rss": 68927488,
+      "heapTotal": 18513920,
+      "heapUsed": 12080352,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:00.668Z",
+  "process": {
+    "pid": 88849,
+    "uptime": 0.290844625,
+    "memoryUsage": {
+      "rss": 100384768,
+      "heapTotal": 39124992,
+      "heapUsed": 25173920,
+      "external": 4223849,
+      "arrayBuffers": 146060
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:27:00.711Z",
+  "process": {
+    "pid": 88848,
+    "uptime": 0.330268667,
+    "memoryUsage": {
+      "rss": 111656960,
+      "heapTotal": 60899328,
+      "heapUsed": 29629304,
+      "external": 8470337,
+      "arrayBuffers": 191694
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:27:00.711Z",
+  "process": {
+    "pid": 88848,
+    "uptime": 0.33062275,
+    "memoryUsage": {
+      "rss": 111706112,
+      "heapTotal": 60899328,
+      "heapUsed": 29721608,
+      "external": 8470337,
+      "arrayBuffers": 191694
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:04.569Z",
+  "process": {
+    "pid": 88847,
+    "uptime": 4.191981334,
+    "memoryUsage": {
+      "rss": 67584000,
+      "heapTotal": 18513920,
+      "heapUsed": 13472880,
+      "external": 2216524,
+      "arrayBuffers": 89115
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:04.570Z",
+  "process": {
+    "pid": 88847,
+    "uptime": 4.1930385,
+    "memoryUsage": {
+      "rss": 68354048,
+      "heapTotal": 18513920,
+      "heapUsed": 13516056,
+      "external": 2216524,
+      "arrayBuffers": 89115
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:30.570Z",
+  "process": {
+    "pid": 89084,
+    "uptime": 0.42443425,
+    "memoryUsage": {
+      "rss": 99729408,
+      "heapTotal": 38862848,
+      "heapUsed": 24921440,
+      "external": 4223849,
+      "arrayBuffers": 146060
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:27:30.625Z",
+  "process": {
+    "pid": 89083,
+    "uptime": 0.478726333,
+    "memoryUsage": {
+      "rss": 112066560,
+      "heapTotal": 61161472,
+      "heapUsed": 29146880,
+      "external": 8467658,
+      "arrayBuffers": 189473
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:27:30.626Z",
+  "process": {
+    "pid": 89083,
+    "uptime": 0.479100916,
+    "memoryUsage": {
+      "rss": 112164864,
+      "heapTotal": 61161472,
+      "heapUsed": 29324280,
+      "external": 8467658,
+      "arrayBuffers": 189473
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:34.378Z",
+  "process": {
+    "pid": 89082,
+    "uptime": 4.235903333,
+    "memoryUsage": {
+      "rss": 66551808,
+      "heapTotal": 18251776,
+      "heapUsed": 13253376,
+      "external": 2218755,
+      "arrayBuffers": 91346
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:34.379Z",
+  "process": {
+    "pid": 89082,
+    "uptime": 4.23662725,
+    "memoryUsage": {
+      "rss": 67026944,
+      "heapTotal": 18251776,
+      "heapUsed": 13565104,
+      "external": 2218755,
+      "arrayBuffers": 91346
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:41.921Z",
+  "process": {
+    "pid": 89244,
+    "uptime": 0.285539417,
+    "memoryUsage": {
+      "rss": 99516416,
+      "heapTotal": 39387136,
+      "heapUsed": 23741480,
+      "external": 4223767,
+      "arrayBuffers": 146066
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:27:41.969Z",
+  "process": {
+    "pid": 89243,
+    "uptime": 0.333497042,
+    "memoryUsage": {
+      "rss": 111280128,
+      "heapTotal": 60637184,
+      "heapUsed": 30342312,
+      "external": 8595459,
+      "arrayBuffers": 315755
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:27:41.970Z",
+  "process": {
+    "pid": 89243,
+    "uptime": 0.334050042,
+    "memoryUsage": {
+      "rss": 111345664,
+      "heapTotal": 60637184,
+      "heapUsed": 30434616,
+      "external": 8595459,
+      "arrayBuffers": 315755
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:45.832Z",
+  "process": {
+    "pid": 89242,
+    "uptime": 4.195982,
+    "memoryUsage": {
+      "rss": 68354048,
+      "heapTotal": 18776064,
+      "heapUsed": 12150264,
+      "external": 2203893,
+      "arrayBuffers": 84540
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:45.832Z",
+  "process": {
+    "pid": 89242,
+    "uptime": 4.196830667,
+    "memoryUsage": {
+      "rss": 68714496,
+      "heapTotal": 18776064,
+      "heapUsed": 12295216,
+      "external": 2203893,
+      "arrayBuffers": 84540
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:46.471Z",
+  "process": {
+    "pid": 89338,
+    "uptime": 0.300488166,
+    "memoryUsage": {
+      "rss": 100892672,
+      "heapTotal": 39387136,
+      "heapUsed": 24071096,
+      "external": 4223842,
+      "arrayBuffers": 146053
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:27:46.515Z",
+  "process": {
+    "pid": 89337,
+    "uptime": 0.344199416,
+    "memoryUsage": {
+      "rss": 110346240,
+      "heapTotal": 60899328,
+      "heapUsed": 30073976,
+      "external": 8595447,
+      "arrayBuffers": 315743
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:27:46.515Z",
+  "process": {
+    "pid": 89337,
+    "uptime": 0.344571958,
+    "memoryUsage": {
+      "rss": 110411776,
+      "heapTotal": 60899328,
+      "heapUsed": 30166280,
+      "external": 8595447,
+      "arrayBuffers": 315743
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:50.356Z",
+  "process": {
+    "pid": 89336,
+    "uptime": 4.187886292,
+    "memoryUsage": {
+      "rss": 67567616,
+      "heapTotal": 18513920,
+      "heapUsed": 13200272,
+      "external": 2212582,
+      "arrayBuffers": 85718
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:27:50.357Z",
+  "process": {
+    "pid": 89336,
+    "uptime": 4.18840725,
+    "memoryUsage": {
+      "rss": 67764224,
+      "heapTotal": 18513920,
+      "heapUsed": 13345232,
+      "external": 2212582,
+      "arrayBuffers": 85718
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:16.792Z",
+  "process": {
+    "pid": 90020,
+    "uptime": 0.411358458,
+    "memoryUsage": {
+      "rss": 99778560,
+      "heapTotal": 38862848,
+      "heapUsed": 25063984,
+      "external": 4223850,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:30:16.847Z",
+  "process": {
+    "pid": 90019,
+    "uptime": 0.468922291,
+    "memoryUsage": {
+      "rss": 110592000,
+      "heapTotal": 60637184,
+      "heapUsed": 30153728,
+      "external": 8595461,
+      "arrayBuffers": 315757
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:30:16.847Z",
+  "process": {
+    "pid": 90019,
+    "uptime": 0.469317958,
+    "memoryUsage": {
+      "rss": 110641152,
+      "heapTotal": 60637184,
+      "heapUsed": 30246032,
+      "external": 8595461,
+      "arrayBuffers": 315757
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:20.598Z",
+  "process": {
+    "pid": 90018,
+    "uptime": 4.222433916,
+    "memoryUsage": {
+      "rss": 66633728,
+      "heapTotal": 18251776,
+      "heapUsed": 13306320,
+      "external": 2218731,
+      "arrayBuffers": 91322
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:20.599Z",
+  "process": {
+    "pid": 90018,
+    "uptime": 4.223128,
+    "memoryUsage": {
+      "rss": 66961408,
+      "heapTotal": 18251776,
+      "heapUsed": 13371344,
+      "external": 2218731,
+      "arrayBuffers": 91322
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:31.547Z",
+  "process": {
+    "pid": 90190,
+    "uptime": 0.288037917,
+    "memoryUsage": {
+      "rss": 99598336,
+      "heapTotal": 39124992,
+      "heapUsed": 24915336,
+      "external": 4223846,
+      "arrayBuffers": 146057
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:30:31.587Z",
+  "process": {
+    "pid": 90189,
+    "uptime": 0.331245167,
+    "memoryUsage": {
+      "rss": 112246784,
+      "heapTotal": 59588608,
+      "heapUsed": 34429024,
+      "external": 8693204,
+      "arrayBuffers": 411929
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:30:31.587Z",
+  "process": {
+    "pid": 90189,
+    "uptime": 0.3316505,
+    "memoryUsage": {
+      "rss": 112394240,
+      "heapTotal": 59588608,
+      "heapUsed": 34527144,
+      "external": 8693204,
+      "arrayBuffers": 411929
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:35.444Z",
+  "process": {
+    "pid": 90188,
+    "uptime": 4.189560417,
+    "memoryUsage": {
+      "rss": 68354048,
+      "heapTotal": 18776064,
+      "heapUsed": 11874512,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:35.446Z",
+  "process": {
+    "pid": 90188,
+    "uptime": 4.190900292,
+    "memoryUsage": {
+      "rss": 69238784,
+      "heapTotal": 18776064,
+      "heapUsed": 12019496,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:36.162Z",
+  "process": {
+    "pid": 90292,
+    "uptime": 0.360679333,
+    "memoryUsage": {
+      "rss": 101056512,
+      "heapTotal": 39387136,
+      "heapUsed": 23696568,
+      "external": 4223761,
+      "arrayBuffers": 146060
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:30:36.207Z",
+  "process": {
+    "pid": 90291,
+    "uptime": 0.410859,
+    "memoryUsage": {
+      "rss": 111869952,
+      "heapTotal": 60899328,
+      "heapUsed": 29463704,
+      "external": 8470333,
+      "arrayBuffers": 191690
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:30:36.208Z",
+  "process": {
+    "pid": 90291,
+    "uptime": 0.411250791,
+    "memoryUsage": {
+      "rss": 111919104,
+      "heapTotal": 60899328,
+      "heapUsed": 29556008,
+      "external": 8470333,
+      "arrayBuffers": 191690
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:40.050Z",
+  "process": {
+    "pid": 90290,
+    "uptime": 4.25319675,
+    "memoryUsage": {
+      "rss": 68796416,
+      "heapTotal": 18513920,
+      "heapUsed": 11908160,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:30:40.051Z",
+  "process": {
+    "pid": 90290,
+    "uptime": 4.25395,
+    "memoryUsage": {
+      "rss": 69320704,
+      "heapTotal": 18513920,
+      "heapUsed": 12053120,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:12.196Z",
+  "process": {
+    "pid": 93006,
+    "uptime": 0.416652208,
+    "memoryUsage": {
+      "rss": 99565568,
+      "heapTotal": 39387136,
+      "heapUsed": 23802248,
+      "external": 4223767,
+      "arrayBuffers": 146066
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:38:12.255Z",
+  "process": {
+    "pid": 93005,
+    "uptime": 0.480116,
+    "memoryUsage": {
+      "rss": 112295936,
+      "heapTotal": 59326464,
+      "heapUsed": 34366608,
+      "external": 8693198,
+      "arrayBuffers": 411923
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:38:12.255Z",
+  "process": {
+    "pid": 93005,
+    "uptime": 0.48049925,
+    "memoryUsage": {
+      "rss": 112721920,
+      "heapTotal": 59326464,
+      "heapUsed": 34458912,
+      "external": 8693198,
+      "arrayBuffers": 411923
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:15.990Z",
+  "process": {
+    "pid": 93004,
+    "uptime": 4.214665792,
+    "memoryUsage": {
+      "rss": 67862528,
+      "heapTotal": 18251776,
+      "heapUsed": 13244248,
+      "external": 2216526,
+      "arrayBuffers": 89117
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:15.991Z",
+  "process": {
+    "pid": 93004,
+    "uptime": 4.21600275,
+    "memoryUsage": {
+      "rss": 68026368,
+      "heapTotal": 18251776,
+      "heapUsed": 13287440,
+      "external": 2216526,
+      "arrayBuffers": 89117
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:37.863Z",
+  "process": {
+    "pid": 93219,
+    "uptime": 0.286441292,
+    "memoryUsage": {
+      "rss": 100909056,
+      "heapTotal": 39387136,
+      "heapUsed": 23789440,
+      "external": 4223777,
+      "arrayBuffers": 146076
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:38:37.904Z",
+  "process": {
+    "pid": 93218,
+    "uptime": 0.329199208,
+    "memoryUsage": {
+      "rss": 113491968,
+      "heapTotal": 59850752,
+      "heapUsed": 34653496,
+      "external": 8693216,
+      "arrayBuffers": 411941
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:38:37.904Z",
+  "process": {
+    "pid": 93218,
+    "uptime": 0.329588708,
+    "memoryUsage": {
+      "rss": 113639424,
+      "heapTotal": 59850752,
+      "heapUsed": 34745800,
+      "external": 8693216,
+      "arrayBuffers": 411941
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:41.769Z",
+  "process": {
+    "pid": 93217,
+    "uptime": 4.195869875,
+    "memoryUsage": {
+      "rss": 68157440,
+      "heapTotal": 18513920,
+      "heapUsed": 11963296,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:41.769Z",
+  "process": {
+    "pid": 93217,
+    "uptime": 4.196516167,
+    "memoryUsage": {
+      "rss": 68517888,
+      "heapTotal": 18513920,
+      "heapUsed": 12108256,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:42.398Z",
+  "process": {
+    "pid": 93308,
+    "uptime": 0.284315542,
+    "memoryUsage": {
+      "rss": 101842944,
+      "heapTotal": 55902208,
+      "heapUsed": 23579536,
+      "external": 4223760,
+      "arrayBuffers": 146059
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:38:42.440Z",
+  "process": {
+    "pid": 93307,
+    "uptime": 0.329648458,
+    "memoryUsage": {
+      "rss": 112771072,
+      "heapTotal": 59850752,
+      "heapUsed": 34566552,
+      "external": 8693198,
+      "arrayBuffers": 411923
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:38:42.441Z",
+  "process": {
+    "pid": 93307,
+    "uptime": 0.330036625,
+    "memoryUsage": {
+      "rss": 113197056,
+      "heapTotal": 59850752,
+      "heapUsed": 34658856,
+      "external": 8693198,
+      "arrayBuffers": 411923
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:46.305Z",
+  "process": {
+    "pid": 93306,
+    "uptime": 4.1944495,
+    "memoryUsage": {
+      "rss": 69009408,
+      "heapTotal": 19038208,
+      "heapUsed": 11943776,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:38:46.306Z",
+  "process": {
+    "pid": 93306,
+    "uptime": 4.195175167,
+    "memoryUsage": {
+      "rss": 69550080,
+      "heapTotal": 19038208,
+      "heapUsed": 12088728,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:43:55.469Z",
+  "process": {
+    "pid": 96389,
+    "uptime": 0.435111542,
+    "memoryUsage": {
+      "rss": 99155968,
+      "heapTotal": 38600704,
+      "heapUsed": 25006768,
+      "external": 4223851,
+      "arrayBuffers": 146062
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:43:55.526Z",
+  "process": {
+    "pid": 96388,
+    "uptime": 0.4926465,
+    "memoryUsage": {
+      "rss": 108429312,
+      "heapTotal": 60637184,
+      "heapUsed": 29783048,
+      "external": 8474297,
+      "arrayBuffers": 194851
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:43:55.527Z",
+  "process": {
+    "pid": 96388,
+    "uptime": 0.492985625,
+    "memoryUsage": {
+      "rss": 108478464,
+      "heapTotal": 60637184,
+      "heapUsed": 30047320,
+      "external": 8474297,
+      "arrayBuffers": 194851
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:43:59.270Z",
+  "process": {
+    "pid": 96387,
+    "uptime": 4.236146917,
+    "memoryUsage": {
+      "rss": 67223552,
+      "heapTotal": 18513920,
+      "heapUsed": 13492520,
+      "external": 2228962,
+      "arrayBuffers": 101744
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:43:59.270Z",
+  "process": {
+    "pid": 96387,
+    "uptime": 4.236761833,
+    "memoryUsage": {
+      "rss": 67698688,
+      "heapTotal": 18513920,
+      "heapUsed": 13556184,
+      "external": 2228962,
+      "arrayBuffers": 101744
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:46:47.677Z",
+  "process": {
+    "pid": 97126,
+    "uptime": 0.417678542,
+    "memoryUsage": {
+      "rss": 100089856,
+      "heapTotal": 38338560,
+      "heapUsed": 24680248,
+      "external": 4223853,
+      "arrayBuffers": 146064
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:46:47.733Z",
+  "process": {
+    "pid": 97125,
+    "uptime": 0.473610125,
+    "memoryUsage": {
+      "rss": 112820224,
+      "heapTotal": 60637184,
+      "heapUsed": 30374376,
+      "external": 8595476,
+      "arrayBuffers": 315772
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:46:47.733Z",
+  "process": {
+    "pid": 97125,
+    "uptime": 0.474090709,
+    "memoryUsage": {
+      "rss": 112869376,
+      "heapTotal": 60637184,
+      "heapUsed": 30466680,
+      "external": 8595476,
+      "arrayBuffers": 315772
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:46:51.482Z",
+  "process": {
+    "pid": 97124,
+    "uptime": 4.2229395,
+    "memoryUsage": {
+      "rss": 67649536,
+      "heapTotal": 18513920,
+      "heapUsed": 13318576,
+      "external": 2216179,
+      "arrayBuffers": 88961
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:46:51.483Z",
+  "process": {
+    "pid": 97124,
+    "uptime": 4.223867792,
+    "memoryUsage": {
+      "rss": 67829760,
+      "heapTotal": 18513920,
+      "heapUsed": 13361392,
+      "external": 2216179,
+      "arrayBuffers": 88961
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:47:56.368Z",
+  "process": {
+    "pid": 97452,
+    "uptime": 0.463929875,
+    "memoryUsage": {
+      "rss": 99909632,
+      "heapTotal": 39387136,
+      "heapUsed": 24206904,
+      "external": 4223844,
+      "arrayBuffers": 146055
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:47:56.423Z",
+  "process": {
+    "pid": 97450,
+    "uptime": 0.518690791,
+    "memoryUsage": {
+      "rss": 110444544,
+      "heapTotal": 60637184,
+      "heapUsed": 30385264,
+      "external": 8595460,
+      "arrayBuffers": 315756
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:47:56.423Z",
+  "process": {
+    "pid": 97450,
+    "uptime": 0.519027833,
+    "memoryUsage": {
+      "rss": 110493696,
+      "heapTotal": 60637184,
+      "heapUsed": 30477568,
+      "external": 8595460,
+      "arrayBuffers": 315756
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:48:00.141Z",
+  "process": {
+    "pid": 97449,
+    "uptime": 4.2364865,
+    "memoryUsage": {
+      "rss": 68435968,
+      "heapTotal": 18513920,
+      "heapUsed": 13293664,
+      "external": 2216167,
+      "arrayBuffers": 88949
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:48:00.142Z",
+  "process": {
+    "pid": 97449,
+    "uptime": 4.237313167,
+    "memoryUsage": {
+      "rss": 68665344,
+      "heapTotal": 18513920,
+      "heapUsed": 13376664,
+      "external": 2216167,
+      "arrayBuffers": 88949
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:48:14.947Z",
+  "process": {
+    "pid": 97765,
+    "uptime": 0.291411125,
+    "memoryUsage": {
+      "rss": 102088704,
+      "heapTotal": 55902208,
+      "heapUsed": 24467936,
+      "external": 4223855,
+      "arrayBuffers": 146066
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:48:14.989Z",
+  "process": {
+    "pid": 97764,
+    "uptime": 0.332405334,
+    "memoryUsage": {
+      "rss": 112738304,
+      "heapTotal": 60899328,
+      "heapUsed": 29529176,
+      "external": 8469014,
+      "arrayBuffers": 190554
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:48:14.989Z",
+  "process": {
+    "pid": 97764,
+    "uptime": 0.332770334,
+    "memoryUsage": {
+      "rss": 112787456,
+      "heapTotal": 60899328,
+      "heapUsed": 29624880,
+      "external": 8469014,
+      "arrayBuffers": 190554
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:48:18.846Z",
+  "process": {
+    "pid": 97763,
+    "uptime": 4.195996875,
+    "memoryUsage": {
+      "rss": 67321856,
+      "heapTotal": 18513920,
+      "heapUsed": 13311224,
+      "external": 2216513,
+      "arrayBuffers": 89104
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:48:18.847Z",
+  "process": {
+    "pid": 97763,
+    "uptime": 4.19691575,
+    "memoryUsage": {
+      "rss": 67944448,
+      "heapTotal": 18513920,
+      "heapUsed": 13351896,
+      "external": 2216513,
+      "arrayBuffers": 89104
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:28.287Z",
+  "process": {
+    "pid": 98148,
+    "uptime": 0.31627375,
+    "memoryUsage": {
+      "rss": 101335040,
+      "heapTotal": 56164352,
+      "heapUsed": 24284488,
+      "external": 4223860,
+      "arrayBuffers": 146071
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:49:28.337Z",
+  "process": {
+    "pid": 98147,
+    "uptime": 0.366234333,
+    "memoryUsage": {
+      "rss": 113213440,
+      "heapTotal": 59588608,
+      "heapUsed": 34581840,
+      "external": 8693220,
+      "arrayBuffers": 411945
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:49:28.337Z",
+  "process": {
+    "pid": 98147,
+    "uptime": 0.3665425,
+    "memoryUsage": {
+      "rss": 113344512,
+      "heapTotal": 59588608,
+      "heapUsed": 34674144,
+      "external": 8693220,
+      "arrayBuffers": 411945
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:32.160Z",
+  "process": {
+    "pid": 98146,
+    "uptime": 4.188398917,
+    "memoryUsage": {
+      "rss": 67911680,
+      "heapTotal": 18251776,
+      "heapUsed": 13346640,
+      "external": 2217605,
+      "arrayBuffers": 90196
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:32.161Z",
+  "process": {
+    "pid": 98146,
+    "uptime": 4.189293959,
+    "memoryUsage": {
+      "rss": 68059136,
+      "heapTotal": 18251776,
+      "heapUsed": 13423784,
+      "external": 2217605,
+      "arrayBuffers": 90196
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:32.768Z",
+  "process": {
+    "pid": 98241,
+    "uptime": 0.27809075,
+    "memoryUsage": {
+      "rss": 100974592,
+      "heapTotal": 39649280,
+      "heapUsed": 23793376,
+      "external": 4223770,
+      "arrayBuffers": 146069
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:49:32.813Z",
+  "process": {
+    "pid": 98240,
+    "uptime": 0.323405583,
+    "memoryUsage": {
+      "rss": 111378432,
+      "heapTotal": 61161472,
+      "heapUsed": 29696800,
+      "external": 8471443,
+      "arrayBuffers": 192580
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:49:32.814Z",
+  "process": {
+    "pid": 98240,
+    "uptime": 0.323809125,
+    "memoryUsage": {
+      "rss": 111443968,
+      "heapTotal": 61161472,
+      "heapUsed": 29789104,
+      "external": 8471443,
+      "arrayBuffers": 192580
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:36.675Z",
+  "process": {
+    "pid": 98239,
+    "uptime": 4.189425584,
+    "memoryUsage": {
+      "rss": 67649536,
+      "heapTotal": 18251776,
+      "heapUsed": 13281936,
+      "external": 2216528,
+      "arrayBuffers": 89119
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:49:36.676Z",
+  "process": {
+    "pid": 98239,
+    "uptime": 4.190369417,
+    "memoryUsage": {
+      "rss": 68026368,
+      "heapTotal": 18251776,
+      "heapUsed": 13426896,
+      "external": 2216528,
+      "arrayBuffers": 89119
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:58:14.923Z",
+  "process": {
+    "pid": 438,
+    "uptime": 0.419721875,
+    "memoryUsage": {
+      "rss": 99500032,
+      "heapTotal": 39124992,
+      "heapUsed": 23914984,
+      "external": 4223762,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T18:58:14.978Z",
+  "process": {
+    "pid": 437,
+    "uptime": 0.471428125,
+    "memoryUsage": {
+      "rss": 114081792,
+      "heapTotal": 59850752,
+      "heapUsed": 34415440,
+      "external": 8693212,
+      "arrayBuffers": 411937
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T18:58:14.978Z",
+  "process": {
+    "pid": 437,
+    "uptime": 0.471822125,
+    "memoryUsage": {
+      "rss": 114802688,
+      "heapTotal": 59850752,
+      "heapUsed": 34507744,
+      "external": 8693212,
+      "arrayBuffers": 411937
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:58:18.715Z",
+  "process": {
+    "pid": 436,
+    "uptime": 4.21268875,
+    "memoryUsage": {
+      "rss": 68075520,
+      "heapTotal": 18776064,
+      "heapUsed": 12102744,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T18:58:18.716Z",
+  "process": {
+    "pid": 436,
+    "uptime": 4.213456,
+    "memoryUsage": {
+      "rss": 68272128,
+      "heapTotal": 18776064,
+      "heapUsed": 12247696,
+      "external": 2130447,
+      "arrayBuffers": 11094
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Test critical error",
+  "stack": "Error: Test critical error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/health.command.test.js:89:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T19:04:58.031Z",
+  "process": {
+    "pid": 2706,
+    "uptime": 0.402776625,
+    "memoryUsage": {
+      "rss": 99942400,
+      "heapTotal": 39387136,
+      "heapUsed": 25170440,
+      "external": 4223850,
+      "arrayBuffers": 146061
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical integration test error",
+  "stack": "Error: Critical integration test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/integration/bot.integration.test.js:113:54\n    at processTicksAndRejections (node:internal/process/task_queues:95:5)\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+  "timestamp": "2025-06-29T19:04:58.085Z",
+  "process": {
+    "pid": 2705,
+    "uptime": 0.453984833,
+    "memoryUsage": {
+      "rss": 112836608,
+      "heapTotal": 60637184,
+      "heapUsed": 29771952,
+      "external": 8474856,
+      "arrayBuffers": 195285
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": {},
+  "message": "integration_test",
+  "stack": "No stack available",
+  "timestamp": "2025-06-29T19:04:58.086Z",
+  "process": {
+    "pid": 2705,
+    "uptime": 0.454357125,
+    "memoryUsage": {
+      "rss": 112885760,
+      "heapTotal": 60637184,
+      "heapUsed": 29864256,
+      "external": 8474856,
+      "arrayBuffers": 195285
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_critical",
+  "message": "Critical error for test",
+  "stack": "Error: Critical error for test\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:119:54\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T19:05:01.840Z",
+  "process": {
+    "pid": 2704,
+    "uptime": 4.211828375,
+    "memoryUsage": {
+      "rss": 67207168,
+      "heapTotal": 18513920,
+      "heapUsed": 13380240,
+      "external": 2216508,
+      "arrayBuffers": 89099
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}
+{
+  "type": "test_context",
+  "message": "Critical test error",
+  "stack": "Error: Critical test error\n    at /Users/coltonsteinbeck/dev/bepo/tests/unit/errorHandler.test.js:128:53\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///Users/coltonsteinbeck/dev/bepo/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)",
+  "timestamp": "2025-06-29T19:05:01.841Z",
+  "process": {
+    "pid": 2704,
+    "uptime": 4.212716417,
+    "memoryUsage": {
+      "rss": 67895296,
+      "heapTotal": 18513920,
+      "heapUsed": 13451160,
+      "external": 2216508,
+      "arrayBuffers": 89099
+    },
+    "platform": "darwin",
+    "nodeVersion": "v20.15.0"
+  }
+}

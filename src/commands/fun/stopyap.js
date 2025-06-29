@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, ChannelType, MessageFlags } from 'discord.js';
 import voiceSessionManager from '../../utils/voiceSessionManager.js';
 
 const stopyapCommand = {
@@ -17,7 +17,7 @@ const stopyapCommand = {
         const sessions = voiceSessionManager.getAllSessions();
 
         if (!sessions || sessions.size === 0) {
-            return await interaction.reply({ content: 'No active yap sessions found.', ephemeral: true });
+            return await interaction.reply({ content: 'No active yap sessions found.', flags: MessageFlags.Ephemeral });
         }
 
         let sessionToStop = null;
@@ -26,14 +26,14 @@ const stopyapCommand = {
         if (channel) {
             // Specific channel provided
             if (channel.type !== ChannelType.GuildVoice) {
-                return await interaction.reply({ content: 'Please provide a valid voice channel.', ephemeral: true });
+                return await interaction.reply({ content: 'Please provide a valid voice channel.', flags: MessageFlags.Ephemeral });
             }
             
             sessionToStop = voiceSessionManager.getSession(channel.id);
             if (sessionToStop) {
                 channelName = channel.name;
             } else {
-                return await interaction.reply({ content: `No active yap session in ${channel.name}.`, ephemeral: true });
+                return await interaction.reply({ content: `No active yap session in ${channel.name}.`, flags: MessageFlags.Ephemeral });
             }
         } else {
             // No channel specified, find any active session in this guild
@@ -51,7 +51,7 @@ const stopyapCommand = {
             }
 
             if (!sessionToStop) {
-                return await interaction.reply({ content: 'No active yap sessions found in this server.', ephemeral: true });
+                return await interaction.reply({ content: 'No active yap sessions found in this server.', flags: MessageFlags.Ephemeral });
             }
         }
 
@@ -61,7 +61,7 @@ const stopyapCommand = {
             await interaction.reply(`❌ Stopped yap and disconnected from ${channelName}`);
         } catch (error) {
             console.error('Error cleaning up session:', error);
-            await interaction.reply({ content: 'Error stopping yap session.', ephemeral: true });
+            await interaction.reply({ content: 'Error stopping yap session.', flags: MessageFlags.Ephemeral });
         }
     },
 };

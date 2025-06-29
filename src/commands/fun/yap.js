@@ -6,7 +6,7 @@ import {
     VoiceConnectionStatus,
     EndBehaviorType
 } from '@discordjs/voice';
-import { SlashCommandBuilder, ChannelType } from 'discord.js';
+import { SlashCommandBuilder, ChannelType, MessageFlags } from 'discord.js';
 import WebSocket from 'ws';
 import { Readable } from 'stream';
 import prism from 'prism-media';
@@ -33,7 +33,7 @@ const yapCommand = {
         if (!channel || channel.type !== ChannelType.GuildVoice) {
             return await interaction.reply({
                 content: 'Please provide a valid voice channel.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -49,7 +49,7 @@ const yapCommand = {
             );
             return await interaction.reply({
                 content: errorMessage,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -57,7 +57,7 @@ const yapCommand = {
         if (!channel.joinable) {
             return await interaction.reply({
                 content: 'I don\'t have permission to join that voice channel.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 
@@ -65,7 +65,7 @@ const yapCommand = {
         if (!process.env.OPENAI_KEY) {
             return await interaction.reply({
                 content: 'OpenAI API key not configured.',
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
         }
 

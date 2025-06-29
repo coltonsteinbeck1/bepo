@@ -1,5 +1,5 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { updateUserMemory, getUserMemoryById } from '../../supabase/supabase.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+import { UserMemoryManager } from '../../utils/memoryUtils.js';
 
 const updateMemoryCommand = {
     data: new SlashCommandBuilder()
@@ -31,29 +31,6 @@ const updateMemoryCommand = {
         const userId = interaction.user.id;
 
         try {
-            // First, verify the memory exists
-            const isCodeMonkey = userId === process.env.CODE_MONKEY;
-            let existingMemory;
-            
-            if (isCodeMonkey) {
-                // CODE_MONKEY can update any user's memory - search across all users
-                existingMemory = await getUserMemoryById(memoryId);
-            } else {
-                // Regular users can only update their own memories
-                existingMemory = await getUserMemoryById(memoryId, userId);
-            }
-            
-            if (!existingMemory) {
-                const errorMessage = isCodeMonkey 
-                    ? '❌ Memory not found with that ID.'
-                    : '❌ Memory not found or you don\'t have permission to update it.';
-                await interaction.reply({
-                    content: errorMessage,
-                    ephemeral: true
-                });
-                return;
-            }
-
             // Build update object with only provided fields
             const updates = {};
             if (newContent) updates.memory_content = newContent;
@@ -62,61 +39,57 @@ const updateMemoryCommand = {
             if (Object.keys(updates).length === 0) {
                 await interaction.reply({
                     content: '❌ Please provide at least one field to update (content or context_type).',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
 
-            // Perform the update
-            const updatedMemory = await updateUserMemory(memoryId, updates);
+            // Check if user is admin (CODE_MONKEY)
+            const isCodeMonkey = userId === process.env.CODE_MONKEY;
+
+            // Update the memory using memoryUtils
+            const result = await UserMemoryManager.updateMemory(memoryId, updates, isCodeMonkey ? null : userId);
             
-            if (!updatedMemory) {
+            if (!result.success) {
                 await interaction.reply({
-                    content: '❌ Failed to update memory. Please try again.',
-                    ephemeral: true
+                    content: result.error || '❌ Failed to update memory.',
+                    flags: MessageFlags.Ephemeral
                 });
                 return;
             }
 
-            // Create response showing what changed
             let response = '✅ **Memory Updated Successfully!**\n\n';
             response += `**Memory ID:** \`${memoryId}\`\n`;
             
             // Show admin indicator if CODE_MONKEY is updating someone else's memory
-            if (isCodeMonkey && existingMemory.user_id !== userId) {
-                response += `**Admin Update:** Updated memory for <@${existingMemory.user_id}>\n`;
+            if (isCodeMonkey && result.wasAdminUpdate) {
+                response += `**Admin Update:** Updated memory for <@${result.originalUserId}>\n`;
             }
             
             if (newContent) {
-                response += `**Old Content:** ${existingMemory.memory_content}\n`;
-                response += `**New Content:** ${updatedMemory.memory_content}\n`;
+                response += `**Updated Content:** ${newContent}\n`;
             }
             
             if (newContextType) {
-                response += `**Old Type:** ${existingMemory.context_type}\n`;
-                response += `**New Type:** ${updatedMemory.context_type}\n`;
+                response += `**Updated Type:** ${newContextType}\n`;
             }
             
-            response += `\n*Last Updated:* <t:${Math.floor(new Date(updatedMemory.updated_at).getTime() / 1000)}:R>`;
-
-            // Add admin footer if CODE_MONKEY
-            if (isCodeMonkey) {
-                response += '\n\n*🔧 Admin privileges enabled*';
-            }
+            response += `\n*Last Updated:* <t:${Math.floor(Date.now() / 1000)}:R>`;
 
             await interaction.reply({
                 content: response,
-                ephemeral: true
+                flags: MessageFlags.Ephemeral
             });
 
         } catch (error) {
-            console.error('Error updating user memory:', error);
+            console.error('Error updating memory:', error);
             await interaction.reply({
-                content: '❌ An error occurred while updating the memory.',
-                ephemeral: true
+                content: '❌ An error occurred while updating the memory. Please try again.',
+                flags: MessageFlags.Ephemeral
             });
         }
     }
 };
 
 export default updateMemoryCommand;
+

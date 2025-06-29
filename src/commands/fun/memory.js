@@ -1,12 +1,5 @@
-import { SlashCommandBuilder } from 'discord.js';
-import { 
-  getUserMemories, 
-  searchUserMemories, 
-  deleteUserMemories, 
-  setUserPreference, 
-  getUserMemoryStats,
-  getTimeAgo 
-} from '../../supabase/supabase.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
+import { UserMemoryManager, MemoryUtils } from '../../utils/memoryUtils.js';
 
 export const data = new SlashCommandBuilder()
   .setName('memory')
@@ -40,6 +33,23 @@ export const data = new SlashCommandBuilder()
           )))
   .addSubcommand(subcommand =>
     subcommand
+      .setName('search')
+      .setDescription('Search your memories')
+      .addStringOption(option =>
+        option.setName('query')
+          .setDescription('Search term to look for in your memories')
+          .setRequired(true))
+      .addStringOption(option =>
+        option.setName('type')
+          .setDescription('Type of memories to search')
+          .addChoices(
+            { name: 'All', value: 'all' },
+            { name: 'Conversations', value: 'conversation' },
+            { name: 'Preferences', value: 'preference' },
+            { name: 'Summaries', value: 'conversation_summary' }
+          )))
+  .addSubcommand(subcommand =>
+    subcommand
       .setName('set')
       .setDescription('Set a preference - Examples: name="Alex", timezone="PST", interests="coding,gaming"')
       .addStringOption(option =>
@@ -62,74 +72,106 @@ export async function execute(interaction) {
   try {
     if (subcommand === 'view') {
       const type = interaction.options.getString('type') || 'all';
+      const result = await UserMemoryManager.getFormattedMemories(userId, type);
       
-      let memories;
-      if (type === 'all') {
-        memories = await getUserMemories(userId);
-      } else {
-        memories = await searchUserMemories(userId, '', type);
-      }
-
-      if (memories.length === 0) {
+      if (!result.success) {
         return interaction.reply({ 
-          content: `No ${type === 'all' ? '' : type + ' '}memories found.`,
-          ephemeral: true 
+          content: result.error || 'Failed to fetch memories.',
+          flags: MessageFlags.Ephemeral 
         });
       }
 
-      const memoryText = memories.slice(0, 10).map((memory, index) => {
-        const timeAgo = getTimeAgo(new Date(memory.updated_at));
-        return `${index + 1}. **${memory.context_type}** (${timeAgo}) \`ID: ${memory.id}\`\n   ${memory.memory_content.substring(0, 100)}${memory.memory_content.length > 100 ? '...' : ''}`;
-      }).join('\n\n');
+      if (result.memories.length === 0) {
+        return interaction.reply({ 
+          content: result.message,
+          flags: MessageFlags.Ephemeral 
+        });
+      }
+
+      const memoryText = MemoryUtils.formatMemoryList(result.memories, result.hasMore);
 
       return interaction.reply({
-        content: `**Your ${type === 'all' ? '' : type + ' '}memories:**\n\n${memoryText}${memories.length > 10 ? `\n\n... and ${memories.length - 10} more` : ''}`,
-        ephemeral: true
+        content: `**Your ${type === 'all' ? '' : type + ' '}memories:**\n\n${memoryText}`,
+        flags: MessageFlags.Ephemeral
+      });
+
+    } else if (subcommand === 'search') {
+      const query = interaction.options.getString('query');
+      const type = interaction.options.getString('type') || null;
+      
+      const result = await UserMemoryManager.searchMemories(userId, query, type);
+      
+      if (!result.success) {
+        return interaction.reply({ 
+          content: result.error || 'Failed to search memories.',
+          flags: MessageFlags.Ephemeral 
+        });
+      }
+
+      if (result.memories.length === 0) {
+        return interaction.reply({ 
+          content: result.message,
+          flags: MessageFlags.Ephemeral 
+        });
+      }
+
+      const memoryText = MemoryUtils.formatMemoryList(result.memories);
+
+      return interaction.reply({
+        content: `**Search results for "${query}":**\n\n${memoryText}`,
+        flags: MessageFlags.Ephemeral
       });
 
     } else if (subcommand === 'clear') {
       const type = interaction.options.getString('type');
+      const typeFilter = type === 'all' ? null : type;
       
-      let deletedCount = 0;
-      if (type === 'all') {
-        deletedCount = await deleteUserMemories(userId);
-      } else {
-        deletedCount = await deleteUserMemories(userId, type);
+      const result = await UserMemoryManager.clearMemories(userId, typeFilter);
+      
+      if (!result.success) {
+        return interaction.reply({ 
+          content: result.error || 'Failed to clear memories.',
+          flags: MessageFlags.Ephemeral 
+        });
       }
 
       return interaction.reply({
-        content: `Cleared ${deletedCount} ${type === 'all' ? '' : type + ' '}memories.`,
-        ephemeral: true
+        content: result.message,
+        flags: MessageFlags.Ephemeral
       });
 
     } else if (subcommand === 'set') {
       const key = interaction.options.getString('key');
       const value = interaction.options.getString('value');
       
-      await setUserPreference(userId, key, value);
+      const result = await UserMemoryManager.setPreference(userId, key, value);
       
-      // Provide helpful examples if they're setting common preferences
-      let helpText = '';
-      if (['name', 'nickname'].includes(key.toLowerCase())) {
-        helpText = '\n💡 *Now I\'ll remember what to call you!*';
-      } else if (['timezone', 'tz'].includes(key.toLowerCase())) {
-        helpText = '\n💡 *This helps me understand your time context!*';
-      } else if (['language', 'lang'].includes(key.toLowerCase())) {
-        helpText = '\n💡 *I can adjust my responses to your preferred language!*';
-      } else if (['coding_style', 'code_style', 'programming_style'].includes(key.toLowerCase())) {
-        helpText = '\n💡 *I\'ll remember your coding preferences!*';
-      } else if (['interests', 'hobbies'].includes(key.toLowerCase())) {
-        helpText = '\n💡 *Great! I\'ll keep your interests in mind during conversations!*';
+      if (!result.success) {
+        return interaction.reply({ 
+          content: result.error || 'Failed to set preference.',
+          flags: MessageFlags.Ephemeral 
+        });
       }
       
+      // Provide helpful examples for common preferences
+      const helpText = getPreferenceHelpText(key);
+      
       return interaction.reply({
-        content: `Preference set: **${key}** = ${value}${helpText}`,
-        ephemeral: true
+        content: `${result.message}${helpText}`,
+        flags: MessageFlags.Ephemeral
       });
 
     } else if (subcommand === 'stats') {
-      const stats = await getUserMemoryStats(userId);
+      const result = await UserMemoryManager.getStats(userId);
       
+      if (!result.success) {
+        return interaction.reply({ 
+          content: result.error || 'Failed to get memory stats.',
+          flags: MessageFlags.Ephemeral 
+        });
+      }
+
+      const stats = result.stats;
       const oldestDate = stats.oldest ? new Date(stats.oldest) : null;
 
       return interaction.reply({
@@ -140,7 +182,7 @@ export async function execute(interaction) {
           `📄 Summaries: **${stats.byType.conversation_summary || 0}**\n` +
           `📂 Other: **${Object.entries(stats.byType).filter(([key]) => !['conversation', 'preference', 'conversation_summary'].includes(key)).reduce((sum, [, count]) => sum + count, 0)}**\n\n` +
           `${oldestDate ? `📅 Oldest memory: ${getTimeAgo(oldestDate)}` : 'No memories yet'}`,
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -148,9 +190,33 @@ export async function execute(interaction) {
     console.error('Memory command error:', error);
     return interaction.reply({
       content: 'An error occurred while managing your memory.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 }
+
+/**
+ * Get helpful text for preference setting
+ */
+function getPreferenceHelpText(key) {
+  const helpMap = {
+    'name': '\n💡 *Now I\'ll remember what to call you!*',
+    'nickname': '\n💡 *Now I\'ll remember what to call you!*',
+    'timezone': '\n💡 *This helps me understand your time context!*',
+    'tz': '\n💡 *This helps me understand your time context!*',
+    'language': '\n💡 *I can adjust my responses to your preferred language!*',
+    'lang': '\n💡 *I can adjust my responses to your preferred language!*',
+    'coding_style': '\n💡 *I\'ll remember your coding preferences!*',
+    'code_style': '\n💡 *I\'ll remember your coding preferences!*',
+    'programming_style': '\n💡 *I\'ll remember your coding preferences!*',
+    'interests': '\n💡 *Great! I\'ll keep your interests in mind during conversations!*',
+    'hobbies': '\n💡 *Great! I\'ll keep your interests in mind during conversations!*'
+  };
+  
+  return helpMap[key.toLowerCase()] || '';
+}
+
+// Import getTimeAgo for backwards compatibility
+import { getTimeAgo } from '../../supabase/supabase.js';
 
 export default { data, execute };

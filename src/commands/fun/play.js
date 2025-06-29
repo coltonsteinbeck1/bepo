@@ -1,6 +1,6 @@
 // play.js
 import { joinVoiceChannel, createAudioResource, createAudioPlayer, StreamType, AudioPlayerStatus } from '@discordjs/voice';
-import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import playdl from 'play-dl';
 import youtubedl from 'youtube-dl-exec';
 import { Readable } from 'stream';
@@ -1149,7 +1149,7 @@ const playCommand = {
                 conflictCheck.channelId, 
                 interaction.client
             );
-            await interaction.reply({ content: errorMessage, ephemeral: true });
+            await interaction.reply({ content: errorMessage, flags: MessageFlags.Ephemeral });
             return;
         }
 
@@ -1549,7 +1549,7 @@ export const handleMusicInteraction = async (interaction) => {
     const queueData = musicQueues.get(guildId);
 
     if (!queueData) {
-        await interaction.reply({ content: 'No music is currently playing!', ephemeral: true });
+        await interaction.reply({ content: 'No music is currently playing!', flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -1619,7 +1619,7 @@ export const handleMusicInteraction = async (interaction) => {
 
         queueEmbed.setFooter({ text: '🎵 = Spotify Track • Use buttons to control playback' });
             
-        await interaction.reply({ embeds: [queueEmbed], ephemeral: true });
+        await interaction.reply({ embeds: [queueEmbed], flags: MessageFlags.Ephemeral });
         return;
     }
 
@@ -1628,7 +1628,7 @@ export const handleMusicInteraction = async (interaction) => {
     switch (interaction.customId) {
         case 'music_pause':
             if (!queueData.player) {
-                await interaction.reply({ content: 'No audio player is currently active!', ephemeral: true });
+                await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
             
@@ -1654,7 +1654,7 @@ export const handleMusicInteraction = async (interaction) => {
 
         case 'music_skip':
             if (!queueData.player) {
-                await interaction.reply({ content: 'No audio player is currently active!', ephemeral: true });
+                await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
             
@@ -1662,13 +1662,13 @@ export const handleMusicInteraction = async (interaction) => {
                 queueData.player.stop(); // This will trigger the next song
                 await interaction.deferUpdate();
             } else {
-                await interaction.reply({ content: 'No more songs in the queue!', ephemeral: true });
+                await interaction.reply({ content: 'No more songs in the queue!', flags: MessageFlags.Ephemeral });
             }
             break;
 
         case 'music_previous':
             if (!queueData.player) {
-                await interaction.reply({ content: 'No audio player is currently active!', ephemeral: true });
+                await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
             
@@ -1677,7 +1677,7 @@ export const handleMusicInteraction = async (interaction) => {
                 queueData.player.stop();
                 await interaction.deferUpdate();
             } else {
-                await interaction.reply({ content: 'No previous songs!', ephemeral: true });
+                await interaction.reply({ content: 'No previous songs!', flags: MessageFlags.Ephemeral });
             }
             break;
 

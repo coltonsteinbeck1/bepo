@@ -1,13 +1,6 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { 
-  storeServerMemory,
-  getServerMemories, 
-  searchServerMemories,
-  deleteServerMemory,
-  getServerMemoryStats,
-  getUserServerMemories,
-  getTimeAgo 
-} from '../../supabase/supabase.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { ServerMemoryManager, MemoryUtils } from '../../utils/memoryUtils.js';
+import { getTimeAgo } from '../../supabase/supabase.js';
 import { getUsernamesFromIds } from '../../utils/utils.js';
 
 export const data = new SlashCommandBuilder()
@@ -78,7 +71,7 @@ export async function execute(interaction) {
   if (!serverId) {
     return interaction.reply({
       content: 'This command can only be used in a server.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
 
@@ -87,19 +80,12 @@ export async function execute(interaction) {
       const content = interaction.options.getString('content');
       const title = interaction.options.getString('title');
       
-      if (content.length > 1000) {
-        return interaction.reply({
-          content: 'Memory content is too long. Please keep it under 1000 characters.',
-          ephemeral: true
-        });
-      }
-
-      const memory = await storeServerMemory(serverId, userId, content, title);
+      const result = await ServerMemoryManager.storeMemory(serverId, userId, content, title);
       
-      if (!memory) {
+      if (!result.success) {
         return interaction.reply({
-          content: 'Failed to store server memory.',
-          ephemeral: true
+          content: result.error || 'Failed to store server memory.',
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -113,7 +99,7 @@ export async function execute(interaction) {
         .setDescription(`**${title || 'Memory'}** has been saved for ${interaction.guild.name}`)
         .addFields(
           { name: 'Content', value: content.substring(0, 500) + (content.length > 500 ? '...' : '') },
-          { name: 'Memory ID', value: memory.id, inline: true },
+          { name: 'Memory ID', value: result.memoryId || 'Unknown', inline: true },
           { name: 'Added by', value: username, inline: true }
         )
         .setTimestamp();
@@ -124,97 +110,65 @@ export async function execute(interaction) {
       const filter = interaction.options.getString('filter');
       const limit = interaction.options.getInteger('limit') || 10;
       
-      let memories;
+      let result;
       if (filter) {
-        memories = await searchServerMemories(serverId, filter, null, limit);
+        result = await ServerMemoryManager.searchMemories(serverId, filter, null, limit);
       } else {
-        memories = await getServerMemories(serverId, null, limit);
+        result = await ServerMemoryManager.getFormattedMemories(serverId, null, limit);
       }
 
-      if (memories.length === 0) {
+      if (!result.success) {
         return interaction.reply({
-          content: filter ? `No memories found matching "${filter}".` : 'No server memories found.',
-          ephemeral: true
+          content: result.error || 'Failed to fetch server memories.',
+          flags: MessageFlags.Ephemeral
         });
       }
 
-      // Get unique user IDs and resolve them to usernames
-      const uniqueUserIds = [...new Set(memories.map(m => m.user_id))];
-      const usernames = await getUsernamesFromIds(interaction.client, uniqueUserIds);
-
-      const embed = new EmbedBuilder()
-        .setColor(0x5865F2)
-        .setTitle(`📚 Server Memories - ${interaction.guild.name}`)
-        .setDescription(`Showing ${memories.length} memories${filter ? ` matching "${filter}"` : ''}`)
-        .setTimestamp();
-
-      memories.slice(0, 10).forEach((memory, index) => {
-        const timeAgo = getTimeAgo(new Date(memory.updated_at));
-        const title = memory.memory_title || `Memory ${index + 1}`;
-        const content = memory.memory_content.substring(0, 100) + (memory.memory_content.length > 100 ? '...' : '');
-        const isCodeMonkey = userId === process.env.CODE_MONKEY;
-        const username = usernames[memory.user_id] || 'Unknown User';
-        
-        // Show full ID for CODE_MONKEY, short ID for others
-        const displayId = isCodeMonkey ? memory.id : memory.id.substring(0, 8);
-        
-        embed.addFields({
-          name: `${index + 1}. ${title}`,
-          value: `${content}\n*Added by ${username} • ${timeAgo} • ID: \`${displayId}\`*`,
-          inline: false
+      if (result.memories.length === 0) {
+        return interaction.reply({
+          content: result.message || 'No server memories found.',
+          flags: MessageFlags.Ephemeral
         });
-      });
-
-      if (memories.length > 10) {
-        embed.setFooter({ text: `... and ${memories.length - 10} more memories` });
-      } else if (userId === process.env.CODE_MONKEY) {
-        embed.setFooter({ text: `Admin: You can delete any memory using its full ID` });
       }
+
+      const embed = await createMemoryListEmbed(
+        result.memories, 
+        interaction, 
+        userId, 
+        `📚 Server Memories - ${interaction.guild.name}`,
+        `Showing ${result.memories.length} memories${filter ? ` matching "${filter}"` : ''}`
+      );
 
       return interaction.reply({ embeds: [embed] });
 
     } else if (subcommand === 'search') {
       const query = interaction.options.getString('query');
-      const memories = await searchServerMemories(serverId, query, null, 15);
+      const result = await ServerMemoryManager.searchMemories(serverId, query, null, 15);
 
-      if (memories.length === 0) {
+      if (!result.success) {
         return interaction.reply({
-          content: `No memories found matching "${query}".`,
-          ephemeral: true
+          content: result.error || 'Failed to search server memories.',
+          flags: MessageFlags.Ephemeral
         });
       }
 
-      // Get unique user IDs and resolve them to usernames
-      const uniqueUserIds = [...new Set(memories.map(m => m.user_id))];
-      const usernames = await getUsernamesFromIds(interaction.client, uniqueUserIds);
-
-      const embed = new EmbedBuilder()
-        .setColor(0x57F287)
-        .setTitle(`🔍 Search Results - "${query}"`)
-        .setDescription(`Found ${memories.length} matching memories in ${interaction.guild.name}`)
-        .setTimestamp();
-
-      memories.slice(0, 8).forEach((memory, index) => {
-        const timeAgo = getTimeAgo(new Date(memory.updated_at));
-        const title = memory.memory_title || `Memory ${index + 1}`;
-        const content = memory.memory_content.substring(0, 150) + (memory.memory_content.length > 150 ? '...' : '');
-        const isCodeMonkey = userId === process.env.CODE_MONKEY;
-        const username = usernames[memory.user_id] || 'Unknown User';
-        
-        // Show full ID for CODE_MONKEY, short ID for others
-        const displayId = isCodeMonkey ? memory.id : memory.id.substring(0, 8);
-        
-        embed.addFields({
-          name: `${title}`,
-          value: `${content}\n*Added by ${username} • ${timeAgo} • ID: \`${displayId}\`*`,
-          inline: false
+      if (result.memories.length === 0) {
+        return interaction.reply({
+          content: result.message || `No memories found matching "${query}".`,
+          flags: MessageFlags.Ephemeral
         });
-      });
+      }
 
-      if (memories.length > 8) {
-        embed.setFooter({ text: `... and ${memories.length - 8} more results` });
-      } else if (userId === process.env.CODE_MONKEY) {
-        embed.setFooter({ text: `Admin: You can delete any memory using its full ID` });
+      const embed = await createMemoryListEmbed(
+        result.memories.slice(0, 8), 
+        interaction, 
+        userId, 
+        `🔍 Search Results - "${query}"`,
+        `Found ${result.memories.length} matching memories in ${interaction.guild.name}`
+      );
+
+      if (result.memories.length > 8) {
+        embed.setFooter({ text: `... and ${result.memories.length - 8} more results` });
       }
 
       return interaction.reply({ embeds: [embed] });
@@ -223,63 +177,38 @@ export async function execute(interaction) {
       const memoryId = interaction.options.getString('memory_id');
       const isCodeMonkey = userId === process.env.CODE_MONKEY;
       
-      // CODE_MONKEY can delete any memory, others can only delete their own
-      let targetMemory;
-      if (isCodeMonkey) {
-        // Search all server memories for CODE_MONKEY
-        const allMemories = await getServerMemories(serverId, null, 100);
-        targetMemory = allMemories.find(m => 
-          m.id === memoryId || m.id.startsWith(memoryId)
-        );
-      } else {
-        // Search only user's own memories for regular users
-        const userMemories = await getUserServerMemories(serverId, userId, 50);
-        targetMemory = userMemories.find(m => 
-          m.id === memoryId || m.id.startsWith(memoryId)
-        );
-      }
-
-      if (!targetMemory) {
-        const errorMsg = isCodeMonkey 
-          ? 'Memory not found with that ID.'
-          : 'Memory not found or you don\'t have permission to delete it.';
-        return interaction.reply({
-          content: errorMsg,
-          ephemeral: true
-        });
-      }
-
-      const deletedMemory = await deleteServerMemory(targetMemory.id, userId);
+      const result = await ServerMemoryManager.deleteMemory(memoryId, isCodeMonkey ? null : userId);
       
-      if (!deletedMemory) {
+      if (!result.success) {
         return interaction.reply({
-          content: 'Failed to delete memory or memory not found.',
-          ephemeral: true
+          content: result.error || 'Failed to delete memory.',
+          flags: MessageFlags.Ephemeral
         });
       }
-
-      // Get usernames for the original creator and the deleter
-      const userIds = [deletedMemory.user_id, userId];
-      const usernames = await getUsernamesFromIds(interaction.client, userIds);
-      const originalUsername = usernames[deletedMemory.user_id] || 'Unknown User';
-      const deleterUsername = usernames[userId] || 'Unknown User';
 
       const embed = new EmbedBuilder()
         .setColor(0xED4245)
         .setTitle('🗑️ Memory Deleted')
-        .setDescription(`**${deletedMemory.memory_title || 'Memory'}** has been deleted from ${interaction.guild.name}`)
+        .setDescription(`Memory has been deleted from ${interaction.guild.name}`)
         .addFields(
-          { name: 'Content', value: deletedMemory.memory_content.substring(0, 200) + (deletedMemory.memory_content.length > 200 ? '...' : '') },
-          { name: 'Originally Added By', value: originalUsername, inline: true },
-          { name: 'Deleted By', value: isCodeMonkey ? `${deleterUsername} (Admin)` : deleterUsername, inline: true }
+          { name: 'Memory ID', value: memoryId, inline: true },
+          { name: 'Deleted By', value: isCodeMonkey ? `<@${userId}> (Admin)` : `<@${userId}>`, inline: true }
         )
         .setTimestamp();
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
     } else if (subcommand === 'stats') {
-      const stats = await getServerMemoryStats(serverId);
+      const result = await ServerMemoryManager.getStats(serverId);
       
+      if (!result.success) {
+        return interaction.reply({
+          content: result.error || 'Failed to get server memory stats.',
+          flags: MessageFlags.Ephemeral
+        });
+      }
+
+      const stats = result.stats;
       const embed = new EmbedBuilder()
         .setColor(0xFEE75C)
         .setTitle(`📊 Server Memory Statistics - ${interaction.guild.name}`)
@@ -298,13 +227,12 @@ export async function execute(interaction) {
       }
 
       if (Object.keys(stats.byUser).length > 0) {
-        // Get top 5 contributor user IDs
+        // Get top 5 contributor user IDs and resolve to usernames
         const topContributorIds = Object.entries(stats.byUser)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 5)
           .map(([userId]) => userId);
         
-        // Resolve user IDs to usernames
         const usernames = await getUsernamesFromIds(interaction.client, topContributorIds);
         
         const topContributors = Object.entries(stats.byUser)
@@ -319,12 +247,15 @@ export async function execute(interaction) {
 
     } else if (subcommand === 'my') {
       const limit = interaction.options.getInteger('limit') || 10;
+      // Note: Need to implement getUserServerMemories in ServerMemoryManager
+      // For now, using existing functionality
+      const { getUserServerMemories } = await import('../../supabase/supabase.js');
       const memories = await getUserServerMemories(serverId, userId, limit);
 
       if (memories.length === 0) {
         return interaction.reply({
           content: `You haven't added any memories to ${interaction.guild.name} yet.`,
-          ephemeral: true
+          flags: MessageFlags.Ephemeral
         });
       }
 
@@ -346,16 +277,54 @@ export async function execute(interaction) {
         });
       });
 
-      return interaction.reply({ embeds: [embed], ephemeral: true });
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     }
 
   } catch (error) {
     console.error('Server memory command error:', error);
     return interaction.reply({
       content: 'An error occurred while managing server memories.',
-      ephemeral: true
+      flags: MessageFlags.Ephemeral
     });
   }
+}
+
+/**
+ * Create a formatted embed for memory lists
+ */
+async function createMemoryListEmbed(memories, interaction, userId, title, description) {
+  // Get unique user IDs and resolve them to usernames
+  const uniqueUserIds = [...new Set(memories.map(m => m.userId))];
+  const usernames = await getUsernamesFromIds(interaction.client, uniqueUserIds);
+
+  const embed = new EmbedBuilder()
+    .setColor(0x5865F2)
+    .setTitle(title)
+    .setDescription(description)
+    .setTimestamp();
+
+  memories.slice(0, 10).forEach((memory, index) => {
+    const title = memory.title || `Memory ${index + 1}`;
+    const isCodeMonkey = userId === process.env.CODE_MONKEY;
+    const username = usernames[memory.userId] || 'Unknown User';
+    
+    // Show full ID for CODE_MONKEY, short ID for others
+    const displayId = isCodeMonkey ? memory.id : memory.id.substring(0, 8);
+    
+    embed.addFields({
+      name: `${index + 1}. ${title}`,
+      value: `${memory.preview}\n*Added by ${username} • ${memory.timeAgo} • ID: \`${displayId}\`*`,
+      inline: false
+    });
+  });
+
+  if (memories.length > 10) {
+    embed.setFooter({ text: `... and ${memories.length - 10} more memories` });
+  } else if (userId === process.env.CODE_MONKEY) {
+    embed.setFooter({ text: `Admin: You can delete any memory using its full ID` });
+  }
+
+  return embed;
 }
 
 export default { data, execute };

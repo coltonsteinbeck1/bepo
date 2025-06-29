@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { convoStore } from "../../utils/utils.js";
 
 const reviewCommand = {
@@ -21,7 +21,7 @@ const reviewCommand = {
         if (!conversation || conversation.history.length <= 1) {
             await interaction.reply({ 
                 content: "No conversation history found.", 
-                ephemeral: true 
+                flags: MessageFlags.Ephemeral 
             });
             return;
         }
@@ -31,7 +31,7 @@ const reviewCommand = {
         if (threadNumber > 1) {
             await interaction.reply({ 
                 content: `Thread ${threadNumber} not found. Only current conversation available (thread 1).`, 
-                ephemeral: true 
+                flags: MessageFlags.Ephemeral 
             });
             return;
         }
@@ -100,7 +100,7 @@ const reviewCommand = {
 
         // Send embeds (Discord allows up to 10 embeds per message)
         const embedsToSend = embeds.slice(0, 10);
-        await interaction.reply({ embeds: embedsToSend, ephemeral: true });
+        await interaction.reply({ embeds: embedsToSend, flags: MessageFlags.Ephemeral });
     },
 };
 

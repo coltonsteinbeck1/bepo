@@ -21,7 +21,7 @@ const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const prayEmojis = ["🙏", "🛐", "✝️", "☪️", "📿"];
 const probability = 0.18;
-const sillyProbability = 0.0033; // 1/250 chance
+const sillyProbability = 0.0033; // 1/300 chance
 
 // Initialize Supabase and get the bot token and prefix, and emojis
 const BOT_PREFIX = process.env.PREFIX;
@@ -470,6 +470,89 @@ export async function checkAndDeleteInactiveThreads(client) {
       }
     }
   }
+}
+
+// Function to validate and recover thread tracking
+export async function validateBotManagedThread(client, threadId, userId, channelId) {
+  try {
+    const thread = await client.channels.fetch(threadId);
+    
+    if (!thread || !thread.isThread()) {
+      // Thread doesn't exist anymore
+      botThreadStore.delete(threadId);
+      return { exists: false, thread: null };
+    }
+    
+    if (thread.archived) {
+      // Thread is archived, but still exists
+      return { exists: true, thread, archived: true };
+    }
+    
+    // Ensure it's properly tracked
+    if (!isBotManagedThread(threadId)) {
+      markThreadAsBotManaged(threadId, userId, channelId);
+      console.log(`Restored tracking for thread ${threadId} after validation`);
+    }
+    
+    return { exists: true, thread, archived: false };
+  } catch (error) {
+    console.error(`Error validating thread ${threadId}:`, error);
+    // If we can't fetch it, assume it doesn't exist
+    botThreadStore.delete(threadId);
+    return { exists: false, thread: null };
+  }
+}
+
+// Function to find user's existing bot-managed threads in a channel
+export async function findUserBotThreadsInChannel(client, userId, channelId) {
+  try {
+    const channel = await client.channels.fetch(channelId);
+    if (!channel || !channel.isTextBased()) {
+      return [];
+    }
+    
+    const threadManager = channel.threads;
+    const activeThreads = await threadManager.fetchActive();
+    const archivedThreads = await threadManager.fetchArchived();
+    
+    const userThreads = [];
+    
+    // Check active threads
+    for (const [threadId, thread] of activeThreads.threads) {
+      const threadInfo = getBotManagedThreadInfo(threadId);
+      if (threadInfo && threadInfo.userId === userId && threadInfo.channelId === channelId) {
+        userThreads.push({ thread, info: threadInfo, archived: false });
+      }
+    }
+    
+    // Check recently archived threads (in case they were just archived)
+    for (const [threadId, thread] of archivedThreads.threads) {
+      const threadInfo = getBotManagedThreadInfo(threadId);
+      if (threadInfo && threadInfo.userId === userId && threadInfo.channelId === channelId) {
+        userThreads.push({ thread, info: threadInfo, archived: true });
+      }
+    }
+    
+    return userThreads;
+  } catch (error) {
+    console.error(`Error finding user threads in channel ${channelId}:`, error);
+    return [];
+  }
+}
+
+// Function to cleanup stale thread references
+export function cleanupStaleThreadReferences() {
+  const staleThreads = [];
+  
+  for (const [threadId, info] of botThreadStore.entries()) {
+    // Mark threads older than 24 hours as potentially stale for validation
+    const ageInHours = (Date.now() - info.createdAt) / (1000 * 60 * 60);
+    if (ageInHours > 24) {
+      staleThreads.push(threadId);
+    }
+  }
+  
+  return staleThreads;
 }
 
 // Helper function to resolve user ID to username

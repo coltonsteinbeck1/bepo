@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { buildMemoryContext } from '../../supabase/supabase.js';
 
 const debugMemoryCommand = {
@@ -21,11 +21,11 @@ const debugMemoryCommand = {
             if (!guildId) {
                 return await interaction.reply({
                     content: 'This command can only be used in a server.',
-                    ephemeral: true
+                    flags: MessageFlags.Ephemeral
                 });
             }
 
-            await interaction.deferReply({ ephemeral: true });
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
             console.log(`Debug: Loading memory context for user ${userId} in guild ${guildId}`);
 

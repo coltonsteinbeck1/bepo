@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import { convoStore, markThreadAsBotManaged } from "../../utils/utils.js";
 import { createConversationThread, generateTopicHint } from "../../utils/threadUtils.js";
 
@@ -27,7 +27,7 @@ const continueCommand = {
         if (!conversation || conversation.history.length <= 1) {
             await interaction.reply({ 
                 content: "No previous conversation found. Start chatting with the bot first!", 
-                ephemeral: true 
+                flags: MessageFlags.Ephemeral 
             });
             return;
         }
@@ -102,7 +102,7 @@ const continueCommand = {
             });
         }
 
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     },
 };
 
