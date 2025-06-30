@@ -161,7 +161,7 @@ async function createCombinedPatchNotesEmbed(notes, source) {
       let content = note.content ? formatContent(note.content) : 'Update details available at the official updates page.';
       let shortContent = content.length > 200 ? content.substring(0, 200) + '...' : content;
       
-      const fieldName = `**${note.title}**${note.author ? ` by ${note.author}` : ''}`;
+      const fieldName = `**${note.title || 'CS2 Update'}**`;
       const fieldValue = `${shortContent}\n*${note.date ? note.date.toLocaleDateString() : 'Unknown date'}*`;
       
       embed.addFields({
