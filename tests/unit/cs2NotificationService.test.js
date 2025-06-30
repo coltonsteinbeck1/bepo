@@ -76,11 +76,11 @@ describe('CS2 Notification Service', () => {
 
   describe('role mention format', () => {
     it('should use correct Discord role mention format', () => {
-      const testRoleId = '1160342442072096788';
+      const testRoleId = '1111111111111111111'; // MOCK ROLE ID
       const expectedMention = `<@&${testRoleId}>`;
       
       // Test that our role mention format matches Discord's standard
-      expect(expectedMention).toBe('<@&1160342442072096788>');
+      expect(expectedMention).toBe('<@&1111111111111111111>');
       
       // Verify it follows the pattern <@&ROLE_ID>
       const roleMentionRegex = /^<@&\d{17,19}>$/;

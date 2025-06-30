@@ -27,19 +27,19 @@ async function initializeCS2Monitoring(client) {
   
   console.log('🎮 Initializing CS2 patch note monitoring...');
   
-  // Get all configured channels (both env and dynamic)
-  const allChannels = await getNotificationChannels();
+  // Get user-submitted channels only (no environment channels)
+  const userChannels = await getNotificationChannels();
   
   // Start monitoring if any channels are configured
-  if (allChannels.length > 0) {
+  if (userChannels.length > 0) {
     startMonitoring();
-    console.log(`📡 CS2 monitoring started for ${allChannels.length} channels:`);
-    console.log(`  - Environment channels: ${NOTIFICATION_CHANNELS.join(', ') || 'none'}`);
-    console.log(`  - Dynamic channels: ${allChannels.filter(ch => !NOTIFICATION_CHANNELS.includes(ch)).join(', ') || 'none'}`);
+    console.log(`📡 CS2 monitoring started for ${userChannels.length} user-submitted channels:`);
+    console.log(`  - User channels: ${userChannels.join(', ')}`);
+    console.log(`  - Environment channels: DISABLED (user-submitted only)`);
   } else {
     console.log('⚠️  No CS2 notification channels configured.');
-    console.log('   - Set CS2_NOTIFICATION_CHANNELS environment variable, or');
-    console.log('   - Use /cs2notify setchannel to configure dynamically');
+    console.log('   - Use /cs2notify setchannel to configure notification channels');
+    console.log('   - Environment channels are disabled (user-submitted only)');
   }
 }
 
@@ -133,18 +133,19 @@ async function setNotificationChannel(channelId, guildId) {
 }
 
 /**
- * Get notification channels (combines env vars and dynamic config)
+ * Get notification channels (ONLY user-submitted channels via /cs2notify setchannel)
+ * Environment channels are completely ignored
  * @returns {Array} Array of channel IDs to notify
  */
 async function getNotificationChannels() {
-  const channels = [...NOTIFICATION_CHANNELS]; // Start with env vars
+  const channels = []; // NO environment channels - start empty
   
-  // Load dynamic configuration
+  // Load dynamic configuration (user-submitted channels only)
   const config = await loadChannelConfig();
   if (config) {
-    // Add dynamically configured channels
+    // Add only dynamically configured channels (set by users)
     Object.values(config).forEach(guildConfig => {
-      if (guildConfig.channelId && !channels.includes(guildConfig.channelId)) {
+      if (guildConfig.channelId) {
         channels.push(guildConfig.channelId);
       }
     });
@@ -206,13 +207,16 @@ async function sendPatchNoteNotification(patchNote) {
     return;
   }
   
-  // Get all notification channels (env vars + dynamic config)
-  const allChannels = await getNotificationChannels();
+  // Get user-submitted notification channels only (no environment channels)
+  const userChannels = await getNotificationChannels();
   
-  if (allChannels.length === 0) {
-    console.log('⚠️  No notification channels configured');
+  if (userChannels.length === 0) {
+    console.log('⚠️  No user-submitted notification channels configured');
+    console.log('   Use /cs2notify setchannel to set up CS2 notifications');
     return;
   }
+  
+  console.log(`📡 Sending CS2 notification to ${userChannels.length} user-submitted channels`);
   
   // Validate guild and role first
   const validationResult = await validateGuildAndRole();
@@ -229,28 +233,24 @@ async function sendPatchNoteNotification(patchNote) {
     notificationContent = `🚨 **New CS2 Update Released!** ${validationResult.role}`;
   }
   
-  for (const channelId of allChannels) {
+  for (const channelId of userChannels) {
     try {
       const channel = await botClient.channels.fetch(channelId.trim());
       
       if (!channel || !channel.isTextBased()) {
-        console.error(`❌ Invalid channel or not text-based: ${channelId}`);
+        console.error(`❌ Invalid user channel or not text-based: ${channelId}`);
         continue;
       }
       
-      // Verify channel is in the correct guild
-      if (channel.guild && channel.guild.id !== GUILD_ID) {
-        console.error(`❌ Channel ${channelId} is not in the configured guild (${GUILD_ID})`);
-        continue;
-      }
+      // Note: User-submitted channels can be in any guild the bot has access to
       
       await channel.send({ 
         content: notificationContent,
         embeds: [embed] 
       });
-      console.log(`📢 Sent CS2 notification to channel: ${channelId} in guild: ${channel.guild?.name || 'Unknown'}`);
+      console.log(`📢 Sent CS2 notification to user channel: ${channelId} in guild: ${channel.guild?.name || 'Unknown'}`);
     } catch (error) {
-      console.error(`❌ Failed to send notification to channel ${channelId}:`, error.message);
+      console.error(`❌ Failed to send notification to user channel ${channelId}:`, error.message);
     }
   }
 }
@@ -412,20 +412,21 @@ async function manualCheckForUpdates() {
  * @returns {Promise<Object>} Status information
  */
 async function getMonitoringStatus() {
-  const allChannels = await getNotificationChannels();
+  const userChannels = await getNotificationChannels();
   const config = await loadChannelConfig();
   
   return {
     isRunning: monitoringInterval !== null,
-    channelsConfigured: allChannels.length,
-    channels: allChannels,
-    envChannels: NOTIFICATION_CHANNELS,
+    channelsConfigured: userChannels.length,
+    channels: userChannels,
+    envChannels: [], // Environment channels disabled
     dynamicChannels: config ? Object.values(config).map(c => c.channelId) : [],
     checkInterval: CHECK_INTERVAL / 1000 / 60, // minutes
     lastCheckFile: LAST_PATCH_FILE,
     channelConfigFile: CHANNEL_CONFIG_FILE,
     guildId: GUILD_ID,
-    cs2RoleId: CS2_ROLE_ID
+    cs2RoleId: CS2_ROLE_ID,
+    environmentChannelsDisabled: true // Flag to indicate env channels are disabled
   };
 }
 
@@ -437,5 +438,7 @@ export {
   manualCheckForUpdates,
   getMonitoringStatus,
   setNotificationChannel,
-  getNotificationChannels
+  getNotificationChannels,
+  sendPatchNoteNotification,
+  createPatchNoteNotificationEmbed
 };

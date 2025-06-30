@@ -57,7 +57,7 @@ const cs2Command = {
     ),
   async execute(interaction) {
     await interaction.deferReply();
-    
+
     // Get command options
     const source = interaction.options.getString("source") || "steam";
     const count = interaction.options.getInteger("count") || 1;
@@ -68,7 +68,7 @@ const cs2Command = {
 
     try {
       let patchNotes;
-      
+
       if (source === "api" && CS2_PATCH_NOTES_URL) {
         // Use legacy API method
         patchNotes = await fetchFromAPI();
@@ -113,7 +113,7 @@ const cs2Command = {
  */
 async function fetchFromAPI() {
   const now = Date.now();
-  
+
   if (cachedPatchNotes && (now - cacheTimestamp) < 300000) { // 5 minutes cache
     return cachedPatchNotes;
   }
@@ -122,14 +122,14 @@ async function fetchFromAPI() {
   if (!response.ok) {
     throw new Error(`HTTP error! Status: ${response.status}`);
   }
-  
+
   const patchNotes = await response.json();
   cachedPatchNotes = patchNotes;
   cacheTimestamp = now;
-  
+
   // Sort patch notes
   patchNotes.sort((a, b) => b.posttime - a.posttime || b.updatetime - a.updatetime);
-  
+
   return patchNotes;
 }
 
@@ -145,12 +145,12 @@ async function createCombinedPatchNotesEmbed(notes, source) {
   // Add each patch note as a field
   for (let i = 0; i < Math.min(notes.length, 25); i++) { // Discord limit is 25 fields
     const note = notes[i];
-    
+
     if (source === "api" && note.body) {
       // Legacy API format
       let cleanBody = formatContent(note.body);
       let shortContent = cleanBody.length > 200 ? cleanBody.substring(0, 200) + '...' : cleanBody;
-      
+
       embed.addFields({
         name: `**${note.headline || 'CS2 Update'}**`,
         value: `${shortContent}\n*Updated: ${new Date(note.updatetime * 1000).toLocaleDateString()}*`,
@@ -160,10 +160,10 @@ async function createCombinedPatchNotesEmbed(notes, source) {
       // Steam API format
       let content = note.content ? formatContent(note.content) : 'Update details available at the official updates page.';
       let shortContent = content.length > 200 ? content.substring(0, 200) + '...' : content;
-      
+
       const fieldName = `**${note.title || 'CS2 Update'}**`;
       const fieldValue = `${shortContent}\n*${note.date ? note.date.toLocaleDateString() : 'Unknown date'}*`;
-      
+
       embed.addFields({
         name: fieldName,
         value: fieldValue,
@@ -177,8 +177,8 @@ async function createCombinedPatchNotesEmbed(notes, source) {
 
   // Add footer with source information
   const sourceText = source === "api" ? "Legacy API" : "Steam API";
-  embed.setFooter({ 
-    text: `Source: ${sourceText} | Click title for official updates page` 
+  embed.setFooter({
+    text: `Source: ${sourceText} | Click title for official updates page`
   });
 
   // Add thumbnail
@@ -200,7 +200,7 @@ async function createPatchNoteEmbed(note, source) {
   if (source === "api" && note.body) {
     // Legacy API format
     let cleanBody = formatContent(note.body);
-    
+
     // Split into sections and add as fields
     let sections = cleanBody.split(/\n(?=\[.+\])/g);
     let limitedSections = sections.slice(0, 25);
@@ -216,22 +216,22 @@ async function createPatchNoteEmbed(note, source) {
       }
     });
 
-    embed.setFooter({ 
-      text: `Updated: ${new Date(note.updatetime * 1000).toLocaleString()} | Source: API` 
+    embed.setFooter({
+      text: `Updated: ${new Date(note.updatetime * 1000).toLocaleString()} | Source: API`
     });
 
   } else {
     // Steam API format
     if (note.content) {
       const formattedContent = formatContent(note.content);
-      
+
       // Split content into manageable chunks if too long
       if (formattedContent.length > 1024) {
         const chunks = formattedContent.match(/[\s\S]{1,1024}/g) || [formattedContent];
         chunks.slice(0, 3).forEach((chunk, index) => {
-          embed.addFields({ 
-            name: index === 0 ? "**Patch Notes**" : "\u200B", 
-            value: chunk 
+          embed.addFields({
+            name: index === 0 ? "**Patch Notes**" : "\u200B",
+            value: chunk
           });
         });
       } else if (formattedContent.length > 0) {
@@ -249,8 +249,8 @@ async function createPatchNoteEmbed(note, source) {
       embed.setAuthor({ name: `By ${note.author}` });
     }
 
-    embed.setFooter({ 
-      text: `${note.date ? note.date.toLocaleDateString() : 'Unknown date'} | Source: Steam API` 
+    embed.setFooter({
+      text: `${note.date ? note.date.toLocaleDateString() : 'Unknown date'} | Source: Steam API`
     });
   }
 
