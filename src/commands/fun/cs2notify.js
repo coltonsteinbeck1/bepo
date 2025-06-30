@@ -114,9 +114,17 @@ async function handleStatus(interaction) {
 
   // Add guild information
   if (status.guildId) {
+    let guildName = 'Unknown';
+    try {
+      const guild = await interaction.client.guilds.fetch(status.guildId);
+      guildName = guild.name;
+    } catch (error) {
+      console.warn(`Could not fetch guild ${status.guildId}:`, error.message);
+    }
+    
     embed.addFields({
       name: '🏰 Target Guild',
-      value: `<#${status.guildId}> (${status.guildId})`,
+      value: `${guildName} (${status.guildId})`,
       inline: true
     });
   }
@@ -131,20 +139,56 @@ async function handleStatus(interaction) {
   }
 
   if (status.channels.length > 0) {
+    // Resolve channel names for better display
+    const channelDisplay = await Promise.all(
+      status.channels.map(async (channelId) => {
+        try {
+          const channel = await interaction.client.channels.fetch(channelId);
+          return `<#${channelId}> (${channel.name})`;
+        } catch (error) {
+          return `<#${channelId}> (unknown)`;
+        }
+      })
+    );
+    
     embed.addFields({
       name: '📋 Notification Channels',
-      value: status.channels.map(id => `<#${id}>`).join('\n') || 'None configured',
+      value: channelDisplay.join('\n') || 'None configured',
       inline: false
     });
     
-    // Show source of channels
+    // Show source of channels with details
     if (status.envChannels.length > 0 || status.dynamicChannels.length > 0) {
       let sourceInfo = '';
+      
       if (status.envChannels.length > 0) {
+        const envChannelDetails = await Promise.all(
+          status.envChannels.map(async (channelId) => {
+            try {
+              const channel = await interaction.client.channels.fetch(channelId);
+              return `<#${channelId}> (${channel.name})`;
+            } catch (error) {
+              return `<#${channelId}> (unknown)`;
+            }
+          })
+        );
         sourceInfo += `📄 Environment: ${status.envChannels.length} channel(s)\n`;
+        sourceInfo += `   ${envChannelDetails.join('\n   ')}\n`;
       }
+      
       if (status.dynamicChannels.length > 0) {
-        sourceInfo += `⚙️ User-configured: ${status.dynamicChannels.length} channel(s)`;
+        const dynamicChannelDetails = await Promise.all(
+          status.dynamicChannels.map(async (channelId) => {
+            try {
+              const channel = await interaction.client.channels.fetch(channelId);
+              return `<#${channelId}> (${channel.name})`;
+            } catch (error) {
+              return `<#${channelId}> (unknown)`;
+            }
+          })
+        );
+        sourceInfo += `⚙️ User-configured: ${status.dynamicChannels.length} channel(s)\n`;
+        sourceInfo += `   ${dynamicChannelDetails.join('\n   ')}`;
       }
       
       embed.addFields({
@@ -156,7 +200,7 @@ async function handleStatus(interaction) {
   } else {
     embed.addFields({
       name: '⚠️ Configuration',
-      value: 'No notification channels configured.\nUse `/cs2notify setchannel` to set a channel or set `CS2_NOTIFICATION_CHANNELS` environment variable.',
+      value: 'No notification channels configured.\nUse `/cs2notify setchannel` to set a channel for notifications.',
       inline: false
     });
   }
@@ -379,7 +423,7 @@ async function handleTestPing(interaction) {
   
   try {
     const cs2RoleId = process.env.CS2_ROLE;
-    const guildId = process.env.GUILD_ID;
+    const guildId = process.env.GUILD_BZ;
     
     if (!cs2RoleId) {
       await interaction.editReply({

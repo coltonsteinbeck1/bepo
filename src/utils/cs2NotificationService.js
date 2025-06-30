@@ -12,7 +12,7 @@ const CHANNEL_CONFIG_FILE = path.join(process.cwd(), 'temp', 'cs2-channel-config
 const CHECK_INTERVAL = 10 * 60 * 1000; // 10 minutes
 const NOTIFICATION_CHANNELS = process.env.CS2_NOTIFICATION_CHANNELS?.split(',') || [];
 const CS2_ROLE_ID = process.env.CS2_ROLE;
-const GUILD_ID = process.env.GUILD_ID;
+const GUILD_ID = process.env.GUILD_BZ;
 
 let monitoringInterval = null;
 let botClient = null;
