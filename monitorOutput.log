@@ -1,0 +1,51 @@
+[Wed Jul  2 12:40:28 EDT 2025] Starting bot monitor...
+
+> bepo@1.0.0 monitor
+> node scripts/bot-monitor.js
+
+✅ Offline notification service loaded
+[2025-07-02T16:40:29.121Z] 🔍 Bepo Monitor starting...
+[2025-07-02T16:40:29.236Z] 🔴 Bepo state changed: UNKNOWN → OFFLINE
+[2025-07-02T16:40:29.236Z] ⚠️  Bepo is down! Process running: false, Last update: Infinitys ago
+[2025-07-02T16:40:29.236Z] 📬 Offline notification sent successfully
+[2025-07-02T16:40:59.353Z] 🔴 Bepo state changed: OFFLINE → PROCESS_STOPPED
+[2025-07-02T16:40:59.353Z] ⚠️  Bepo is down! Process running: false, Last update: 23s ago
+[2025-07-02T16:40:59.353Z] ⏭️ Offline notification skipped (cooldown)
+[Wed Jul  2 12:46:26 EDT 2025] Starting bot monitor...
+
+> bepo@1.0.0 monitor
+> node scripts/bot-monitor.js
+
+✅ Offline notification service loaded
+[2025-07-02T16:46:27.847Z] 🔍 Bepo Monitor starting...
+[2025-07-02T16:46:27.944Z] 🔴 Bepo state changed: UNKNOWN → OFFLINE
+[2025-07-02T16:46:27.944Z] ⚠️  Bepo is down! Process running: false, Last update: 202s ago
+[2025-07-02T16:46:27.945Z] 📬 Offline notification sent successfully
+[2025-07-02T16:46:58.055Z] 🔴 Bepo state changed: OFFLINE → PROCESS_STOPPED
+[2025-07-02T16:46:58.055Z] ⚠️  Bepo is down! Process running: false, Last update: 23s ago
+[2025-07-02T16:46:58.055Z] ⏭️ Offline notification skipped (cooldown)
+[2025-07-02T16:50:58.966Z] 📊 Extended offline period: 10 checks (5 minutes)
+[2025-07-02T16:53:59.617Z] 🔴 Bepo state changed: PROCESS_STOPPED → OFFLINE
+[2025-07-02T16:53:59.617Z] ⚠️  Bepo is down! Process running: false, Last update: 112s ago
+[2025-07-02T16:53:59.618Z] ⏭️ Offline notification skipped (cooldown)
+[2025-07-02T16:56:00.046Z] 📊 Extended offline period: 20 checks (10 minutes)
+[2025-07-02T17:01:01.121Z] 📊 Extended offline period: 30 checks (15 minutes)
+[2025-07-02T17:06:02.204Z] 📊 Extended offline period: 40 checks (20 minutes)
+[2025-07-02T17:11:03.274Z] 📊 Extended offline period: 50 checks (25 minutes)
+[2025-07-02T17:16:04.316Z] 📊 Extended offline period: 60 checks (30 minutes)
+[2025-07-02T17:20:35.272Z] 🔴 Bepo state changed: OFFLINE → PROCESS_STOPPED
+[2025-07-02T17:20:35.273Z] ⚠️  Bepo is down! Process running: false, Last update: 2s ago
+[2025-07-02T17:20:35.274Z] 📬 Offline notification sent successfully
+Wed Jul  2 13:20:51 EDT 2025 - Manual shutdown for testing
+[2025-07-02T17:21:05.387Z] 📊 Extended offline period: 70 checks (35 minutes)
+[2025-07-02T17:22:05.616Z] 🔴 Bepo state changed: PROCESS_STOPPED → OFFLINE
+[2025-07-02T17:22:05.616Z] ⚠️  Bepo is down! Process running: false, Last update: 92s ago
+[2025-07-02T17:22:05.617Z] ⏭️ Offline notification skipped (cooldown)
+[2025-07-02T17:26:06.503Z] 🔴 Bepo state changed: OFFLINE → PROCESS_STOPPED
+[2025-07-02T17:26:06.503Z] ⚠️  Bepo is down! Process running: false, Last update: 21s ago
+[2025-07-02T17:26:06.504Z] ⏭️ Offline notification skipped (cooldown)
+[2025-07-02T17:26:06.504Z] 📊 Extended offline period: 80 checks (40 minutes)
+[2025-07-02T17:27:36.828Z] 🔴 Bepo state changed: PROCESS_STOPPED → OFFLINE
+[2025-07-02T17:27:36.828Z] ⚠️  Bepo is down! Process running: false, Last update: 111s ago
+[2025-07-02T17:27:36.828Z] ⏭️ Offline notification skipped (cooldown)
+[2025-07-02T17:31:07.568Z] 📊 Extended offline period: 90 checks (45 minutes)

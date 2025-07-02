@@ -1,6 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } from 'discord.js';
 import errorHandler from '../../utils/errorHandler.js';
 import healthMonitor from '../../utils/healthMonitor.js';
+import { getStatusChecker } from '../../utils/statusChecker.js';
+import offlineNotificationService from '../../utils/offlineNotificationService.js';
 
 const healthCommand = {
     data: new SlashCommandBuilder()
@@ -115,6 +117,10 @@ const healthCommand = {
 async function createHealthEmbed(detailed = false) {
     const health = errorHandler.getHealthStatus();
     const summary = healthMonitor.getHealthSummary();
+    
+    // Get comprehensive status from status checker (same one used by offline system)
+    const statusChecker = getStatusChecker();
+    const systemStatus = await statusChecker.getBotStatus();
 
     const uptime = Math.floor(health.uptime / 1000);
     const uptimeHours = Math.floor(uptime / 3600);
@@ -124,12 +130,13 @@ async function createHealthEmbed(detailed = false) {
     const memoryMB = Math.round((health.memoryUsage?.used || 0) / 1024 / 1024);
     const memoryTotal = Math.round((health.memoryUsage?.total || 0) / 1024 / 1024);
 
-    // Determine online status
-    const isOnline = summary.online && summary.discord.connected;
-    const statusEmoji = isOnline ? '🟢' : '🔴';
-    const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
-    const statusColor = isOnline ? (health.healthy ? '#00ff00' : '#ffaa00') : '#ff0000';
+    // Use the same logic as offline system for consistency
+    const isOperational = systemStatus.summary.operational;
+    const statusEmoji = isOperational ? '🟢' : '🔴';
+    const statusText = isOperational ? 'ONLINE' : 'OFFLINE';
+    const statusColor = isOperational ? (health.healthy ? '#00ff00' : '#ffaa00') : '#ff0000';
 
+    // Create base embed
     const embed = new EmbedBuilder()
         .setTitle(`${statusEmoji} Bot Health & Status Dashboard`)
         .setColor(statusColor)
@@ -166,6 +173,51 @@ async function createHealthEmbed(detailed = false) {
             }
         );
 
+    // Add offline-specific information if bot is down
+    if (!isOperational) {
+        const lastSeenTime = systemStatus.bot.lastSeen ? 
+            `<t:${Math.floor(new Date(systemStatus.bot.lastSeen).getTime() / 1000)}:R>` : 
+            'Unknown';
+        
+        const shutdownReason = systemStatus.bot.shutdownReason || 'Unknown';
+        
+        embed.addFields({
+            name: '🕐 Last Seen',
+            value: lastSeenTime,
+            inline: true
+        }, {
+            name: '📋 Shutdown Reason',
+            value: shutdownReason,
+            inline: false
+        }, {
+            name: '📡 Backup System',
+            value: '✅ Active (Auto-responding)',
+            inline: true
+        });
+        
+        // Add helpful context based on shutdown reason
+        if (shutdownReason.includes('Manually') || shutdownReason.includes('script')) {
+            embed.addFields({
+                name: '🔧 Status',
+                value: 'Bot was intentionally stopped. This is likely planned maintenance.',
+                inline: false
+            });
+        } else if (shutdownReason.includes('Error') || shutdownReason.includes('error') || 
+                   shutdownReason.includes('Network') || shutdownReason.includes('connectivity')) {
+            embed.addFields({
+                name: '⚠️ Issue Detected',
+                value: 'Bot encountered an error and went offline. Automatic restart may be in progress.',
+                inline: false
+            });
+        } else if (shutdownReason.includes('Testing') || shutdownReason.includes('debugging')) {
+            embed.addFields({
+                name: '🧪 Development',
+                value: 'Bot was stopped for testing/debugging purposes.',
+                inline: false
+            });
+        }
+    }
+
     // Add detailed information if requested
     if (detailed) {
         embed.addFields(
@@ -189,16 +241,23 @@ async function createHealthEmbed(detailed = false) {
 
     // Add warnings and status descriptions
     let description = '';
-    if (!isOnline) {
-        description += '🔴 **Bot is currently OFFLINE** - Discord connection lost\n';
+    if (!isOperational) {
+        const shutdownReason = systemStatus.bot.shutdownReason || 'Unknown';
+        description += `🔴 **Bot is currently OFFLINE**\n`;
+        description += `📋 **Reason:** ${shutdownReason}\n`;
+        description += '📡 **Backup Active:** Offline response system is handling mentions\n';
+        
+        if (systemStatus.bot.lastSeen) {
+            description += `⏰ **Last seen:** <t:${Math.floor(new Date(systemStatus.bot.lastSeen).getTime() / 1000)}:R>\n`;
+        }
     } else if (!health.healthy) {
         description += '⚠️ **Warning**: Bot is online but in an unhealthy state\n';
     } else {
         description += '✅ **All systems operational**\n';
     }
 
-    if (summary.discord.connected && !isOnline) {
-        description += '📡 Discord connected but bot marked offline\n';
+    if (summary.discord.connected && !isOperational) {
+        description += '📡 Offline system connected but main bot process unavailable\n';
     }
 
     embed.setDescription(description);

@@ -6,7 +6,5 @@ src/images/image.png
 temp/
 logs/
 serverOutput.log
-start-bepo.sh
-stop-bepo.sh
 image.png
 config.toml

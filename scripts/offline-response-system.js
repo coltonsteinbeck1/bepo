@@ -2,7 +2,11 @@
 /**
  * External Offline Response System for Bepo
  * This system uses Discord webhooks to respond to mentions when Bepo is offline
- * It monitors for @mentions in configured channels and responds with offline status
+ * It monitors for @mentions in configured c                    {
+                        name: '📋 What Happened',
+                        value: shutdownReason,
+                        inline: false
+                    },ls and responds with offline status
  */
 
 import { Client, GatewayIntentBits } from 'discord.js';
@@ -68,6 +72,12 @@ class OfflineResponseSystem {
             this.botUserId = this.client.user.id; // Get bot ID from client
             this.isMonitoring = true;
             this.startStatusMonitoring();
+            
+            // Set status to invisible to hide online presence
+            this.client.user.setPresence({
+                status: 'invisible'
+            });
+            console.log('👻 Set presence to invisible to avoid showing as online');
         });
 
         this.client.on('messageCreate', async (message) => {
@@ -143,8 +153,19 @@ class OfflineResponseSystem {
             return;
         }
 
-        console.log(`🔴 Responding to mention while Bepo is offline`);
-        await this.sendOfflineResponse(message);
+        // Check if this is a health/status request
+        const messageContent = message.content.toLowerCase();
+        const isHealthRequest = messageContent.includes('health') || 
+                               messageContent.includes('status') || 
+                               messageContent.includes('/health');
+
+        console.log(`🔴 Responding to ${isHealthRequest ? 'health request' : 'mention'} while Bepo is offline`);
+        
+        if (isHealthRequest) {
+            await this.sendHealthResponse(message);
+        } else {
+            await this.sendOfflineResponse(message);
+        }
         
         // Set cooldown for this user
         this.responseCooldown.set(userId, Date.now());
@@ -155,24 +176,206 @@ class OfflineResponseSystem {
             // Get current status for the response
             const statusChecker = getStatusChecker();
             const currentStatus = await statusChecker.getBotStatus();
-            const statusMessage = offlineNotificationService.generateStatusMessage(currentStatus);
 
-            // Try to reply to the message
+            // Create rich embed for offline response
+            const shutdownReason = currentStatus.bot.shutdownReason || 'Unknown';
+            const isPlanned = shutdownReason.includes('Manually') || shutdownReason.includes('script') || 
+                             shutdownReason.includes('Testing') || shutdownReason.includes('debugging');
+            
+            const embed = {
+                title: '🔴 Bepo is Currently Offline',
+                description: isPlanned ? 
+                    '🔧 **Planned Maintenance** - I\'ll be back soon!' :
+                    '⚠️ **Unexpected Downtime** - Working on getting back online!',
+                color: isPlanned ? 0xffa500 : 0xff6b6b, // Orange for planned, red for unexpected
+                fields: [
+                    {
+                        name: '📊 Current Status',
+                        value: `🔴 **OFFLINE**`,
+                        inline: true
+                    },
+                    {
+                        name: '🕐 Last Seen',
+                        value: currentStatus.bot.lastSeen ? 
+                            `<t:${Math.floor(new Date(currentStatus.bot.lastSeen).getTime() / 1000)}:R>` : 
+                            'Unknown',
+                        inline: true
+                    },
+                    {
+                        name: '⏱️ Duration',
+                        value: currentStatus.bot.timeSinceUpdate ? 
+                            `${Math.floor(currentStatus.bot.timeSinceUpdate / 60)} min` : 
+                            'Unknown',
+                        inline: true
+                    },
+                    {
+                        name: '� What Happened',
+                        value: shutdownReason,
+                        inline: false
+                    },
+                    {
+                        name: '💡 Auto-Response Active',
+                        value: 'This automated system detected your mention and responded while the main bot is offline.',
+                        inline: false
+                    }
+                ],
+                footer: {
+                    text: 'Offline Response System • Bepo',
+                    icon_url: 'https://cdn.discordapp.com/emojis/1143334637851136051.png'
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            // Add contextual fields based on shutdown reason
+            if (isPlanned) {
+                embed.fields.push({
+                    name: '🔄 Expected Return',
+                    value: 'Usually within a few minutes',
+                    inline: true
+                }, {
+                    name: '✅ No Action Needed',
+                    value: 'This is routine maintenance',
+                    inline: true
+                });
+            } else {
+                embed.fields.push({
+                    name: '🔄 Recovery Status',
+                    value: 'Automatic restart in progress',
+                    inline: true
+                }, {
+                    name: '📞 Need Help?',
+                    value: 'Contact <@540624372398817312> for urgent issues',
+                    inline: true
+                });
+            }
+
+            // Try to reply to the message with embed
             await message.reply({
-                content: `${statusMessage}\n\n*This is an automated response from the offline monitoring system.*`,
+                embeds: [embed],
                 allowedMentions: { repliedUser: false }
             });
 
             console.log(`📬 Sent offline response to ${message.author.tag} in ${message.channel.name || message.channel.id}`);
             
             // Log the response
-            this.logOfflineResponse(message, statusMessage);
+            this.logOfflineResponse(message, embed.title);
             
         } catch (error) {
             console.error('Failed to send offline response:', error);
             
             // Fallback: try to send via webhook if configured
             await this.sendWebhookFallback(message, error);
+        }
+    }
+
+    async sendHealthResponse(message) {
+        try {
+            // Get comprehensive status for health response
+            const statusChecker = getStatusChecker();
+            const currentStatus = await statusChecker.getBotStatus();
+            const healthStatus = await statusChecker.getHealth();
+
+            // Calculate status metrics
+            const shutdownReason = currentStatus.bot.shutdownReason || 'Unknown';
+            const isPlanned = shutdownReason.includes('Manually') || shutdownReason.includes('script') || 
+                             shutdownReason.includes('Testing') || shutdownReason.includes('debugging');
+            
+            const lastSeenTime = currentStatus.bot.lastSeen ? 
+                `<t:${Math.floor(new Date(currentStatus.bot.lastSeen).getTime() / 1000)}:R>` : 
+                'Unknown';
+            
+            const downtime = currentStatus.bot.timeSinceUpdate ? 
+                `${Math.floor(currentStatus.bot.timeSinceUpdate / 60)} minutes` : 
+                'Unknown';
+
+            // Create comprehensive health embed
+            const embed = {
+                title: '🔴 Bot Health & Status Dashboard (Offline Mode)',
+                description: '📡 **Backup System Active** - Health data from offline monitoring',
+                color: isPlanned ? 0xffa500 : 0xff0000, // Orange for planned, red for unexpected
+                fields: [
+                    {
+                        name: '🤖 Bot Status',
+                        value: `**Status:** 🔴 OFFLINE\n**Health:** ❌ Unavailable`,
+                        inline: true
+                    },
+                    {
+                        name: '🕐 Last Seen',
+                        value: lastSeenTime,
+                        inline: true
+                    },
+                    {
+                        name: '⏱️ Downtime',
+                        value: downtime,
+                        inline: true
+                    },
+                    {
+                        name: '📋 Shutdown Reason',
+                        value: shutdownReason,
+                        inline: false
+                    },
+                    {
+                        name: '📡 Backup System',
+                        value: '✅ Active (Auto-responding)\n✅ Health monitoring available\n✅ Status checking operational',
+                        inline: true
+                    },
+                    {
+                        name: '🔄 Recovery',
+                        value: isPlanned ? 
+                            '🔧 Planned maintenance\n⏰ Expected return soon' : 
+                            '🚨 Automatic restart in progress\n📞 Admin notified',
+                        inline: true
+                    }
+                ],
+                footer: {
+                    text: 'Offline Health Monitor • Bepo',
+                    icon_url: 'https://cdn.discordapp.com/emojis/1143334637851136051.png'
+                },
+                timestamp: new Date().toISOString()
+            };
+
+            // Add health details if available
+            if (healthStatus.healthy !== null) {
+                embed.fields.push({
+                    name: '📊 Last Health Check',
+                    value: healthStatus.lastCheck ? 
+                        `<t:${Math.floor(new Date(healthStatus.lastCheck).getTime() / 1000)}:R>` : 
+                        'No recent health data',
+                    inline: true
+                });
+            }
+
+            // Add contextual information based on shutdown type
+            if (isPlanned) {
+                embed.fields.push({
+                    name: '🔧 Maintenance Info',
+                    value: 'This is planned maintenance. No action required from users.',
+                    inline: false
+                });
+            } else if (shutdownReason.includes('Error') || shutdownReason.includes('error')) {
+                embed.fields.push({
+                    name: '⚠️ Issue Detected',
+                    value: 'Bot encountered an error. Automatic recovery is in progress.',
+                    inline: false
+                });
+            }
+
+            // Send the health response
+            await message.reply({
+                embeds: [embed],
+                allowedMentions: { repliedUser: false }
+            });
+
+            console.log(`📊 Sent health response to ${message.author.tag} in ${message.channel.name || message.channel.id}`);
+            
+            // Log the health response
+            this.logOfflineResponse(message, 'Health Status (Offline Mode)');
+            
+        } catch (error) {
+            console.error('Failed to send health response:', error);
+            
+            // Fallback to simple offline response
+            await this.sendOfflineResponse(message);
         }
     }
 
