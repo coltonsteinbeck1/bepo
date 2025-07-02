@@ -145,6 +145,23 @@ The Discord bot who should probably go outside and touch grass, but chooses to b
 /draw <prompt> [style]                     # Generate AI artwork with DALL-E
 ```
 
+## 🚀 Quick Start Guide
+
+**New to Bepo?** Check out the **[Simplified Bepo Guide](./BEPO_GUIDE.md)** for:
+- APEX Mode setup (gaming notifications)
+- OFFLINE Mode features (continuous operation)  
+- Essential commands and testing scenarios
+
+### Core Operations
+```bash
+npm start                 # Start Bepo with all services
+npm stop                  # Stop all Bepo services
+npm run status           # Check bot health
+npm restart              # Restart everything
+```
+
+---
+
 ## 🛡️ Error Handling & Reliability
 
 ### 🔄 **Automatic Recovery Systems**
@@ -256,7 +273,7 @@ npm run dev                               # Start in development mode
 - **Rename Tolerance**: Bot maintains tracking even when users rename threads
 - **Recovery System**: Automatically re-establishes thread tracking after bot restarts
 - **Smart Detection**: Finds existing threads even if tracking was lost
-- **Permission Handling**: Gracefully handles archived threads and permission errors
+- **Permission Handling**: Gracefully handles archived threads and unarchiving when needed
 
 ### 🛡️ **Thread Safeguards Implementation**
 

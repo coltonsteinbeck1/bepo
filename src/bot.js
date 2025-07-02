@@ -21,6 +21,8 @@ import healthCommand from "./commands/fun/health.js";
 import { getAllContext } from "../scripts/create-context.js";
 import { getMarkovChannels } from "../src/supabase/supabase.js";
 import apexMapCommand from "./commands/fun/apexMap.js";
+import apexCommand from "./commands/fun/apex.js";
+import apexNotifyCommand from "./commands/fun/apexnotify.js";
 import minecraftServer from "./commands/fun/minecraftServer.js";
 import cs2Command from "./commands/fun/cs2.js"
 import cs2NotifyCommand from "./commands/fun/cs2notify.js"
@@ -30,15 +32,20 @@ import yapCommand from "./commands/fun/yap.js";
 import stopyapCommand from "./commands/fun/stopyap.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
-import { memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing, 
-    isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
-    sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads, 
-    updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences, 
-    getBotManagedThreadInfo } from "./utils//utils.js";
+import {
+  memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing,
+  isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
+  sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads,
+  updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences,
+  getBotManagedThreadInfo
+} from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import healthMonitor from "./utils/healthMonitor.js";
+import offlineNotificationService from "./utils/offlineNotificationService.js";
+import { getStatusChecker } from "./utils/statusChecker.js";
 import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
+import { initializeApexMonitoring } from "./utils/apexNotificationService.js";
 
 
 dotenv.config();
@@ -83,25 +90,25 @@ client.on('shardReconnecting', (shardId) => {
 // Add graceful shutdown handler
 process.on('SHUTDOWN', async (error) => {
   console.log('🛑 Bot shutting down gracefully...');
-  
+
   try {
     // Stop scheduled tasks
     console.log('⏹️ Stopping scheduled tasks...');
-    
+
     // Cleanup voice connections
     console.log('🎵 Cleaning up voice connections...');
     // This will be handled by individual command cleanup
-    
+
     // Close database connections
     console.log('🗄️ Closing database connections...');
     // Supabase client will handle this automatically
-    
+
     // Destroy Discord client
     console.log('🤖 Destroying Discord client...');
     if (client.readyState !== 'DESTROYED') {
       client.destroy();
     }
-    
+
     console.log('✅ Graceful shutdown completed');
   } catch (shutdownError) {
     console.error('❌ Error during graceful shutdown:', shutdownError);
@@ -129,9 +136,11 @@ client.commands.set("updateservermemory", updateServerMemoryCommand);
 client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
 client.commands.set("yap", yapCommand);
-client.commands.set("stopyap",stopyapCommand);
+client.commands.set("stopyap", stopyapCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
+client.commands.set("apex", apexCommand);
+client.commands.set("apexnotify", apexNotifyCommand);
 
 
 
@@ -156,13 +165,13 @@ function startScheduledMessaging(client) {
   setInterval(() => {
     const currentDate = getCurrentDateString();
     const now = new Date();
-    const easternTime = new Date(now.toLocaleString("en-US", {timeZone: "America/New_York"}));
-    
+    const easternTime = new Date(now.toLocaleString("en-US", { timeZone: "America/New_York" }));
+
     // Log periodic check (every 10 minutes to avoid spam)
     if (easternTime.getMinutes() % 10 === 0) {
       console.log(`[${now.toISOString()}] Scheduled message check - Eastern Time: ${easternTime}`);
     }
-    
+
     // Check for game time message
     if (isGameTime()) {
       if (lastSentMessages.gameTime !== currentDate) {
@@ -171,7 +180,7 @@ function startScheduledMessaging(client) {
         lastSentMessages.gameTime = currentDate;
       }
     }
-    
+
     // Check for Sunday image
     if (isSundayImageTime()) {
       if (lastSentMessages.sundayImage !== currentDate) {
@@ -182,20 +191,20 @@ function startScheduledMessaging(client) {
         console.log(`[${now.toISOString()}] Sunday image already sent today: ${currentDate}`);
       }
     }
-    
+
     // Auto digest disabled - use /digest command manually
   }, 60000); // Check every minute
-  
+
   // Clean up old bot-managed threads every hour
   setInterval(() => {
     cleanupOldBotThreads();
   }, 60 * 60 * 1000); // Every hour
-  
+
   // Check for inactive threads to delete every 30 minutes
   setInterval(() => {
     checkAndDeleteInactiveThreads(client);
   }, 30 * 60 * 1000); // Every 30 minutes
-  
+
   // Validate and cleanup stale thread references every 2 hours
   setInterval(async () => {
     await safeAsync(async () => {
@@ -203,17 +212,17 @@ function startScheduledMessaging(client) {
       const staleThreads = cleanupStaleThreadReferences();
       let validatedCount = 0;
       let cleanedCount = 0;
-      
+
       for (const threadId of staleThreads) {
         const threadInfo = getBotManagedThreadInfo(threadId);
         if (threadInfo) {
           const validation = await validateBotManagedThread(
-            client, 
-            threadId, 
-            threadInfo.userId, 
+            client,
+            threadId,
+            threadInfo.userId,
             threadInfo.channelId
           );
-          
+
           if (validation.exists) {
             validatedCount++;
           } else {
@@ -221,7 +230,7 @@ function startScheduledMessaging(client) {
           }
         }
       }
-      
+
       if (validatedCount > 0 || cleanedCount > 0) {
         console.log(`🧹 Thread validation complete: ${validatedCount} validated, ${cleanedCount} cleaned up`);
       }
@@ -238,13 +247,20 @@ const markov = new MarkovChain();
 
 client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
+  
+  // Initialize health monitoring with Discord client
+  healthMonitor.setDiscordClient(client);
   console.log(`🏥 Health monitoring started`);
+  
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
-  
+
   // Initialize CS2 patch note monitoring
   await initializeCS2Monitoring(client);
-  
+
+  // Initialize Apex Legends patch note monitoring
+  await initializeApexMonitoring(client);
+
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {
     await safeAsync(async () => {
@@ -262,7 +278,7 @@ client.on("ready", async () => {
 
 client.on("interactionCreate", async (interaction) => {
   const retryWrapper = createRetryWrapper(2, 1000); // 2 retries with 1 second base delay
-  
+
   await safeAsync(async () => {
     if (interaction.isCommand()) {
       const command = client.commands.get(interaction.commandName);
@@ -308,13 +324,13 @@ client.on("interactionCreate", async (interaction) => {
         }, async (error) => {
           console.error('Role toggle error:', error);
           if (!interaction.replied) {
-            await interaction.reply({ 
-              content: "❌ Failed to toggle role. I might not have the required permissions.", 
-              flags: MessageFlags.Ephemeral 
+            await interaction.reply({
+              content: "❌ Failed to toggle role. I might not have the required permissions.",
+              flags: MessageFlags.Ephemeral
             });
           }
         }, 'role_toggle');
-        
+
       } else if (interaction.customId.startsWith("removeRole:")) {
         const roleId = interaction.customId.split(":")[1];
         const member = interaction.member;
@@ -333,9 +349,9 @@ client.on("interactionCreate", async (interaction) => {
         }, async (error) => {
           console.error('Role remove error:', error);
           if (!interaction.replied) {
-            await interaction.reply({ 
-              content: "❌ Failed to remove role. I might not have the required permissions.", 
-              flags: MessageFlags.Ephemeral 
+            await interaction.reply({
+              content: "❌ Failed to remove role. I might not have the required permissions.",
+              flags: MessageFlags.Ephemeral
             });
           }
         }, 'role_remove');
@@ -345,12 +361,12 @@ client.on("interactionCreate", async (interaction) => {
     // Global interaction error fallback
     console.error("Error during interaction:", error);
     const isDiscordError = handleDiscordError(error, interaction, 'interaction');
-    
+
     // Try to respond to the user if we haven't already
-    const errorMessage = isDiscordError && error.code === 50013 
+    const errorMessage = isDiscordError && error.code === 50013
       ? "❌ I don't have the required permissions to perform this action."
       : "❌ Something went wrong while processing your request. Please try again.";
-    
+
     try {
       if (interaction.replied || interaction.deferred) {
         await interaction.followUp({
@@ -380,32 +396,50 @@ client.on("messageCreate", async (message) => {
 
   // Check if message is in a bot-managed thread (auto-respond)
   const isInBotThread = message.channel.isThread() && isBotManagedThread(message.channel.id);
-  
+
   // If message is in a thread but not tracked, check if it should be tracked
   if (message.channel.isThread() && !isInBotThread) {
     // Check if this might be a thread we created but lost tracking for
     const threadInfo = await safeAsync(async () => {
       return await validateBotManagedThread(
-        client, 
-        message.channel.id, 
-        message.author.id, 
+        client,
+        message.channel.id,
+        message.author.id,
         message.channel.parentId
       );
     }, null, 'thread_validation');
-    
+
     if (threadInfo && threadInfo.exists && !threadInfo.archived) {
       console.log(`Recovered tracking for thread ${message.channel.id} after name change or restart`);
     }
   }
-  
+
   // Update thread activity if message is in a bot-managed thread
   if (isInBotThread) {
     updateThreadActivity(message.channel.id);
   }
-  
+
+  // Check if bot was mentioned and respond with status if needed
+  if (isBotMentioned(message, client) && !isBotMessageOrPrefix(message, BOT_PREFIX) && !isInBotThread) {
+    // Check current bot health status
+    const statusChecker = getStatusChecker();
+    const currentStatus = await safeAsync(async () => {
+      return await statusChecker.getBotStatus();
+    }, null, 'status_check_on_mention');
+
+    // If bot appears to be offline or unhealthy, send status message
+    if (currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
+      const statusMessage = offlineNotificationService.generateStatusMessage(currentStatus);
+      await safeAsync(async () => {
+        await message.reply(statusMessage);
+      }, null, 'offline_status_reply');
+      return; // Don't process further if sending status message
+    }
+  }
+
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client) || isInBotThread) {
     const sendTypingInterval = await sendTypingIndicator(message);
-    
+
     if (message.content.match(/^reset bot$/i)) {
       const key = `${message.channelId}:${message.author.id}`;
       convoStore.delete(key);
@@ -415,19 +449,19 @@ client.on("messageCreate", async (message) => {
 
     // Process message and check for images
     const messageData = await processMessageWithImages(message);
-    
+
     // 1) get existing context (with system prompt on first run)
     const context = await buildStreamlinedConversationContext(message);
-    
+
     let response;
-    
+
     if (messageData.hasImages && messageData.imageUrls.length > 0) {
       // Use OpenAI with vision for image-containing messages
       const visionMessages = [...context];
-      
+
       // Replace the system message with the image-specific one
       visionMessages[0] = { role: "system", content: process.env.IMAGE_SYSTEM_PROMPT };
-      
+
       // Build the user message with image content
       let imagePrompt;
       if (messageData.hasGifs) {
@@ -435,32 +469,32 @@ client.on("messageCreate", async (message) => {
       } else {
         imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
       }
-      
+
       const userMessageContent = [
         {
           type: "text",
           text: imagePrompt
         }
       ];
-      
+
       // Add images to the message
       let processedImages = 0;
       for (const imageUrl of messageData.imageUrls) {
         try {
           // Check if this specific URL is a GIF
-          const isGif = imageUrl.toLowerCase().includes('.gif') || 
-                       (message.attachments && 
-                        Array.from(message.attachments.values()).some(att => 
-                          att.url === imageUrl && att.contentType === 'image/gif'));
-          
+          const isGif = imageUrl.toLowerCase().includes('.gif') ||
+            (message.attachments &&
+              Array.from(message.attachments.values()).some(att =>
+                att.url === imageUrl && att.contentType === 'image/gif'));
+
           if (isGif) {
             // For GIFs, use frame extraction for better analysis
             const gifAnalysis = await analyzeGifWithFrames(
-              imageUrl, 
+              imageUrl,
               message.content || "analyze this gif animation. react to the movement and sequence.",
               process.env.IMAGE_SYSTEM_PROMPT
             );
-            
+
             if (gifAnalysis) {
               // Store the GIF analysis and skip adding to userMessageContent
               response = {
@@ -502,41 +536,41 @@ client.on("messageCreate", async (message) => {
           // Skip this image and continue with others
         }
       }
-      
+
       // If no images were successfully processed, fall back to text-only
       if (processedImages === 0) {
         const userContent = messageData.processedContent;
         appendToConversation(message, "user", userContent);
-           response = await safeAsync(async () => {
-        return await xAI.chat.completions.create({
-          model: "grok-3-mini-beta",
-          messages: [...context, { 
-            role: "user", 
-            content: userContent
-          }],
-        });
-      }, async (error) => {
-        const aiErrorResult = handleAIError(error, 'xai');
-        console.log("xAI connection Error:", error);
-        
-        if (aiErrorResult.retry) {
-          // For retryable errors, return null so the retry can happen
-          return null;
-        } else {
-          // For non-retryable errors, send user message and return null
-          await safeAsync(async () => {
-            await message.reply("Model connection having issues - please try again in a moment");
-          }, null, 'ai_error_reply');
-          return null;
-        }
-      }, 'xai_api_call');
+        response = await safeAsync(async () => {
+          return await xAI.chat.completions.create({
+            model: "grok-3-mini-beta",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+          });
+        }, async (error) => {
+          const aiErrorResult = handleAIError(error, 'xai');
+          console.log("xAI connection Error:", error);
+
+          if (aiErrorResult.retry) {
+            // For retryable errors, return null so the retry can happen
+            return null;
+          } else {
+            // For non-retryable errors, send user message and return null
+            await safeAsync(async () => {
+              await message.reply("Model connection having issues - please try again in a moment");
+            }, null, 'ai_error_reply');
+            return null;
+          }
+        }, 'xai_api_call');
       } else if (!response) {
         // Process with vision model (only if we don't already have a response from GIF processing)
         visionMessages.push({
           role: "user",
           content: userMessageContent
         });
-        
+
         response = await safeAsync(async () => {
           return await openAI.chat.completions.create({
             model: "gpt-4o-mini",
@@ -546,14 +580,14 @@ client.on("messageCreate", async (message) => {
         }, async (error) => {
           const aiErrorResult = handleAIError(error, 'openai');
           console.log("OpenAI Image Error:", error);
-          
+
           await safeAsync(async () => {
             await message.reply("Image model connection having issues - please try again in a moment");
           }, null, 'vision_error_reply');
           return null;
         }, 'openai_vision_call');
       }
-      
+
       // Store the processed message in conversation history
       if (response) {
         appendToConversation(message, "user", message.content + " [User shared an image]");
@@ -566,15 +600,15 @@ client.on("messageCreate", async (message) => {
       response = await safeAsync(async () => {
         return await xAI.chat.completions.create({
           model: "grok-3-mini-beta",
-          messages: [...context, { 
-            role: "user", 
+          messages: [...context, {
+            role: "user",
             content: userContent
           }],
         });
       }, async (error) => {
         const aiErrorResult = handleAIError(error, 'xai');
         console.log("xAI connection Error:", error);
-        
+
         await safeAsync(async () => {
           await message.reply("Model connection having issues - please try again in a moment");
         }, null, 'ai_error_reply');
@@ -592,7 +626,7 @@ client.on("messageCreate", async (message) => {
     const responseMessage = response.choices[0].message.content;
 
     appendToConversation(message, "assistant", responseMessage);
-    
+
     // Store memory after successful conversation
     await safeAsync(async () => {
       // Store the user's message as memory
@@ -606,7 +640,7 @@ client.on("messageCreate", async (message) => {
           timestamp: new Date().toISOString()
         }
       );
-      
+
       // Store interesting parts of the bot's response as memory
       if (responseMessage.length > 50) {
         await storeUserMemory(
@@ -638,7 +672,7 @@ client.on("messageCreate", async (message) => {
       }, async (error) => {
         console.error('Failed to send message chunk:', error);
         handleDiscordError(error, null, 'message_reply');
-        
+
         // Try to send a shorter error message instead
         if (i === 0) { // Only send error on first chunk to avoid spam
           await safeAsync(async () => {
@@ -647,12 +681,12 @@ client.on("messageCreate", async (message) => {
         }
       }, `message_reply_chunk_${i}`);
     }
-    
+
     // Update thread activity after bot responds (if in bot-managed thread)
     if (isInBotThread) {
       updateThreadActivity(message.channel.id);
     }
-    
+
     return;
   }
   if (markovChannelIds.includes(message.channelId.toString())) {
