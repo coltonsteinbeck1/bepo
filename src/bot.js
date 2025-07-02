@@ -247,11 +247,11 @@ const markov = new MarkovChain();
 
 client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
-  
+
   // Initialize health monitoring with Discord client
   healthMonitor.setDiscordClient(client);
   console.log(`🏥 Health monitoring started`);
-  
+
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
 

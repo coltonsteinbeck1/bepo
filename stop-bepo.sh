@@ -31,7 +31,9 @@ if ! tmux has-session -t $SESSION_NAME 2>/dev/null; then
     else
         print_status $COLOR_GREEN "✅ No Bepo processes found."
     fi
-    exit 0
+    
+    # Continue to cleanup status files even when no session exists
+    # Don't exit here - let the script continue to clean status files
 fi
 
 print_status $COLOR_RED "🛑 Stopping Bepo services..." | tee -a $LOG_FILE
@@ -102,5 +104,47 @@ print_status $COLOR_CYAN "📊 Log files preserved:"
 echo "  Bot logs: $LOG_FILE"
 echo "  Monitor logs: $MONITOR_LOG_FILE"  
 echo "  Offline logs: $OFFLINE_LOG_FILE"
+
+# Clear stale status files to prevent false "online" status
+echo ""
+print_status $COLOR_CYAN "🧹 Clearing status files..."
+if [ -f "logs/bot-status.json" ]; then
+    cat > logs/bot-status.json << 'EOF'
+{
+  "botStatus": {
+    "isOnline": false,
+    "status": "OFFLINE",
+    "lastSeen": null,
+    "uptime": 0,
+    "startTime": null
+  },
+  "health": {
+    "healthy": false,
+    "errorCount": 0,
+    "criticalErrorCount": 0,
+    "memoryUsage": {
+      "used": 0,
+      "total": 0
+    },
+    "lastHealthCheck": null,
+    "lastCriticalError": null
+  },
+  "discord": {
+    "connected": false,
+    "ping": null,
+    "guilds": 0,
+    "users": 0
+  },
+  "system": {
+    "platform": "darwin",
+    "nodeVersion": "v22.16.0",
+    "pid": null
+  },
+  "lastUpdated": null
+}
+EOF
+    print_status $COLOR_GREEN "✅ Bot status file cleared"
+fi
+
 echo ""
 print_status $COLOR_GREEN "🔄 To restart: ./start-bepo.sh"
