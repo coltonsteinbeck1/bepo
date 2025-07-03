@@ -137,7 +137,7 @@ async function gracefulShutdown() {
           activities: []
         });
         console.log('👻 Discord presence set to invisible');
-        
+
         // Give Discord a moment to register the status change
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (presenceError) {
@@ -506,11 +506,11 @@ client.on("messageCreate", async (message) => {
 
     // Only send status message if bot is actually offline/unhealthy AND this is a status request
     const messageContent = message.content.toLowerCase();
-    const isStatusRequest = messageContent.includes('status') || 
-                           messageContent.includes('health') ||
-                           messageContent.includes('/health') ||
-                           messageContent.includes('ping') ||
-                           messageContent.includes('online');
+    const isStatusRequest = messageContent.includes('status') ||
+      messageContent.includes('health') ||
+      messageContent.includes('/health') ||
+      messageContent.includes('ping') ||
+      messageContent.includes('online');
 
     // Only respond with status if explicitly requested or if bot is genuinely offline
     if (isStatusRequest && currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
