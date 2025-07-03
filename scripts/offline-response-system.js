@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 /**
  * External Offline Response System for Bepo
- * This system uses Discord webhooks to respond to mentions when Bepo is offline
- * It monitors for @mentions in configured c                    {
-                        name: '📋 What Happened',
-                        value: shutdownReason,
-                        inline: false
-                    },ls and responds with offline status
+ * This system responds to mentions when Bepo is offline
+ * It monitors for @mentions in configured channels and responds with offline status
  */
 
 import { Client, GatewayIntentBits } from 'discord.js';
@@ -58,6 +54,22 @@ class OfflineResponseSystem {
     async initialize() {
         console.log('🔧 Initializing Offline Response System...');
         
+        // Start by monitoring status without logging into Discord
+        this.isMonitoring = true;
+        this.startStatusMonitoring();
+        
+        console.log('🎯 Offline Response System is now monitoring bot status...');
+        console.log('💡 Will only connect to Discord when main bot goes offline');
+    }
+
+    async connectToDiscord() {
+        if (this.client && this.client.readyState !== 'DISCONNECTED') {
+            console.log('🔄 Already connected to Discord');
+            return;
+        }
+
+        console.log('🔗 Connecting to Discord for offline responses...');
+        
         // Create a lightweight Discord client just for monitoring mentions
         this.client = new Client({
             intents: [
@@ -67,17 +79,20 @@ class OfflineResponseSystem {
             ]
         });
 
-        this.client.on('ready', () => {
-            console.log(`✅ Offline Response Monitor ready as: ${this.client.user.tag}`);
+        this.client.on('ready', async () => {
+            console.log(`✅ Offline Response Monitor connected as: ${this.client.user.tag}`);
             this.botUserId = this.client.user.id; // Get bot ID from client
-            this.isMonitoring = true;
-            this.startStatusMonitoring();
             
             // Set status to invisible to hide online presence
-            this.client.user.setPresence({
-                status: 'invisible'
-            });
-            console.log('👻 Set presence to invisible to avoid showing as online');
+            try {
+                await this.client.user.setPresence({
+                    status: 'invisible',
+                    activities: []
+                });
+                console.log('👻 Set presence to invisible while in offline mode');
+            } catch (error) {
+                console.error('❌ Failed to set invisible presence:', error);
+            }
         });
 
         this.client.on('messageCreate', async (message) => {
@@ -92,6 +107,18 @@ class OfflineResponseSystem {
         await this.client.login(process.env.BOT_TOKEN);
     }
 
+    async disconnectFromDiscord() {
+        if (this.client && this.client.readyState !== 'DISCONNECTED') {
+            console.log('🔌 Disconnecting from Discord (main bot is back online)');
+            try {
+                await this.client.destroy();
+                this.client = null;
+            } catch (error) {
+                console.error('Error disconnecting from Discord:', error);
+            }
+        }
+    }
+
     startStatusMonitoring() {
         const checkStatus = async () => {
             if (!this.isMonitoring) return;
@@ -100,27 +127,45 @@ class OfflineResponseSystem {
                 const statusChecker = getStatusChecker();
                 const currentStatus = await statusChecker.getBotStatus();
                 
-                // Only respond to mentions if main bot is offline/unhealthy
-                this.mainBotOffline = !currentStatus.summary.operational;
+                const isMainBotOffline = !currentStatus.summary.operational;
+                const wasOffline = this.mainBotOffline;
+                this.mainBotOffline = isMainBotOffline;
                 
-                if (this.mainBotOffline) {
-                    console.log(`🔴 Bepo detected as offline/unhealthy: ${currentStatus.summary.status}`);
+                // Handle state changes
+                if (isMainBotOffline && !wasOffline) {
+                    // Bot just went offline - connect to Discord
+                    console.log(`🔴 Main bot went offline (${currentStatus.summary.status}) - connecting offline response system`);
+                    await this.connectToDiscord();
+                    this.statusCheckInterval = 30000; // Check every 30 seconds when offline
+                } else if (!isMainBotOffline && wasOffline) {
+                    // Bot came back online - disconnect from Discord
+                    console.log(`� Main bot came back online (${currentStatus.summary.status}) - disconnecting offline response system`);
+                    await this.disconnectFromDiscord();
+                    this.statusCheckInterval = 120000; // Check every 2 minutes when online
+                } else if (isMainBotOffline) {
+                    // Still offline
+                    console.log(`🔴 Main bot still offline (${currentStatus.summary.status})`);
+                    this.statusCheckInterval = 30000;
                 } else {
-                    // If main bot is online, we can be less active
-                    console.log(`🟢 Bepo is operational, standing by...`);
+                    // Still online - log occasionally
+                    if (Date.now() - this.lastStatusCheck > 300000) { // Only log every 5 minutes when online
+                        console.log(`🟢 Main bot operational (${currentStatus.summary.status}) - offline response system standing by`);
+                    }
+                    this.statusCheckInterval = 120000;
                 }
                 
                 this.lastStatusCheck = Date.now();
             } catch (error) {
                 console.error('Status check failed:', error);
-                // Assume offline if we can't check status
-                this.mainBotOffline = true;
+                // If we can't check status, don't change connection state
+                console.log('⚠️ Status check failed - maintaining current connection state');
             }
 
-            // Schedule next check
+            // Schedule next check with dynamic interval
             setTimeout(checkStatus, this.statusCheckInterval);
         };
 
+        // Start with first check
         checkStatus();
     }
 
@@ -139,11 +184,8 @@ class OfflineResponseSystem {
 
         if (!botMentioned) return;
 
-        // Check if main bot is offline
-        if (!this.mainBotOffline) {
-            console.log(`🟢 Bepo mention detected but Bepo is online, letting main bot handle it`);
-            return;
-        }
+        // We only get here if we're connected to Discord, which means main bot is offline
+        console.log(`� Bot mention detected while main bot is offline - responding`);
 
         // Check user cooldown
         const userId = message.author.id;
@@ -159,7 +201,7 @@ class OfflineResponseSystem {
                                messageContent.includes('status') || 
                                messageContent.includes('/health');
 
-        console.log(`🔴 Responding to ${isHealthRequest ? 'health request' : 'mention'} while Bepo is offline`);
+        console.log(`🔴 Responding to ${isHealthRequest ? 'health request' : 'mention'} while main bot is offline`);
         
         if (isHealthRequest) {
             await this.sendHealthResponse(message);
@@ -196,16 +238,12 @@ class OfflineResponseSystem {
                     },
                     {
                         name: '🕐 Last Seen',
-                        value: currentStatus.bot.lastSeen ? 
-                            `<t:${Math.floor(new Date(currentStatus.bot.lastSeen).getTime() / 1000)}:R>` : 
-                            'Unknown',
+                        value: this.formatLastSeen(currentStatus),
                         inline: true
                     },
                     {
                         name: '⏱️ Duration',
-                        value: currentStatus.bot.timeSinceUpdate ? 
-                            `${Math.floor(currentStatus.bot.timeSinceUpdate / 60)} min` : 
-                            'Unknown',
+                        value: this.formatDowntime(currentStatus),
                         inline: true
                     },
                     {
@@ -280,13 +318,8 @@ class OfflineResponseSystem {
             const isPlanned = shutdownReason.includes('Manually') || shutdownReason.includes('script') || 
                              shutdownReason.includes('Testing') || shutdownReason.includes('debugging');
             
-            const lastSeenTime = currentStatus.bot.lastSeen ? 
-                `<t:${Math.floor(new Date(currentStatus.bot.lastSeen).getTime() / 1000)}:R>` : 
-                'Unknown';
-            
-            const downtime = currentStatus.bot.timeSinceUpdate ? 
-                `${Math.floor(currentStatus.bot.timeSinceUpdate / 60)} minutes` : 
-                'Unknown';
+            const lastSeenTime = this.formatLastSeen(currentStatus);
+            const downtime = this.formatDowntime(currentStatus);
 
             // Create comprehensive health embed
             const embed = {
@@ -463,11 +496,96 @@ class OfflineResponseSystem {
         console.log('🛑 Stopping Offline Response System...');
         this.isMonitoring = false;
         
-        if (this.client) {
-            await this.client.destroy();
-        }
+        await this.disconnectFromDiscord();
         
         console.log('✅ Offline Response System stopped');
+    }
+
+    formatLastSeen(statusData) {
+        try {
+            // Try to get last seen from different sources
+            let lastSeenTime = null;
+            
+            // First, try the bot.data.botStatus.lastSeen field (ISO string)
+            if (statusData.bot?.data?.botStatus?.lastSeen) {
+                lastSeenTime = new Date(statusData.bot.data.botStatus.lastSeen);
+            }
+            // Try the bot's lastUpdated time as fallback
+            else if (statusData.bot?.data?.lastUpdated) {
+                if (typeof statusData.bot.data.lastUpdated === 'number') {
+                    // Unix timestamp in seconds, convert to milliseconds
+                    lastSeenTime = new Date(statusData.bot.data.lastUpdated * 1000);
+                } else {
+                    // ISO string
+                    lastSeenTime = new Date(statusData.bot.data.lastUpdated);
+                }
+            }
+            // Try timestamp from status data
+            else if (statusData.timestamp) {
+                lastSeenTime = new Date(statusData.timestamp);
+            }
+            
+            if (lastSeenTime && !isNaN(lastSeenTime.getTime())) {
+                // Use Discord's relative timestamp format
+                return `<t:${Math.floor(lastSeenTime.getTime() / 1000)}:R>`;
+            } else {
+                return 'Unknown';
+            }
+        } catch (error) {
+            console.error('Error formatting last seen time:', error);
+            return 'Unknown';
+        }
+    }
+
+    formatDowntime(statusData) {
+        try {
+            let durationMs = 0;
+            
+            // Try to calculate downtime from different sources
+            if (statusData.bot?.timeSinceUpdate) {
+                // timeSinceUpdate is in seconds, convert to milliseconds
+                durationMs = statusData.bot.timeSinceUpdate * 1000;
+            } else if (statusData.bot?.data?.botStatus?.lastSeen) {
+                // Calculate from last seen time (ISO string)
+                const lastSeen = new Date(statusData.bot.data.botStatus.lastSeen);
+                if (!isNaN(lastSeen.getTime())) {
+                    durationMs = Date.now() - lastSeen.getTime();
+                }
+            } else if (statusData.bot?.data?.lastUpdated) {
+                // lastUpdated might be Unix timestamp (seconds) or ISO string
+                let lastUpdate;
+                if (typeof statusData.bot.data.lastUpdated === 'number') {
+                    // Unix timestamp in seconds, convert to milliseconds
+                    lastUpdate = new Date(statusData.bot.data.lastUpdated * 1000);
+                } else {
+                    // ISO string
+                    lastUpdate = new Date(statusData.bot.data.lastUpdated);
+                }
+                if (!isNaN(lastUpdate.getTime())) {
+                    durationMs = Date.now() - lastUpdate.getTime();
+                }
+            } else {
+                return 'Unknown';
+            }
+            
+            // Convert to human-readable format
+            const durationMinutes = Math.floor(durationMs / (1000 * 60));
+            const durationHours = Math.floor(durationMinutes / 60);
+            const durationDays = Math.floor(durationHours / 24);
+            
+            if (durationDays > 0) {
+                return `${durationDays} day${durationDays !== 1 ? 's' : ''}, ${durationHours % 24} hour${(durationHours % 24) !== 1 ? 's' : ''}`;
+            } else if (durationHours > 0) {
+                return `${durationHours} hour${durationHours !== 1 ? 's' : ''}, ${durationMinutes % 60} min`;
+            } else if (durationMinutes > 0) {
+                return `${durationMinutes} minute${durationMinutes !== 1 ? 's' : ''}`;
+            } else {
+                return 'Less than 1 minute';
+            }
+        } catch (error) {
+            console.error('Error formatting downtime:', error);
+            return 'Unknown';
+        }
     }
 }
 
@@ -491,8 +609,8 @@ async function main() {
         responseSystem = new OfflineResponseSystem();
         await responseSystem.initialize();
         
-        console.log('🎯 Offline Response System is now monitoring for mentions...');
-        console.log('💡 This system will respond to bot mentions when the main bot is offline');
+        console.log('🎯 Offline Response System initialized successfully');
+        console.log('💡 Monitoring main bot status - will connect to Discord only when bot goes offline');
         
     } catch (error) {
         console.error('❌ Failed to start Offline Response System:', error);

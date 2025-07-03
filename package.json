@@ -27,6 +27,7 @@
     "delete": "node scripts/delete-commands.js",
     "generate": "node src/dalle/cli.js generate",
     "start": "./start-bepo.sh",
+    "start:quick": "./start-bepo.sh",
     "start:full": "node src/bot.js & node scripts/bot-monitor.js & node scripts/offline-response-system.js",
     "start:bot-only": "./start-bot-only.sh",
     "start:bot-direct": "node src/bot.js",

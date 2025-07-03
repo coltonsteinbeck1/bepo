@@ -83,15 +83,68 @@ client.on('shardDisconnect', (event, shardId) => {
   console.warn(`🔌 Shard ${shardId} Disconnected:`, event);
 });
 
+client.on('disconnect', () => {
+  console.log('🔌 Discord client disconnected');
+});
+
 client.on('shardReconnecting', (shardId) => {
   // Reduced logging - only log if multiple reconnections
 });
 
 // Add graceful shutdown handler
-process.on('SHUTDOWN', async (error) => {
-  console.log('🛑 Bot shutting down gracefully...');
+process.on('SIGINT', async () => {
+  console.log('🛑 Received SIGINT (Ctrl+C), shutting down gracefully...');
+  await gracefulShutdown();
+});
 
+process.on('SIGTERM', async () => {
+  console.log('🛑 Received SIGTERM, shutting down gracefully...');
+  await gracefulShutdown();
+});
+
+process.on('SHUTDOWN', async () => {
+  console.log('🛑 Received SHUTDOWN signal, shutting down gracefully...');
+  await gracefulShutdown();
+});
+
+async function gracefulShutdown() {
   try {
+    console.log('🛑 Bot shutting down gracefully...');
+
+    // Update bot status to offline before shutting down
+    const statusChecker = getStatusChecker();
+    if (statusChecker) {
+      await safeAsync(async () => {
+        await statusChecker.updateBotStatus({
+          isOnline: false,
+          status: "OFFLINE",
+          lastSeen: new Date().toISOString(),
+          uptime: 0,
+          startTime: null
+        });
+        console.log('📊 Bot status updated to offline');
+      }, (error) => {
+        console.error('❌ Failed to update bot status on shutdown:', error);
+      }, 'status_update_shutdown');
+    }
+
+    // Set Discord presence to invisible/offline before destroying
+    console.log('🔄 Setting Discord presence to offline...');
+    if (client && client.user && client.readyState === 'READY') {
+      try {
+        await client.user.setPresence({
+          status: 'invisible',
+          activities: []
+        });
+        console.log('👻 Discord presence set to invisible');
+        
+        // Give Discord a moment to register the status change
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (presenceError) {
+        console.error('❌ Failed to set presence:', presenceError);
+      }
+    }
+
     // Stop scheduled tasks
     console.log('⏹️ Stopping scheduled tasks...');
 
@@ -105,15 +158,22 @@ process.on('SHUTDOWN', async (error) => {
 
     // Destroy Discord client
     console.log('🤖 Destroying Discord client...');
-    if (client.readyState !== 'DESTROYED') {
-      client.destroy();
+    if (client && client.readyState !== 'DESTROYED') {
+      try {
+        await client.destroy();
+        console.log('💥 Discord client destroyed');
+      } catch (destroyError) {
+        console.error('❌ Error destroying client:', destroyError);
+      }
     }
 
     console.log('✅ Graceful shutdown completed');
+    process.exit(0);
   } catch (shutdownError) {
     console.error('❌ Error during graceful shutdown:', shutdownError);
+    process.exit(1);
   }
-});
+}
 
 client.commands = new Collection();
 client.commands.set("play", playCommand);
@@ -247,6 +307,23 @@ const markov = new MarkovChain();
 
 client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
+
+  // Update bot status to online
+  const statusChecker = getStatusChecker();
+  if (statusChecker) {
+    await safeAsync(async () => {
+      await statusChecker.updateBotStatus({
+        isOnline: true,
+        status: "ONLINE",
+        lastSeen: new Date().toISOString(),
+        uptime: 0,
+        startTime: new Date().toISOString()
+      });
+      console.log('📊 Bot status updated to online');
+    }, (error) => {
+      console.error('❌ Failed to update bot status on startup:', error);
+    }, 'status_update_startup');
+  }
 
   // Initialize health monitoring with Discord client
   healthMonitor.setDiscordClient(client);
@@ -427,8 +504,16 @@ client.on("messageCreate", async (message) => {
       return await statusChecker.getBotStatus();
     }, null, 'status_check_on_mention');
 
-    // If bot appears to be offline or unhealthy, send status message
-    if (currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
+    // Only send status message if bot is actually offline/unhealthy AND this is a status request
+    const messageContent = message.content.toLowerCase();
+    const isStatusRequest = messageContent.includes('status') || 
+                           messageContent.includes('health') ||
+                           messageContent.includes('/health') ||
+                           messageContent.includes('ping') ||
+                           messageContent.includes('online');
+
+    // Only respond with status if explicitly requested or if bot is genuinely offline
+    if (isStatusRequest && currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
       const statusMessage = offlineNotificationService.generateStatusMessage(currentStatus);
       await safeAsync(async () => {
         await message.reply(statusMessage);

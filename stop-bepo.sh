@@ -58,8 +58,37 @@ fi
 
 if echo "$WINDOWS" | grep -q "$BEPO_BOT_WINDOW"; then
     print_status $COLOR_YELLOW "🛑 Stopping main bot..."
-    tmux send-keys -t $SESSION_NAME:$BEPO_BOT_WINDOW C-c 2>/dev/null || true
-    sleep 3
+    
+    # First, try to find the bot process and send SIGTERM directly
+    BOT_PIDS=$(get_bepo_pids "bot")
+    if [ -n "$BOT_PIDS" ]; then
+        print_status $COLOR_YELLOW "  Sending SIGTERM to bot process(es): $BOT_PIDS"
+        for pid in $BOT_PIDS; do
+            kill -TERM $pid 2>/dev/null || true
+        done
+        sleep 3
+        
+        # Check if processes are still running
+        BOT_PIDS=$(get_bepo_pids "bot")
+        if [ -n "$BOT_PIDS" ]; then
+            print_status $COLOR_YELLOW "  Bot still running, sending SIGINT via tmux..."
+            tmux send-keys -t $SESSION_NAME:$BEPO_BOT_WINDOW C-c 2>/dev/null || true
+            sleep 3
+            
+            # Final check and force kill if still running
+            BOT_PIDS=$(get_bepo_pids "bot")
+            if [ -n "$BOT_PIDS" ]; then
+                print_status $COLOR_YELLOW "  Force killing bot processes..."
+                for pid in $BOT_PIDS; do
+                    kill -KILL $pid 2>/dev/null || true
+                done
+            fi
+        fi
+    else
+        # No process found, just send C-c to tmux window
+        tmux send-keys -t $SESSION_NAME:$BEPO_BOT_WINDOW C-c 2>/dev/null || true
+        sleep 2
+    fi
 fi
 
 # Force kill any remaining processes
@@ -105,16 +134,28 @@ echo "  Bot logs: $LOG_FILE"
 echo "  Monitor logs: $MONITOR_LOG_FILE"  
 echo "  Offline logs: $OFFLINE_LOG_FILE"
 
-# Clear stale status files to prevent false "online" status
+# Update status files to show offline (preserve last seen time)
 echo ""
-print_status $COLOR_CYAN "🧹 Clearing status files..."
+print_status $COLOR_CYAN "🧹 Updating status files..."
+
+# Wait a moment to ensure any final status writes are complete
+sleep 1
+
 if [ -f "logs/bot-status.json" ]; then
-    cat > logs/bot-status.json << 'EOF'
+    # Preserve the existing status but mark as offline
+    if command -v jq >/dev/null 2>&1; then
+        # Use jq to update status while preserving other data
+        TEMP_STATUS=$(mktemp)
+        jq '.botStatus.isOnline = false | .botStatus.status = "OFFLINE" | .lastUpdated = now | .botStatus.startTime = null | .discord.connected = false | .system.pid = null' logs/bot-status.json > "$TEMP_STATUS" 2>/dev/null && mv "$TEMP_STATUS" logs/bot-status.json || rm -f "$TEMP_STATUS"
+        print_status $COLOR_GREEN "✅ Bot status updated to offline (preserved last seen)"
+    else
+        # Fallback: create a basic offline status with current time as last seen
+        cat > logs/bot-status.json << EOF
 {
   "botStatus": {
     "isOnline": false,
-    "status": "OFFLINE",
-    "lastSeen": null,
+    "status": "OFFLINE", 
+    "lastSeen": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")",
     "uptime": 0,
     "startTime": null
   },
@@ -136,14 +177,23 @@ if [ -f "logs/bot-status.json" ]; then
     "users": 0
   },
   "system": {
-    "platform": "darwin",
-    "nodeVersion": "v22.16.0",
+    "platform": "$(uname -s | tr '[:upper:]' '[:lower:]')",
+    "nodeVersion": "$(node -v 2>/dev/null || echo 'unknown')",
     "pid": null
   },
-  "lastUpdated": null
+  "lastUpdated": "$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")"
 }
 EOF
-    print_status $COLOR_GREEN "✅ Bot status file cleared"
+        print_status $COLOR_GREEN "✅ Bot status file updated to offline"
+    fi
+else
+    print_status $COLOR_YELLOW "⚠️  Bot status file not found"
+fi
+
+# Also clear any other status files that might exist
+if [ -f "logs/bot-status-monitor.json" ]; then
+    echo '{"status": "offline", "lastCheck": null}' > logs/bot-status-monitor.json
+    print_status $COLOR_GREEN "✅ Monitor status file cleared"
 fi
 
 echo ""

@@ -289,11 +289,58 @@ export function getStatusReport() {
     };
 }
 
+/**
+ * Update bot status in the status file
+ * @param {Object} statusUpdate - Status update object
+ */
+export function updateBotStatus(statusUpdate) {
+    try {
+        const statusFile = path.join(process.cwd(), 'logs', 'bot-status.json');
+        
+        // Create logs directory if it doesn't exist
+        const logDir = path.dirname(statusFile);
+        if (!fs.existsSync(logDir)) {
+            fs.mkdirSync(logDir, { recursive: true });
+        }
+        
+        // Read existing status or create new one
+        let currentStatus = {};
+        if (fs.existsSync(statusFile)) {
+            try {
+                currentStatus = JSON.parse(fs.readFileSync(statusFile, 'utf8'));
+            } catch (error) {
+                console.warn('Could not read existing status file, creating new one');
+                currentStatus = {};
+            }
+        }
+        
+        // Update the bot status section
+        if (!currentStatus.botStatus) {
+            currentStatus.botStatus = {};
+        }
+        
+        // Merge the status update
+        Object.assign(currentStatus.botStatus, statusUpdate);
+        
+        // Update timestamp
+        currentStatus.lastUpdated = new Date().toISOString();
+        
+        // Write the updated status
+        fs.writeFileSync(statusFile, JSON.stringify(currentStatus, null, 2));
+        
+        return true;
+    } catch (error) {
+        console.error('Failed to update bot status:', error);
+        return false;
+    }
+}
+
 // Export default as the main status checker
 export default {
     checkBotStatus,
     getHealthFromLogs,
-    getStatusReport
+    getStatusReport,
+    updateBotStatus
 };
 
 // Export a factory function for consistency with other modules
@@ -301,6 +348,7 @@ export function getStatusChecker() {
     return {
         getBotStatus: getStatusReport,
         checkOnline: checkBotStatus,
-        getHealth: getHealthFromLogs
+        getHealth: getHealthFromLogs,
+        updateBotStatus: updateBotStatus
     };
 }
