@@ -1,6 +1,6 @@
 # Bepo Bot - Technical Documentation
 
-## System Architecture Changes
+## System Architecture
 
 ### Memory System Implementation
 
@@ -47,7 +47,6 @@ CREATE INDEX idx_user_memory_expires_at ON user_memory(expires_at);
 export const botThreadStore = new Map(); // Tracks bot-created threads
 
 // Thread data structure:
-{
   threadId: string,
   userId: string, 
   parentChannelId: string,
@@ -148,8 +147,8 @@ const probability = 0.18; // 18% for other reactions
 ### Thread Auto-Management
 - **Background Processing**: Cleanup runs every 30 minutes
 - **Activity Tracking**: Updates on every thread message
-- **Graceful Deletion**: Warning message before thread removal
-- **State Synchronization**: Thread store kept in sync with Discord
+- Graceful Deletion: Warning message before thread removal
+- State Synchronization: Thread store kept in sync with Discord
 
 ## Error Handling & Resilience
 
@@ -165,16 +164,16 @@ try {
 ```
 
 ### Discord API Operations
-- **Rate Limit Handling**: Built into Discord.js client
-- **Permission Checks**: Verify bot permissions before operations
-- **Graceful Degradation**: Continue functioning if non-critical features fail
-- **Retry Logic**: Automatic retries for transient failures
+- Rate Limit Handling: Built into Discord.js client
+- Permission Checks: Verify bot permissions before operations
+- Graceful Degradation: Continue functioning if non-critical features fail
+- Retry Logic: Automatic retries for transient failures
 
 ### AI Service Integration
-- **API Key Validation**: Check for API key presence
-- **Model Fallbacks**: Multiple AI providers configured
-- **Timeout Handling**: Reasonable timeouts for AI requests
-- **Context Limits**: Respect token limits for AI models
+- API Key Validation: Check for API key presence
+- Model Fallbacks: Multiple AI providers configured
+- Timeout Handling: Reasonable timeouts for AI requests
+- Context Limits: Respect token limits for AI models
 
 ## Troubleshooting Guide
 
@@ -220,27 +219,14 @@ try {
 - Limit number of channels scanned
 - Optimize message processing
 
-### Emoji Reactions Issues
-
-**Problem**: Custom emoji not working
-- Verify bot is in server with custom emoji
-- Check emoji name matches exactly ('lickinglips')
-- Ensure bot has reaction permissions
-- Verify emoji isn't deleted or renamed
-
-**Problem**: Reactions happening too frequently
-- Check `sillyProbability` value (should be 0.004)
-- Verify randomization logic
-- Monitor reaction logs if debugging enabled
-
 ### General Debug Steps
 
-1. **Check Console Logs**: Look for error messages and warnings
-2. **Verify Environment Variables**: Ensure all required env vars are set
-3. **Test Database Connection**: Run simple query to verify Supabase connection
-4. **Check Bot Permissions**: Verify bot has necessary Discord permissions
-5. **Monitor API Usage**: Check API quotas and rate limits
-6. **Review Error Handlers**: Ensure error handling isn't masking issues
+1. Check Console Logs: Look for error messages and warnings
+2. Verify Environment Variables: Ensure all required env vars are set
+3. Test Database Connection: Run simple query to verify Supabase connection
+4. Check Bot Permissions: Verify bot has necessary Discord permissions
+5. Monitor API Usage: Check API quotas and rate limits
+6. Review Error Handlers: Ensure error handling isn't masking issues
 
 ### Performance Monitoring
 

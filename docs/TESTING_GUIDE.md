@@ -1,20 +1,18 @@
-# Bepo Testing Scenarios
+# Bepo Testing Guide
 
-## 🎯 Complete Test Checklist
+## Complete Test Checklist
 
 ### Prerequisites
 - Ensure Discord bot token is configured
 - Make sure all dependencies are installed: `npm install`
 - Verify tmux is available: `which tmux`
 
----
-
-## 🚀 Core System Tests
+## Core System Tests
 
 ### 1. Shell Script Integration Test
 ```bash
 # Test the main startup script
-./start-bepo.sh
+./scripts/start-bepo.sh
 
 # Expected: Creates tmux session with 3 windows:
 # - Window 0: Bepo-Main (main bot)
@@ -55,11 +53,9 @@ npm run start:offline      # Just offline responder
 npm run stop:all
 ```
 
----
+## Gaming Integration Tests
 
-## 🎮 APEX Mode Tests
-
-### 1. APEX Command Setup Test
+### 1. APEX Command Test
 In Discord, test these commands:
 ```
 /apexnotify status                        # Check monitoring status
@@ -68,17 +64,13 @@ In Discord, test these commands:
 /maprotation                              # Test map rotation command
 ```
 
-### 2. APEX Notification Test
-```bash
-# Manually trigger a patch check
-/apexnotify check
-
-# Expected: Bot checks for new Apex Legends updates
+### 2. CS2 Command Test
+```
+/cs2                                      # Test CS2 updates
+/cs2prices <skin_name>                    # Test skin price lookup
 ```
 
----
-
-## 🛡️ OFFLINE Mode Tests
+## Offline Mode Tests
 
 ### 1. Offline Response Test
 ```bash
@@ -123,9 +115,7 @@ npm run stop:bot
 npm restart
 ```
 
----
-
-## 📊 Monitoring Tests
+## Monitoring Tests
 
 ### 1. Log File Tests
 ```bash
@@ -158,12 +148,147 @@ npm run status
 # Monitor health logs in real-time
 npm run logs
 
-# Expected: Regular health checks and status updates
+## Unit Testing
+
+### Run Test Suite
+```bash
+# Run all tests
+npm test
+
+# Run specific test suites
+npm run test:unit                         # Unit tests only
+npm run test:integration                  # Integration tests only
+
+# Run tests with coverage
+npm run test:coverage
 ```
 
----
+### Test Coverage Areas
+- Memory utilities (memoryUtils.js)
+- Apex utilities (apexUtils.js)
+- CS2 utilities (cs2Utils.js)
+- Command loading and validation
+- Error handling functions
+- Bot initialization
 
-## 🔧 Troubleshooting Tests
+## Troubleshooting Tests
+
+### 1. Process Management Test
+```bash
+# Check all processes are properly managed
+ps aux | grep -E "(bot\.js|bot-monitor|offline-response)"
+
+# Start system
+npm start
+
+# Check processes are running
+ps aux | grep -E "(bot\.js|bot-monitor|offline-response)"
+
+# Stop system
+npm stop
+
+# Verify all processes stopped
+ps aux | grep -E "(bot\.js|bot-monitor|offline-response)"
+```
+
+### 2. Recovery Test
+```bash
+# Start system
+npm start
+
+# Kill one component manually
+pkill -f "bot-monitor"
+
+# Check if system detects the failure
+npm run status
+
+# Test restart
+npm restart
+
+# Verify all components are back
+npm run status
+```
+
+### 3. Error Handling Test
+```bash
+# Test with invalid configuration
+# (Temporarily rename .env file)
+mv .env .env.backup
+
+# Try to start
+npm start
+
+# Expected: Graceful error messages, no hanging processes
+
+# Restore configuration
+mv .env.backup .env
+```
+
+## Success Criteria
+
+### Shell Scripts Working
+- npm start launches tmux session with 3 windows
+- All components start in proper order (bot → monitor → offline)
+- npm stop cleanly shuts down all processes
+- No orphaned processes after stop
+
+### Gaming Integration Working
+- /apexnotify commands work properly
+- Can set notification channel
+- Can start/stop monitoring
+- /maprotation shows current maps
+- /cs2 and /cs2prices work correctly
+
+### Offline Mode Working
+- Offline monitor detects when main bot is down
+- Responds to mentions with appropriate status
+- Health checks work continuously
+- Status files are updated regularly
+
+### Integration Working
+- All npm scripts work correctly
+- Shell scripts integrate with npm scripts
+- Logs are properly separated and readable
+- Status checking works in all scenarios
+
+## Common Issues & Solutions
+
+### Issue: Tmux session already exists
+```bash
+# Solution: Stop existing session first
+./scripts/stop-bepo.sh
+./scripts/start-bepo.sh
+```
+
+### Issue: Processes not stopping cleanly
+```bash
+# Solution: Force kill all
+npm run stop:all
+pkill -f "node.*bepo"
+```
+
+### Issue: Discord token errors
+```bash
+# Solution: Check .env file
+cat .env | grep BOT_TOKEN
+# Ensure token is valid and has proper permissions
+```
+
+### Issue: Offline monitor not responding
+```bash
+# Solution: Check it's monitoring the right channels
+npm run setup-offline-responses
+# Verify bot has permissions in target channels
+```
+
+### Issue: Tests failing
+```bash
+# Solution: Check test environment
+npm install                               # Reinstall dependencies
+npm run test:unit                         # Run unit tests only
+```
+
+For additional troubleshooting, see [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
 ### 1. Process Management Test
 ```bash

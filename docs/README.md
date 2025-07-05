@@ -1,82 +1,73 @@
-# Bepo 🤖
+# Bepo Discord Bot
 
-The Discord bot who should probably go outside and touch grass, but chooses to be chronically online instead! A feature-rich Discord bot powered by AI with memory, server management, gaming utilities, and more.
+A feature-rich Discord bot powered by AI with memory, server management, gaming utilities, and more.
 
-## ✨ Recent Updates (June 2025)
+## Recent Updates (July 2025)
 
-### 🔧 **Major Refactoring & Improvements**
+### Major Refactoring & Improvements
+- Code organization refactored for better maintainability and performance
+- Business logic separated from commands into dedicated utility modules
+- Enhanced error handling with comprehensive tracking and retry mechanisms
+- Discord.js modernization with updated API usage
+- Comprehensive unit test coverage for all major utilities
 
-- **Code Organization**: Refactored all commands for better maintainability and performance
-- **Business Logic Separation**: Moved logic from commands into dedicated utility modules
-- **Enhanced Error Handling**: Comprehensive error tracking with retry mechanisms and graceful failures
-- **Discord.js Modernization**: Updated to use `MessageFlags.Ephemeral` instead of deprecated `ephemeral: true`
-- **Test Coverage Expansion**: Added comprehensive unit tests for all major utilities
+### Thread Management Safeguards
+- Robust thread tracking that survives title changes and bot restarts
+- Automatic recovery and re-establishment of thread tracking after disruptions
+- Multi-step validation with comprehensive thread existence checking
+- User-friendly responses with clickable thread links and clear error messages
+- Automated thread validation and cleanup every 2 hours
+- Support for thread renaming while maintaining tracking
+- Cross-restart persistence for thread functionality
+- Permission-aware handling of archived threads and permission errors
 
-### 🧵 **Thread Management Safeguards**
+### Memory System Enhancements
+- All memory logic moved to dedicated `memoryUtils.js` for better organization
+- Enhanced memory update commands with admin capabilities and override permissions
+- Support for partial memory ID resolution for easier updates
+- Full test coverage for memory operations and edge cases
+- Smart context integration where AI automatically references relevant memories
 
-- **Robust Thread Tracking**: Enhanced thread management that survives title changes and bot restarts
-- **Automatic Recovery**: Bot automatically re-establishes tracking for threads after disruptions
-- **Multi-step Validation**: Comprehensive thread existence checking with graceful error handling
-- **User-Friendly Responses**: Clear guidance with clickable thread links and better error messages
-- **Periodic Cleanup**: Automated thread validation and cleanup every 2 hours
-- **Rename Tolerance**: Explicitly supports thread renaming while maintaining tracking
-- **Cross-restart Persistence**: Thread functionality survives bot restarts and updates
-- **Permission-aware**: Handles archived threads and permission errors gracefully
+### Digest System Improvements
+- Updated to use `grok-2-1212` for better digest generation
+- Robust fallback summaries when AI generation fails
+- Digest generation moved to `digestUtils.js` with comprehensive error handling
+- Support for flexible time periods: 1h, 12h, daily, and weekly digests
 
-### 🧠 **Memory System Enhancements**
-
-- **Utility Refactoring**: Moved all memory logic to dedicated `memoryUtils.js` for better organization
-- **Admin Support**: Enhanced memory update commands with admin capabilities and override permissions
-- **Partial ID Matching**: Support for partial memory ID resolution for easier updates
-- **Comprehensive Testing**: Full test coverage for memory operations and edge cases
-- **Smart Context Integration**: AI automatically references relevant memories during conversations
-
-### 📊 **Digest System Improvements**
-
-- **AI Model Update**: Updated to use `grok-2-1212` for better digest generation
-- **Fallback Handling**: Robust fallback summaries when AI generation fails
-- **Logic Separation**: Moved digest generation to `digestUtils.js` with comprehensive error handling
-- **Flexible Time Periods**: Support for 1h, 12h, daily, and weekly digests
-
-### 🏥 **Health Monitoring & Reliability**
-
-- **Real-time Metrics**: Live bot performance monitoring with detailed statistics
-- **Error Classification**: Different handling for Discord, database, and AI errors
-- **Recovery Tracking**: Comprehensive error logging with categorization and recovery tracking
-- **System Status**: Memory usage, uptime, and critical error monitoring with automated cleanup
-- **Graceful Degradation**: Non-critical failures don't affect core functionality
-- **Automatic Recovery**: Exponential backoff retry mechanisms for transient failures
+### Health Monitoring & Reliability
+- Real-time bot performance monitoring with detailed statistics
+- Different error handling for Discord, database, and AI errors
+- Comprehensive error logging with categorization and recovery tracking
+- Memory usage, uptime, and critical error monitoring with automated cleanup
+- Non-critical failures don't affect core functionality
+- Automatic recovery with exponential backoff retry mechanisms
 
 ## Features
 
-### 🧠 **Advanced Memory System**
+### Advanced Memory System
+- Personal memory: Remembers conversations, preferences, and personal details across interactions
+- Server memory: Shared knowledge base that all server members can contribute to and reference
+- Memory management: View, search, update, and clear memories with sophisticated filtering
+- Smart context: AI automatically references relevant memories during conversations
 
-- **Personal Memory**: Bepo remembers your conversations, preferences, and personal details across all interactions
-- **Server Memory**: Shared knowledge base that all server members can contribute to and reference
-- **Memory Management**: View, search, update, and clear memories with sophisticated filtering and admin controls
-- **Smart Context**: AI automatically references relevant memories during conversations
+### Gaming & Entertainment
+- AI-powered meme generation and responses
+- AI image generation with DALL-E integration
+- Game integration: Real-time Apex Legends map rotation and CS2 skin prices
+- Minecraft server management with AWS-powered start/stop/status controls
 
-### 🎮 **Gaming & Entertainment**
+### Conversation & AI
+- Smart conversations with advanced AI chat using memory context
+- Thread management: Create organized Discord threads for longer conversations
+- Voice integration: YAP system for voice channel interactions
+- Digest system: AI-powered server activity summaries with customizable time periods
 
-- **Memes Chronically**: Degen behavior, powered by LLM's!
-- **Drawing**: AI-powered image generation with DALL-E
-- **Game Integration**: Real-time stats for Apex Legends map rotation and CS2 skin prices
-- **Minecraft Support**: AWS-powered server management with start/stop/status controls
-
-### 🗣️ **Conversation & AI**
-
-- **Smart Conversations**: Advanced AI chat with memory context and personality
-- **Thread Management**: Create organized Discord threads for longer conversations with auto-cleanup
-- **Voice Integration**: YAP system for voice channel interactions
-- **Digest System**: AI-powered server activity summaries with customizable time periods
-
-### 🔧 **Server Management**
-
-- **Role Management**: Self-assignable roles with permission controls and banned role filtering
-- **Health Monitoring**: Comprehensive bot health checks and error tracking with automated recovery
-- **Thread Safeguards**: Robust thread management that survives title changes and bot restarts
-- **Robust Error Handling**: Advanced error tracking, retry mechanisms, and graceful failure handling
-- **Performance Monitoring**: Real-time system metrics and automated cleanup processes
+### Server Management
+- Role management: Self-assignable roles with permission controls
+- Health monitoring: Comprehensive bot health checks and error tracking
+- Thread safeguards: Robust thread management surviving restarts and changes
+- Advanced error handling with tracking, retry mechanisms, and graceful failures
+- Performance monitoring: Real-time system metrics and automated cleanup
 
 ## Commands
 
@@ -206,96 +197,43 @@ npm restart              # Restart everything
 
 ### 🔧 **Utility Modules**
 
-- **`memoryUtils.js`**: All memory operations with admin support and validation
-- **`digestUtils.js`**: AI-powered server analysis and digest generation
-- **`threadUtils.js`**: Thread creation, management, and AI topic generation
-- **`errorHandler.js`**: Centralized error handling with retry logic
-- **`healthMonitor.js`**: System health tracking and performance metrics
+- `memoryUtils.js`: All memory operations with admin support and validation
+- `digestUtils.js`: AI-powered server analysis and digest generation
+- `threadUtils.js`: Thread creation, management, and AI topic generation
+- `errorHandler.js`: Centralized error handling with retry logic
+- `healthMonitor.js`: System health tracking and performance metrics
 
-### 🛡️ **Reliability Features**
-
-- **Thread Safeguards**: Automatic recovery from thread title changes and bot restarts
-- **Memory Persistence**: Robust database operations with transaction safety
-- **Error Recovery**: Automatic retry mechanisms with exponential backoff
-- **Graceful Degradation**: Non-critical failures don't affect core functionality
+### Reliability Features
+- Thread safeguards: Automatic recovery from thread title changes and bot restarts
+- Memory persistence: Robust database operations with transaction safety
+- Error recovery: Automatic retry mechanisms with exponential backoff
+- Graceful degradation: Non-critical failures don't affect core functionality
 
 ## Development & Testing
 
-### 🧪 **Test Suite**
-
+### Test Suite
 ```bash
 npm test                                   # Run all tests (unit + integration)
 npm run test:unit                          # Run unit tests only
 npm run test:integration                   # Run integration tests only
 ```
 
-### 📈 **Test Coverage**
+### Test Coverage
+- 64 total tests covering all major functionality
+- Unit tests for all utility modules and error handling
+- Integration tests for bot initialization and command loading
+- Mock implementations for external APIs to prevent costs during testing
 
-- **64 total tests** covering all major functionality
-- **Unit tests** for all utility modules and error handling
-- **Integration tests** for bot initialization and command loading
-- **Mock implementations** for external APIs to prevent costs during testing
-
-### 🚀 **Deployment**
-
+### Deployment
 ```bash
 npm run deploy                             # Deploy slash commands to Discord
 npm start                                  # Start the bot in production
 npm run dev                               # Start in development mode
 ```
 
-## Memory System Deep Dive
-
-### Personal Memory Features
-
-- **Automatic Storage**: Conversations are automatically saved and categorized
-- **Smart Preferences**: Set and update personal details that Bepo remembers
-- **Search & Filter**: Find specific memories by content, type, or timeframe
-- **Memory Updates**: Modify existing memories with full version tracking and admin support
-- **Privacy Controls**: All personal memories are private to you
-- **Partial ID Support**: Update memories using partial IDs for easier management
-
-### Server Memory Features
-
-- **Shared Knowledge**: Create a collective server knowledge base
-- **Contribution Tracking**: See who added what information
-- **Admin Controls**: Enhanced management for server administrators with override capabilities
-- **Smart Integration**: Bot references server memories in conversations
-- **Categorization**: Organize by type (server info, rules, FAQ, important)
-- **Bulk Operations**: Efficient memory management with search and filtering
-
-## Thread Management System
-
-### 🧵 **Advanced Thread Features**
-
-- **AI Topic Generation**: Automatically generates descriptive thread names from conversation context
-- **Auto-cleanup**: Threads automatically delete after 1 hour of inactivity
-- **Rename Tolerance**: Bot maintains tracking even when users rename threads
-- **Recovery System**: Automatically re-establishes thread tracking after bot restarts
-- **Smart Detection**: Finds existing threads even if tracking was lost
-- **Permission Handling**: Gracefully handles archived threads and unarchiving when needed
-
-### 🛡️ **Thread Safeguards Implementation**
-
-- **Multi-step Validation**: Three-tier validation process for thread existence and accessibility
-- **Automatic Recovery**: Re-establishes tracking for existing but untracked threads
-- **Search & Recovery**: Searches for user's bot-managed threads if tracking is lost
-- **Stale Reference Cleanup**: Regular validation and cleanup of thread references
-- **Cross-restart Persistence**: Thread functionality survives bot restarts and updates
-- **User-Friendly Feedback**: Clear error messages with clickable thread links and guidance
-
-### 🔧 **Technical Implementation**
-
-- **Thread Store**: In-memory tracking of all bot-managed threads with metadata
-- **Validation Functions**: `validateBotManagedThread()` and `findUserBotThreadsInChannel()`
-- **Periodic Maintenance**: Automated cleanup every 2 hours for optimal performance
-- **Recovery on Message**: Automatic validation when messages are sent in untracked threads
-- **Archive Awareness**: Proper handling of archived threads and unarchiving when needed
-
 ## Configuration & Environment
 
-### 🔑 **Required Environment Variables**
-
+### Required Environment Variables
 ```bash
 # Discord Configuration
 BOT_TOKEN=your_discord_bot_token
@@ -315,25 +253,22 @@ PREFIX=your_bot_prefix
 MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
-### 🏗️ **Database Schema**
+### Database Schema
+- Memory tables: User and server memory storage with metadata and expiration handling
+- Thread tracking: Bot-managed thread information, activity tracking, and recovery data
+- Health metrics: Error logs, performance data, and automated recovery tracking
+- Configuration: Server-specific settings, preferences, and admin overrides
 
-- **Memory Tables**: User and server memory storage with metadata and expiration handling
-- **Thread Tracking**: Bot-managed thread information, activity tracking, and recovery data
-- **Health Metrics**: Error logs, performance data, and automated recovery tracking
-- **Configuration**: Server-specific settings, preferences, and admin overrides
+### Memory Types
+- `conversation`: User messages and bot responses with automatic cleanup
+- `preference`: User settings (name, timezone, language, interests)
+- `conversation_summary`: Condensed conversation overviews for context
+- `temporary`: Short-term contextual memory (24h default expiration)
+- `mood`: User emotional state and temporary behavioral preferences
 
-### 📊 **Memory Types**
+## Usage Examples
 
-- **`conversation`**: User messages and bot responses with automatic cleanup
-- **`preference`**: User settings (name, timezone, language, interests)
-- **`conversation_summary`**: Condensed conversation overviews for context
-- **`temporary`**: Short-term contextual memory (24h default expiration)
-- **`mood`**: User emotional state and temporary behavioral preferences
-
-## 🚀 Quick Start & Examples
-
-### 📝 **Setting Up Personal Preferences**
-
+### Setting Up Personal Preferences
 ```
 /memory set key:name value:Alex                    # Set your name
 /memory set key:timezone value:EST                 # Set your timezone
@@ -341,8 +276,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 /memory view type:preferences                      # View all preferences
 ```
 
-### 🧵 **Thread Management Examples**
-
+### Thread Management
 ```
 /thread AI Discussion                              # Create named thread
 /thread                                           # Create auto-named thread
@@ -350,8 +284,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 /review                                           # Review current thread history
 ```
 
-### 🧠 **Memory Management Examples**
-
+### Memory Management
 ```
 /memory search query:"project ideas"               # Search your memories
 /updatememory id:abc123 content:"Updated content"  # Update by full ID
@@ -359,8 +292,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 /memory clear type:conversations                   # Clear conversation history
 ```
 
-### 📊 **Server Memory Examples**
-
+### Server Memory
 ```
 /servermemory add "Server rules: Be respectful" title:"Rules"
 /servermemory search query:"rules"
@@ -368,43 +300,30 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 /servermemory my limit:10                          # View your contributions
 ```
 
-### 🏥 **Health & Diagnostics**
-
+### Health & Diagnostics
 ```
 /health                                           # Full system health check
 /debug-memory user:@someone                       # Debug user memory (admin)
 /digest period:daily include_stats:true           # Server activity digest
 ```
 
-## Troubleshooting
+## Additional Documentation
 
-### 🔍 **Common Issues**
-
-- **Thread "Unknown Body" Errors**: Fixed with comprehensive thread safeguards
-- **Memory Update Failures**: Enhanced with partial ID support and admin controls
-- **Command Deprecation Warnings**: Updated to use modern Discord.js patterns
-- **Bot Restart Issues**: Automatic recovery systems handle most scenarios
-
-### 🛠️ **Debug Commands**
-
-- `/health` - Check overall bot health and system metrics
-- `/debug-memory [user]` - Inspect memory context for troubleshooting
-- **Console Logs**: Comprehensive logging for all major operations
+- [User Guide](USER_GUIDE.md) - Complete command reference and usage
+- [Technical Documentation](TECHNICAL_DOCS.md) - Development and architecture details
+- [Testing Guide](TESTING_GUIDE.md) - Test procedures and scenarios
+- [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
 
 ## Contributing
 
-### 📝 **Development Guidelines**
+### Development Guidelines
+- Code organization: Keep business logic in utility modules
+- Error handling: Use `safeAsync` wrapper for all async operations
+- Testing: Add tests for new features and bug fixes
+- Documentation: Update README and technical docs for changes
 
-- **Code Organization**: Keep business logic in utility modules
-- **Error Handling**: Use `safeAsync` wrapper for all async operations
-- **Testing**: Add tests for new features and bug fixes
-- **Documentation**: Update README and technical docs for changes
-
-### 🧪 **Testing Standards**
-
-- **Mock External APIs**: Prevent costs during testing
-- **Comprehensive Coverage**: Test both success and failure scenarios
-- **Integration Tests**: Verify commands load and function properly
-- **Unit Tests**: Test individual utility functions in isolation
-
----
+### Testing Standards
+- Mock external APIs: Prevent costs during testing
+- Comprehensive coverage: Test both success and failure scenarios
+- Integration tests: Verify commands load and function properly
+- Unit tests: Test individual utility functions in isolation

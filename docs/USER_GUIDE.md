@@ -1,12 +1,10 @@
 # Bepo Bot - User Guide
 
-## New Features & Commands
+## Memory System
 
-### Memory System
+Bepo remembers your conversations and preferences across all interactions.
 
-Bepo now remembers your conversations and preferences across all interactions.
-
-#### Memory Commands
+### Memory Commands
 
 ```
 /memory view [type]         # View your stored memories
@@ -31,10 +29,10 @@ Bepo now remembers your conversations and preferences across all interactions.
 ```
 
 **Memory Update Features:**
-- ✅ **Update Content**: Change the text of any of your memories
-- ✅ **Change Type**: Convert between conversation, summary, temporary, or personal note
-- ✅ **ID-Based**: Use memory IDs shown in `/memory view` to target specific memories
-- ✅ **Safe Updates**: Only you can update your own memories
+- Update Content: Change the text of any of your memories
+- Change Type: Convert between conversation, summary, temporary, or personal note
+- ID-Based: Use memory IDs shown in `/memory view` to target specific memories
+- Safe Updates: Only you can update your own memories
 
 ### Thread Management
 
@@ -59,10 +57,10 @@ Create organized Discord threads for longer conversations.
 
 #### Thread Features
 
-- **Auto-Response**: Bot responds to ALL messages in bot-created threads (no @ needed)
-- **AI-Powered Naming**: Auto-generates relevant thread names based on conversation
-- **Auto-Delete**: Threads auto-delete after 1 hour of inactivity
-- **Context Preservation**: Full conversation history maintained when switching to a thread
+- Auto-Response: Bot responds to ALL messages in bot-created threads (no @ needed)
+- AI-Powered Naming: Auto-generates relevant thread names based on conversation
+- Auto-Delete: Threads auto-delete after 1 hour of inactivity
+- Context Preservation: Full conversation history maintained when switching to a thread
 
 ### Server Digest System
 
@@ -120,38 +118,34 @@ Store and access memories that are shared across the entire Discord server. All 
 ```
 
 **Server Memory Update Features:**
-- ✅ **Update Content**: Modify the information in server memories
-- ✅ **Update Titles**: Change memory titles for better organization
-- ✅ **Change Context Types**: Set as server, rules, FAQ, or important
-- ✅ **Permission Control**: Update your own memories, admins can update any
-- ✅ **ID-Based**: Use memory IDs from `/servermemory list` to target specific memories
+- Update Content: Modify the information in server memories
+- Update Titles: Change memory titles for better organization
+- Change Context Types: Set as server, rules, FAQ, or important
+- Permission Control: Update your own memories, admins can update any
+- ID-Based: Use memory IDs from `/servermemory list` to target specific memories
 
-#### Admin Features (CODE_MONKEY only)
+#### Admin Features
 
-When CODE_MONKEY uses server memory commands, they get enhanced capabilities:
-- **Full Memory IDs**: `list` and `search` commands show complete UUIDs instead of short IDs
-- **Delete Any Memory**: Can delete any memory using its full ID, not just their own
-- **Admin Indicators**: Footer messages indicate admin privileges are available
+When admins use server memory commands, they get enhanced capabilities:
+- Full Memory IDs: `list` and `search` commands show complete UUIDs instead of short IDs
+- Delete Any Memory: Can delete any memory using its full ID, not just their own
+- Admin Indicators: Footer messages indicate admin privileges are available
 
 **Features:**
-- ✅ **Shared Knowledge**: All users can view and search server memories
-- ✅ **Smart Integration**: Bot references server memories in conversations
-- ✅ **User Attribution**: Shows who added each memory
-- ✅ **Conditional Admin**: Admin features only visible to CODE_MONKEY
-
-### Funny Update
-
-Bepo now has some silly surprise reactions that might randomly appear in chat.
+- Shared Knowledge: All users can view and search server memories
+- Smart Integration: Bot references server memories in conversations
+- User Attribution: Shows who added each memory
+- Conditional Admin: Admin features only visible to authorized users
 
 ## How It All Works Together
 
 ### Getting Started
 
-1. **Start chatting** with Bepo using `@Bepo` or the bot prefix
-2. **Your conversation is remembered** automatically in the memory system
-3. **Create a thread** using `/thread` or `/continue create_thread:true`
-4. **Add server knowledge** using `/servermemory add` for information everyone should know
-5. **Update memories** as information changes using the update commands
+1. Start chatting with Bepo using `@Bepo` or the bot prefix
+2. Your conversation is remembered automatically in the memory system
+3. Create a thread using `/thread` or `/continue create_thread:true`
+4. Add server knowledge using `/servermemory add` for information everyone should know
+5. Update memories as information changes using the update commands
 
 ### Finding Memory IDs for Updates
 
@@ -172,16 +166,16 @@ To update a memory, you need its ID. Here's how to find them:
 3. Memory is updated with new content and timestamp
 
 ### Thread Features
-- **No @ mentions needed** in bot-created threads
-- **Auto-cleanup** prevents server clutter
-- **Smart naming** using AI topic detection
+- No @ mentions needed in bot-created threads
+- Auto-cleanup prevents server clutter
+- Smart naming using AI topic detection
 
 ### Digest Benefits
 
-- **Server insights** - see what's been happening
-- **Community highlights** - funny quotes and memorable moments
-- **Activity tracking** - busiest channels and active users
-- **Flexible timeframes** - from 1 hour to weekly summaries
+- Server insights - see what's been happening
+- Community highlights - funny quotes and memorable moments
+- Activity tracking - busiest channels and active users
+- Flexible timeframes - from 1 hour to weekly summaries
 
 ## Tips & Best Practices
 
