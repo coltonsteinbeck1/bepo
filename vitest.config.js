@@ -9,8 +9,9 @@ export default defineConfig({
     include: ['**/*.{test,spec}.{js,ts}'],
     exclude: ['node_modules', 'dist', 'build', 'coverage', 'tests/setup.js'],
     
-    // Global test timeout (30 seconds for integration tests)
-    testTimeout: 30000,
+    // Global test timeout (reduced for unit tests)
+    testTimeout: 10000, // 10 seconds max per test
+    hookTimeout: 5000,  // 5 seconds for setup/teardown
     
     // Coverage configuration
     coverage: {

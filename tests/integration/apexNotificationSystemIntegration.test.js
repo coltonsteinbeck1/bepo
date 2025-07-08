@@ -152,10 +152,10 @@ describe('Apex Notification System Integration', () => {
         it('should filter patch notes correctly', async () => {
             const mockPatchNotes = [
                 {
-                    id: 'apex-2025-06-30-season26',
+                    id: 'apex-2025-07-05-season26',
                     title: 'Apex Legends: Season 26 Patch Notes',
                     content: 'New legend Viper introduced with tactical abilities',
-                    date: new Date('2025-06-30'),
+                    date: new Date('2025-07-05'),
                     tags: ['season', 'legend', 'patch-notes']
                 },
                 {
@@ -183,11 +183,11 @@ describe('Apex Notification System Integration', () => {
             const limitedResults = apexUtils.filterPatchNotes(mockPatchNotes, { count: 2 });
             expect(limitedResults).toHaveLength(2);
 
-            // Test date filtering (last 7 days from June 30)
+            // Test date filtering (last 7 days from July 7)
             const recentResults = apexUtils.filterPatchNotes(mockPatchNotes, { daysAgo: 7 });
             expect(recentResults.length).toBeGreaterThan(0);
             expect(recentResults.every(note =>
-                new Date(note.date) >= new Date('2025-06-23')
+                new Date(note.date) >= new Date('2025-06-30')
             )).toBe(true);
         });
 

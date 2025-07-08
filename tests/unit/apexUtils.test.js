@@ -101,21 +101,21 @@ describe('Apex Utils', () => {
         id: '1',
         title: 'Season 25 Update',
         content: 'New legend Sparrow',
-        date: new Date('2025-06-30'), // 1 day ago from July 1
+        date: new Date('2025-07-05'), // 2 days ago, well within 7 days
         tags: ['season', 'legend']
       },
       {
         id: '2',
         title: 'Hotfix Update',
         content: 'Bug fixes',
-        date: new Date('2025-06-20'), // 11 days ago 
+        date: new Date('2025-06-20'), // 18 days ago 
         tags: ['hotfix', 'bug-fix']
       },
       {
         id: '3',
         title: 'Balance Changes',
         content: 'Weapon adjustments',
-        date: new Date('2025-06-15'), // 16 days ago
+        date: new Date('2025-06-15'), // 23 days ago
         tags: ['balance', 'weapon']
       }
     ];
@@ -140,7 +140,7 @@ describe('Apex Utils', () => {
 
     it('should filter by days ago', () => {
       const result = filterPatchNotes(mockPatchNotes, { daysAgo: 7 });
-      expect(result).toHaveLength(1); // Only the June 30 entry should be within 7 days
+      expect(result).toHaveLength(1); // Only the July 5 entry should be within 7 days
     });
 
     it('should limit count', () => {

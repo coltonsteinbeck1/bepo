@@ -1,0 +1,13 @@
+
+> bepo@1.0.0 start:offline
+> node scripts/offline-response-system.js
+
+📡 Loaded configuration:
+   Bepo User ID: undefined
+   Response Channels: 736781721386877073, 621478676017709057, 1004547770037833798, 896251538744418324
+🔧 Initializing Offline Response System...
+🎯 Offline Response System is now monitoring bot status...
+💡 Will only connect to Discord when main bot goes offline
+🟢 Main bot operational (OPERATIONAL) - offline response system standing by
+🎯 Offline Response System initialized successfully
+💡 Monitoring main bot status - will connect to Discord only when bot goes offline

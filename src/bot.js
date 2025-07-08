@@ -30,7 +30,9 @@ import roleSupport from "./commands/fun/roleSupport.js"
 import cs2Prices from "./commands/fun/cs2Prices.js"
 import yapCommand from "./commands/fun/yap.js";
 import stopyapCommand from "./commands/fun/stopyap.js";
+import markovCommand from "./commands/fun/markov.js";
 import MarkovChain from "./utils/markovChaining.js";
+import { MarkovPersistence } from "./utils/markovPersistence.js";
 import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
 import {
   memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing,
@@ -128,6 +130,15 @@ async function gracefulShutdown() {
       }, 'status_update_shutdown');
     }
 
+    // Save markov chain before shutdown
+    console.log('💾 Saving markov chain...');
+    await safeAsync(async () => {
+      await markovPersistence.saveChain(markov);
+      console.log('📁 Markov chain saved successfully');
+    }, (error) => {
+      console.error('❌ Failed to save markov chain on shutdown:', error);
+    }, 'markov_save_shutdown');
+
     // Set Discord presence to invisible/offline before destroying
     console.log('🔄 Setting Discord presence to offline...');
     if (client && client.user && client.readyState === 'READY') {
@@ -197,6 +208,7 @@ client.commands.set("digest", digestCommand);
 client.commands.set("thread", threadCommand);
 client.commands.set("yap", yapCommand);
 client.commands.set("stopyap", stopyapCommand);
+client.commands.set("markov", markovCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
@@ -298,12 +310,28 @@ function startScheduledMessaging(client) {
       console.error('Thread validation error - will retry next cycle:', error);
     }, 'thread_validation_cleanup');
   }, 2 * 60 * 60 * 1000); // Every 2 hours
+
+  // Auto-save markov chain every 30 minutes
+  setInterval(async () => {
+    await safeAsync(async () => {
+      await markovPersistence.saveChain(markov);
+    }, (error) => {
+      console.error('Markov chain auto-save error - will retry next cycle:', error);
+    }, 'markov_auto_save');
+  }, 30 * 60 * 1000); // Every 30 minutes
 }
 
 // const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
-const markov = new MarkovChain();
+const markov = new MarkovChain(3); // Lower order for more creative output in chat context
+const markovPersistence = new MarkovPersistence();
+
+// Load existing markov chain data
+await markovPersistence.loadChain(markov);
+
+// Make markov instance available to commands
+client.markov = markov;
 
 client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
@@ -351,6 +379,15 @@ client.on("ready", async () => {
       console.error('Memory cleanup error - will retry next cycle:', error);
     }, 'memory_cleanup');
   }, 6 * 60 * 60 * 1000); // Every 6 hours
+
+  // Auto-save markov chain every 30 minutes
+  setInterval(async () => {
+    await safeAsync(async () => {
+      await markovPersistence.saveChain(markov);
+    }, (error) => {
+      console.error('Markov chain auto-save error - will retry next cycle:', error);
+    }, 'markov_auto_save');
+  }, 30 * 60 * 1000); // Every 30 minutes
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -464,7 +501,15 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  markov.train(message.content);
+  
+  // Only train on messages that have some substance (longer than 10 characters)
+  // and filter out commands and mentions to improve training quality
+  if (message.content.length > 10 && 
+      !message.content.startsWith(BOT_PREFIX) && 
+      !message.mentions.users.has(client.user.id)) {
+    markov.train(message.content);
+  }
+  
   // Meme reactions
   await memeFilter(message);
 
@@ -776,9 +821,16 @@ client.on("messageCreate", async (message) => {
   }
   if (markovChannelIds.includes(message.channelId.toString())) {
     if (Math.random() < 0.0033) {
-      const generatedText = markov.generate(null, Math.floor(Math.random() * 30) + 20); // Randomize length between 20-50
-      if (generatedText.trim().length > 0) {
-        await message.reply(generatedText);
+      // Use enhanced generation with coherence mode enabled
+      const targetLength = Math.floor(Math.random() * 40) + 30; // 30-70 words for better sentences
+      const generatedText = markov.generate(null, targetLength, true); // Enable coherence mode
+      
+      if (generatedText.trim().length > 20) { // Ensure minimum quality threshold
+        await safeAsync(async () => {
+          await message.reply(generatedText);
+        }, (error) => {
+          console.error('Failed to send markov message:', error);
+        }, 'markov_message_send');
       }
     }
   }
