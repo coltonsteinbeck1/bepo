@@ -10,3 +10,4 @@ monitorOutput.log
 offlineOutput.log
 image.png
 config.toml
+data/
