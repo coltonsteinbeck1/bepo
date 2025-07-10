@@ -4,7 +4,7 @@
 
 # Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/bepo-config.sh"
+source "$SCRIPT_DIR/scripts/bepo-config.sh"
 
 # Function to check service health
 check_service_health() {

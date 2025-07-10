@@ -6,5 +6,7 @@ src/images/image.png
 temp/
 logs/
 serverOutput.log
+monitorOutput.log
+offlineOutput.log
 image.png
 config.toml

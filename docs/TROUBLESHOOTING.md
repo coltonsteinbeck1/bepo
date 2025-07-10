@@ -5,7 +5,7 @@
 ### Check Bot Status
 ```bash
 npm run status           # Overall health check
-node scripts/bepo-status.sh  # Detailed system status
+./bepo-status.sh         # Detailed system status
 ```
 
 ### Common Issues

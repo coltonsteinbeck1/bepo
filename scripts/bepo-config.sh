@@ -35,7 +35,7 @@ export OFFLINE_THRESHOLD=90
 
 # Process Detection Patterns
 export BOT_PROCESS_PATTERN="node.*src/bot.js"
-export MONITOR_PROCESS_PATTERN="node.*bot-monitor.js"
+export MONITOR_PROCESS_PATTERN="node.*monitor-service.js"
 export OFFLINE_PROCESS_PATTERN="node.*offline-response-system.js"
 
 # Color Output (for better visibility)

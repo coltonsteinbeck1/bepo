@@ -85,33 +85,44 @@ async function testWebhook(webhookUrl) {
     try {
         console.log('🧪 Sending test notification...');
         
-        // Import the notification service
-        const { default: offlineNotificationService } = await import('../src/utils/offlineNotificationService.js');
+        // Import the unified monitoring service
+        const UnifiedMonitoringService = (await import('./monitor-service.js')).default;
         
-        // Create a test status report
-        const testStatusReport = {
-            summary: {
-                status: 'TEST',
-                operational: false
-            },
-            bot: {
-                lastSeen: new Date().toISOString(),
-                timeSinceUpdate: 0,
-                reason: 'This is a test notification from the webhook setup'
-            }
+        // Create test environment variables
+        const originalWebhook = process.env.DISCORD_ALERT_WEBHOOK;
+        const originalBotSpam = process.env.BOT_SPAM;
+        
+        process.env.DISCORD_ALERT_WEBHOOK = webhookUrl;
+        process.env.BOT_SPAM = '123456789012345678'; // Mock channel ID
+        
+        const monitor = new UnifiedMonitoringService();
+        
+        // Create test health data
+        const testHealthData = {
+            status: 'offline',
+            uptime: 0,
+            memory: { used: 25000000, total: 50000000 },
+            errors: { count: 1, recent: ['Test error message'] },
+            lastUpdated: new Date().toISOString()
         };
-
-        // Temporarily override webhook for test
-        const originalWebhooks = offlineNotificationService.webhooks;
-        offlineNotificationService.webhooks = [webhookUrl];
-        offlineNotificationService.lastNotificationTime = 0; // Reset cooldown for test
-
-        const success = await offlineNotificationService.sendOfflineAlert(testStatusReport);
         
-        // Restore original webhooks
-        offlineNotificationService.webhooks = originalWebhooks;
+        // Send test notification
+        const messageId = await monitor.sendWebhookNotification(false, testHealthData, false);
         
-        if (success) {
+        // Restore original environment variables
+        if (originalWebhook) {
+            process.env.DISCORD_ALERT_WEBHOOK = originalWebhook;
+        } else {
+            delete process.env.DISCORD_ALERT_WEBHOOK;
+        }
+        
+        if (originalBotSpam) {
+            process.env.BOT_SPAM = originalBotSpam;
+        } else {
+            delete process.env.BOT_SPAM;
+        }
+        
+        if (messageId) {
             console.log('✅ Test notification sent successfully!');
             console.log('📬 Check your Discord channel for the test message');
         } else {

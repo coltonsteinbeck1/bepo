@@ -2,7 +2,10 @@
 /**
  * External Offline Response System for Bepo
  * This system responds to mentions when Bepo is offline
- * It monitors for @mentions in configured channels and responds with offline status
+ * It monitors                } else if (!isMainBotOffline && wasOffline) {
+                    // Bot came back online - stop responding to mentions
+                    console.log(`🟢 Main bot came back online (${currentStatus.summary.status}) - offline response system now standby`);
+                    this.statusCheckInterval = 120000; // Check every 2 minutes when online@mentions in configured channels and responds with offline status
  */
 
 import { Client, GatewayIntentBits } from 'discord.js';
@@ -25,8 +28,6 @@ class OfflineResponseSystem {
         this.lastStatusCheck = 0;
         this.statusCheckInterval = 30000; // 30 seconds
         this.responseChannels = new Set(); // Channels to monitor for mentions
-        this.responseCooldown = new Map(); // User cooldown to prevent spam
-        this.cooldownDuration = 60000; // 1 minute cooldown per user
         
         this.loadConfiguration();
     }
@@ -54,12 +55,15 @@ class OfflineResponseSystem {
     async initialize() {
         console.log('🔧 Initializing Offline Response System...');
         
-        // Start by monitoring status without logging into Discord
+        // Connect to Discord immediately to catch all mentions
+        await this.connectToDiscord();
+        
+        // Start monitoring status to know when to respond
         this.isMonitoring = true;
         this.startStatusMonitoring();
         
         console.log('🎯 Offline Response System is now monitoring bot status...');
-        console.log('💡 Will only connect to Discord when main bot goes offline');
+        console.log('💡 Connected to Discord and ready to respond when main bot goes offline');
     }
 
     async connectToDiscord() {
@@ -68,7 +72,7 @@ class OfflineResponseSystem {
             return;
         }
 
-        console.log('🔗 Connecting to Discord for offline responses...');
+        console.log('🔗 Connecting to Discord for mention monitoring...');
         
         // Create a lightweight Discord client just for monitoring mentions
         this.client = new Client({
@@ -89,7 +93,7 @@ class OfflineResponseSystem {
                     status: 'invisible',
                     activities: []
                 });
-                console.log('👻 Set presence to invisible while in offline mode');
+                console.log('👻 Set presence to invisible - ready to catch mentions when bot goes offline');
             } catch (error) {
                 console.error('❌ Failed to set invisible presence:', error);
             }
@@ -133,9 +137,8 @@ class OfflineResponseSystem {
                 
                 // Handle state changes
                 if (isMainBotOffline && !wasOffline) {
-                    // Bot just went offline - connect to Discord
-                    console.log(`🔴 Main bot went offline (${currentStatus.summary.status}) - connecting offline response system`);
-                    await this.connectToDiscord();
+                    // Bot just went offline - start responding to mentions
+                    console.log(`🔴 Main bot went offline (${currentStatus.summary.status}) - offline response system now active`);
                     this.statusCheckInterval = 30000; // Check every 30 seconds when offline
                 } else if (!isMainBotOffline && wasOffline) {
                     // Bot came back online - disconnect from Discord
@@ -184,16 +187,23 @@ class OfflineResponseSystem {
 
         if (!botMentioned) return;
 
-        // We only get here if we're connected to Discord, which means main bot is offline
-        console.log(`� Bot mention detected while main bot is offline - responding`);
-
-        // Check user cooldown
-        const userId = message.author.id;
-        const lastResponse = this.responseCooldown.get(userId);
-        if (lastResponse && Date.now() - lastResponse < this.cooldownDuration) {
-            console.log(`⏱️ User ${userId} is on cooldown, skipping response`);
+        // Check if main bot is actually offline before responding
+        try {
+            const statusChecker = getStatusChecker();
+            const currentStatus = await statusChecker.getBotStatus();
+            const isMainBotOffline = !currentStatus.summary.operational;
+            
+            if (!isMainBotOffline) {
+                console.log(`💬 Bot mention detected but main bot is online - ignoring`);
+                return;
+            }
+        } catch (error) {
+            console.error('Failed to check bot status for mention response:', error);
             return;
         }
+
+        // We only get here if main bot is confirmed offline
+        console.log(`💬 Bot mention detected while main bot is offline - responding`);
 
         // Check if this is a health/status request
         const messageContent = message.content.toLowerCase();
@@ -208,9 +218,6 @@ class OfflineResponseSystem {
         } else {
             await this.sendOfflineResponse(message);
         }
-        
-        // Set cooldown for this user
-        this.responseCooldown.set(userId, Date.now());
     }
 
     async sendOfflineResponse(message) {
@@ -234,6 +241,11 @@ class OfflineResponseSystem {
                     {
                         name: '📊 Current Status',
                         value: `🔴 **OFFLINE**`,
+                        inline: true
+                    },
+                    {
+                        name: '🌐 Discord Connection',
+                        value: `🔄 **Backup Active**\n✅ Can receive mentions`,
                         inline: true
                     },
                     {
@@ -278,7 +290,7 @@ class OfflineResponseSystem {
             } else {
                 embed.fields.push({
                     name: '🔄 Recovery Status',
-                    value: 'Automatic restart in progress',
+                    value: 'Manual restart required',
                     inline: true
                 }, {
                     name: '📞 Need Help?',
@@ -333,6 +345,11 @@ class OfflineResponseSystem {
                         inline: true
                     },
                     {
+                        name: '🌐 Discord Connection',
+                        value: `**Main Bot:** ❌ Disconnected\n**Backup System:** ✅ Connected\n**Response Capability:** ✅ Active`,
+                        inline: true
+                    },
+                    {
                         name: '🕐 Last Seen',
                         value: lastSeenTime,
                         inline: true
@@ -356,7 +373,7 @@ class OfflineResponseSystem {
                         name: '🔄 Recovery',
                         value: isPlanned ? 
                             '🔧 Planned maintenance\n⏰ Expected return soon' : 
-                            '🚨 Automatic restart in progress\n📞 Admin notified',
+                            '� Manual restart required\n📞 Admin notified',
                         inline: true
                     }
                 ],
@@ -388,7 +405,7 @@ class OfflineResponseSystem {
             } else if (shutdownReason.includes('Error') || shutdownReason.includes('error')) {
                 embed.fields.push({
                     name: '⚠️ Issue Detected',
-                    value: 'Bot encountered an error. Automatic recovery is in progress.',
+                    value: 'Bot encountered an error. Manual intervention may be required.',
                     inline: false
                 });
             }

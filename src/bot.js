@@ -44,11 +44,11 @@ import {
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import healthMonitor from "./utils/healthMonitor.js";
-import offlineNotificationService from "./utils/offlineNotificationService.js";
 import { getStatusChecker } from "./utils/statusChecker.js";
 import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
 import { initializeApexMonitoring } from "./utils/apexNotificationService.js";
-
+// Import the new unified monitoring service
+import UnifiedMonitoringService from '../scripts/monitor-service.js';
 
 dotenv.config();
 
@@ -183,6 +183,80 @@ async function gracefulShutdown() {
   } catch (shutdownError) {
     console.error('❌ Error during graceful shutdown:', shutdownError);
     process.exit(1);
+  }
+}
+
+// Generate status message for offline notifications that matches webhook data
+function generateStatusMessage(statusReport) {
+  // Handle both old and new status report formats
+  const isOnline = statusReport.summary?.operational || statusReport.botStatus?.isOnline || false;
+  const statusEmoji = isOnline ? '🟢' : '🔴';
+  const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
+  
+  if (isOnline) {
+    // Extract health data for online status
+    const healthData = statusReport.health || {};
+    const discordData = statusReport.discord || {};
+    const botStatus = statusReport.botStatus || {};
+    
+    let message = `${statusEmoji} **Bepo Status: ${statusText}**\n`;
+    message += `✅ All systems operational\n`;
+    
+    if (botStatus.uptime) {
+      const uptime = formatUptime(botStatus.uptime);
+      message += `⏱️ Uptime: ${uptime}\n`;
+    }
+    
+    if (healthData.memoryUsage) {
+      const memMB = Math.round((healthData.memoryUsage.used / 1024 / 1024) * 100) / 100;
+      message += `💾 Memory: ${memMB} MB\n`;
+    }
+    
+    if (discordData.connected) {
+      message += `🌐 Discord: Connected (${discordData.guilds || 0} guilds, ${discordData.users || 0} users)\n`;
+    }
+    
+    if (healthData.errorCount !== undefined) {
+      message += `🐛 Errors: ${healthData.errorCount}`;
+    }
+    
+    return message;
+  } else {
+    // Extract offline data - use same timestamp source as webhook
+    let lastSeen = 'Unknown';
+    
+    if (statusReport.botStatus?.lastSeen) {
+      lastSeen = `<t:${Math.floor(new Date(statusReport.botStatus.lastSeen).getTime() / 1000)}:R>`;
+    } else if (statusReport.bot?.lastSeen) {
+      lastSeen = `<t:${Math.floor(new Date(statusReport.bot.lastSeen).getTime() / 1000)}:R>`;
+    }
+    
+    let reason = 'Bot process not detected';
+    if (statusReport.botStatus?.reason) {
+      reason = statusReport.botStatus.reason;
+    } else if (statusReport.bot?.reason) {
+      reason = statusReport.bot.reason;
+    }
+    
+    return `${statusEmoji} **Bepo Status: ${statusText}**\n` +
+           `🕒 Last seen: ${lastSeen}\n` +
+           `❓ Reason: ${reason}\n` +
+           `\n*Bepo may be temporarily unavailable. Please try again later.*`;
+  }
+}
+
+// Helper function to format uptime (matches monitoring service)
+function formatUptime(seconds) {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${secs}s`;
+  } else if (minutes > 0) {
+    return `${minutes}m ${secs}s`;
+  } else {
+    return `${secs}s`;
   }
 }
 
@@ -356,6 +430,16 @@ client.on("ready", async () => {
   // Initialize health monitoring with Discord client
   healthMonitor.setDiscordClient(client);
   console.log(`🏥 Health monitoring started`);
+
+  // Initialize Unified Monitoring Service - this replaces the old offline notification system
+  try {
+    const unifiedMonitor = new UnifiedMonitoringService();
+    // Store the monitor instance on the client for access elsewhere
+    client.unifiedMonitor = unifiedMonitor;
+    console.log('🔍 Unified monitoring service initialized');
+  } catch (error) {
+    console.error('❌ Failed to initialize unified monitoring service:', error);
+  }
 
   startScheduledMessaging(client);
   console.log("Scheduled messaging started");
@@ -559,7 +643,7 @@ client.on("messageCreate", async (message) => {
 
     // Only respond with status if explicitly requested or if bot is genuinely offline
     if (isStatusRequest && currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
-      const statusMessage = offlineNotificationService.generateStatusMessage(currentStatus);
+      const statusMessage = generateStatusMessage(currentStatus);
       await safeAsync(async () => {
         await message.reply(statusMessage);
       }, null, 'offline_status_reply');

@@ -2,7 +2,6 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, Butt
 import errorHandler from '../../utils/errorHandler.js';
 import healthMonitor from '../../utils/healthMonitor.js';
 import { getStatusChecker } from '../../utils/statusChecker.js';
-import offlineNotificationService from '../../utils/offlineNotificationService.js';
 
 const healthCommand = {
     data: new SlashCommandBuilder()
