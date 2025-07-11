@@ -1,4 +1,4 @@
-// Simplified version for debugging
+// Simplified Apex Legends utilities
 
 /**
  * Check if content is a patch note or game update

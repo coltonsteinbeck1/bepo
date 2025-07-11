@@ -176,12 +176,12 @@ export async function execute(interaction) {
 
       return interaction.reply({
         content: `**Your Memory Stats:**\n\n` +
-          `📝 Total memories: **${stats.total}**\n` +
-          `💬 Conversations: **${stats.byType.conversation || 0}**\n` +
-          `⚙️ Preferences: **${stats.byType.preference || 0}**\n` +
-          `📄 Summaries: **${stats.byType.conversation_summary || 0}**\n` +
-          `📂 Other: **${Object.entries(stats.byType).filter(([key]) => !['conversation', 'preference', 'conversation_summary'].includes(key)).reduce((sum, [, count]) => sum + count, 0)}**\n\n` +
-          `${oldestDate ? `📅 Oldest memory: ${getTimeAgo(oldestDate)}` : 'No memories yet'}`,
+          `Total memories: **${stats.total}**\n` +
+          `Conversations: **${stats.byType.conversation || 0}**\n` +
+          `Preferences: **${stats.byType.preference || 0}**\n` +
+          `Summaries: **${stats.byType.conversation_summary || 0}**\n` +
+          `Other: **${Object.entries(stats.byType).filter(([key]) => !['conversation', 'preference', 'conversation_summary'].includes(key)).reduce((sum, [, count]) => sum + count, 0)}**\n\n` +
+          `${oldestDate ? `Oldest memory: ${getTimeAgo(oldestDate)}` : 'No memories yet'}`,
         flags: MessageFlags.Ephemeral
       });
     }
@@ -200,17 +200,17 @@ export async function execute(interaction) {
  */
 function getPreferenceHelpText(key) {
   const helpMap = {
-    'name': '\n💡 *Now I\'ll remember what to call you!*',
-    'nickname': '\n💡 *Now I\'ll remember what to call you!*',
-    'timezone': '\n💡 *This helps me understand your time context!*',
-    'tz': '\n💡 *This helps me understand your time context!*',
-    'language': '\n💡 *I can adjust my responses to your preferred language!*',
-    'lang': '\n💡 *I can adjust my responses to your preferred language!*',
-    'coding_style': '\n💡 *I\'ll remember your coding preferences!*',
-    'code_style': '\n💡 *I\'ll remember your coding preferences!*',
-    'programming_style': '\n💡 *I\'ll remember your coding preferences!*',
-    'interests': '\n💡 *Great! I\'ll keep your interests in mind during conversations!*',
-    'hobbies': '\n💡 *Great! I\'ll keep your interests in mind during conversations!*'
+    'name': '\n*Now I\'ll remember what to call you!*',
+    'nickname': '\n*Now I\'ll remember what to call you!*',
+    'timezone': '\n*This helps me understand your time context!*',
+    'tz': '\n*This helps me understand your time context!*',
+    'language': '\n*I can adjust my responses to your preferred language!*',
+    'lang': '\n*I can adjust my responses to your preferred language!*',
+    'coding_style': '\n*I\'ll remember your coding preferences!*',
+    'code_style': '\n*I\'ll remember your coding preferences!*',
+    'programming_style': '\n*I\'ll remember your coding preferences!*',
+    'interests': '\n*Great! I\'ll keep your interests in mind during conversations!*',
+    'hobbies': '\n*Great! I\'ll keep your interests in mind during conversations!*'
   };
   
   return helpMap[key.toLowerCase()] || '';

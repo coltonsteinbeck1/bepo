@@ -25,7 +25,7 @@ let dynamicChannelConfig = null;
 async function initializeCS2Monitoring(client) {
   botClient = client;
   
-  console.log('🎮 Initializing CS2 patch note monitoring...');
+  console.log('Initializing CS2 patch note monitoring...');
   
   // Get user-submitted channels only (no environment channels)
   const userChannels = await getNotificationChannels();
@@ -33,11 +33,11 @@ async function initializeCS2Monitoring(client) {
   // Start monitoring if any channels are configured
   if (userChannels.length > 0) {
     startMonitoring();
-    console.log(`📡 CS2 monitoring started for ${userChannels.length} user-submitted channels:`);
+    console.log(`CS2 monitoring started for ${userChannels.length} user-submitted channels:`);
     console.log(`  - User channels: ${userChannels.join(', ')}`);
     console.log(`  - Environment channels: DISABLED (user-submitted only)`);
   } else {
-    console.log('⚠️  No CS2 notification channels configured.');
+    console.log('No CS2 notification channels configured.');
     console.log('   - Use /cs2notify setchannel to configure notification channels');
     console.log('   - Environment channels are disabled (user-submitted only)');
   }
@@ -98,7 +98,7 @@ async function saveChannelConfig(config) {
     await fs.writeFile(CHANNEL_CONFIG_FILE, JSON.stringify(config, null, 2));
     dynamicChannelConfig = config;
   } catch (error) {
-    console.error('❌ Failed to save channel config:', error.message);
+    console.error('Failed to save channel config:', error.message);
     throw error;
   }
 }
@@ -124,10 +124,10 @@ async function setNotificationChannel(channelId, guildId) {
     // Save the configuration
     await saveChannelConfig(config);
     
-    console.log(`✅ CS2 notification channel set: ${channelId} for guild: ${guildId}`);
+    console.log(`CS2 notification channel set: ${channelId} for guild: ${guildId}`);
     return true;
   } catch (error) {
-    console.error('❌ Failed to set notification channel:', error.message);
+    console.error('Failed to set notification channel:', error.message);
     return false;
   }
 }
@@ -160,13 +160,13 @@ async function getNotificationChannels() {
  */
 async function checkForNewPatchNotes() {
   try {
-    console.log('🔍 Checking for new CS2 patch notes...');
+    console.log('Checking for new CS2 patch notes...');
     
     // Get current patch notes
     const currentPatchNotes = await getCachedPatchNotes(true); // Force refresh
     
     if (!currentPatchNotes || currentPatchNotes.length === 0) {
-      console.log('📝 No patch notes found');
+      console.log('No patch notes found');
       return;
     }
     
@@ -187,13 +187,13 @@ async function checkForNewPatchNotes() {
       if (lastKnownPatch) {
         await sendPatchNoteNotification(latestPatchNote);
       } else {
-        console.log('📋 First run - saving current patch note as baseline');
+        console.log('First run - saving current patch note as baseline');
       }
     } else {
-      console.log('✅ No new patch notes');
+      console.log('No new patch notes');
     }
   } catch (error) {
-    console.error('❌ Error checking for new patch notes:', error.message);
+    console.error('Error checking for new patch notes:', error.message);
   }
 }
 
@@ -203,7 +203,7 @@ async function checkForNewPatchNotes() {
  */
 async function sendPatchNoteNotification(patchNote) {
   if (!botClient) {
-    console.log('⚠️  No bot client available');
+    console.log('No bot client available');
     return;
   }
   
@@ -211,17 +211,17 @@ async function sendPatchNoteNotification(patchNote) {
   const userChannels = await getNotificationChannels();
   
   if (userChannels.length === 0) {
-    console.log('⚠️  No user-submitted notification channels configured');
+    console.log('No user-submitted notification channels configured');
     console.log('   Use /cs2notify setchannel to set up CS2 notifications');
     return;
   }
   
-  console.log(`📡 Sending CS2 notification to ${userChannels.length} user-submitted channels`);
+  console.log(`Sending CS2 notification to ${userChannels.length} user-submitted channels`);
   
   // Validate guild and role first
   const validationResult = await validateGuildAndRole();
   if (!validationResult.isValid) {
-    console.error('❌ Guild/Role validation failed:', validationResult.error);
+    console.error('Guild/Role validation failed:', validationResult.error);
     return;
   }
   
@@ -238,7 +238,7 @@ async function sendPatchNoteNotification(patchNote) {
       const channel = await botClient.channels.fetch(channelId.trim());
       
       if (!channel || !channel.isTextBased()) {
-        console.error(`❌ Invalid user channel or not text-based: ${channelId}`);
+        console.error(`Invalid user channel or not text-based: ${channelId}`);
         continue;
       }
       
@@ -248,9 +248,9 @@ async function sendPatchNoteNotification(patchNote) {
         content: notificationContent,
         embeds: [embed] 
       });
-      console.log(`📢 Sent CS2 notification to user channel: ${channelId} in guild: ${channel.guild?.name || 'Unknown'}`);
+      console.log(`Sent CS2 notification to user channel: ${channelId} in guild: ${channel.guild?.name || 'Unknown'}`);
     } catch (error) {
-      console.error(`❌ Failed to send notification to user channel ${channelId}:`, error.message);
+      console.error(`Failed to send notification to user channel ${channelId}:`, error.message);
     }
   }
 }
@@ -271,25 +271,25 @@ async function validateGuildAndRole() {
       return { isValid: false, error: `Guild ${GUILD_ID} not found or bot not in guild` };
     }
     
-    console.log(`✅ Guild validation passed: ${guild.name} (${guild.id})`);
+    console.log(`Guild validation passed: ${guild.name} (${guild.id})`);
     
     // Check if CS2 role exists (optional but recommended)
     if (CS2_ROLE_ID) {
       try {
         const role = await guild.roles.fetch(CS2_ROLE_ID);
         if (role) {
-          console.log(`✅ CS2 role found: ${role.name} (${role.id})`);
+          console.log(`CS2 role found: ${role.name} (${role.id})`);
           return { 
             isValid: true, 
             guild, 
             role: `<@&${role.id}>` // Role mention format
           };
         } else {
-          console.warn(`⚠️ CS2 role ${CS2_ROLE_ID} not found in guild ${guild.name}`);
+          console.warn(`CS2 role ${CS2_ROLE_ID} not found in guild ${guild.name}`);
           return { isValid: true, guild, role: null };
         }
       } catch (roleError) {
-        console.warn(`⚠️ Could not fetch CS2 role: ${roleError.message}`);
+        console.warn(`Could not fetch CS2 role: ${roleError.message}`);
         return { isValid: true, guild, role: null };
       }
     }
@@ -389,7 +389,7 @@ async function saveLastKnownPatch(patchNote) {
     
     await fs.writeFile(LAST_PATCH_FILE, JSON.stringify(saveData, null, 2));
   } catch (error) {
-    console.error('❌ Failed to save last known patch:', error.message);
+    console.error('Failed to save last known patch:', error.message);
   }
 }
 

@@ -4,7 +4,7 @@
 
 # Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/scripts/bepo-config.sh"
+source "$SCRIPT_DIR/bepo-config.sh"
 
 # Function to check service health
 check_service_health() {
@@ -161,15 +161,15 @@ main() {
     print_status $COLOR_CYAN "Management Commands:"
     echo "  Start services: ./start-bepo.sh"
     echo "  Stop services: ./stop-bepo.sh"
-    echo "  View this status: ./bepo-status.sh"
-    echo "  View logs: ./bepo-status.sh --logs"
+    echo "  View this status: ./scripts/bepo-status.sh"
+    echo "  View logs: ./scripts/bepo-status.sh --logs"
     echo "  Monitor logs: tail -f $BEPO_BOT_LOG $BEPO_MONITOR_LOG $BEPO_OFFLINE_LOG"
     echo ""
     
     print_status $COLOR_CYAN "Configuration:"
     echo "  Disable monitor: ENABLE_BOT_MONITOR=false ./start-bepo.sh"
     echo "  Disable offline: ENABLE_OFFLINE_MODE=false ./start-bepo.sh"
-    echo "  Edit config: vim bepo-config.sh"
+    echo "  Edit config: vim scripts/bepo-config.sh"
     echo ""
 }
 

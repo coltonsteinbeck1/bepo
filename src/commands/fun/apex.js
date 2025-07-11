@@ -102,7 +102,7 @@ async function createCombinedPatchNotesEmbed(notes) {
         .setAuthor({ 
             name: 'Apex Legends'
         })
-        .setTitle(`Recent Apex Legends Updates (${notes.length})`)
+        .setTitle(`🎮 Recent Apex Legends Updates (${notes.length})`)
         .setTimestamp();
 
     // Add Apex logo as thumbnail for multiple updates

@@ -12,20 +12,20 @@ print_status $COLOR_YELLOW "🛑 Stopping ONLY the main bot (keeping monitor & o
 
 # Check if session exists
 if ! tmux has-session -t $SESSION_NAME 2>/dev/null; then
-    print_status $COLOR_RED "❌ No session named $SESSION_NAME found."
+    print_status $COLOR_RED "No session named $SESSION_NAME found."
     echo ""
-    print_status $COLOR_CYAN "🔍 Checking for bot processes..."
+    print_status $COLOR_CYAN "Checking for bot processes..."
     
     # Check for bot processes only
     BOT_PIDS=$(get_bepo_pids "bot")
     
     if [ -n "$BOT_PIDS" ]; then
-        print_status $COLOR_YELLOW "⚠️  Found running bot processes. Stopping them..."
+        print_status $COLOR_YELLOW "Found running bot processes. Stopping them..."
         kill $BOT_PIDS 2>/dev/null || true
         sleep 2
-        print_status $COLOR_GREEN "✅ Bot processes stopped."
+        print_status $COLOR_GREEN "Bot processes stopped."
     else
-        print_status $COLOR_GREEN "✅ No bot processes found."
+        print_status $COLOR_GREEN "No bot processes found."
     fi
     exit 0
 fi
@@ -33,7 +33,7 @@ fi
 # Get list of windows in the session
 WINDOWS=$(tmux list-windows -t $SESSION_NAME -F "#{window_name}" 2>/dev/null || echo "")
 
-print_status $COLOR_CYAN "📋 Session windows: $WINDOWS"
+print_status $COLOR_CYAN "Session windows: $WINDOWS"
 
 # Stop ONLY the main bot
 if echo "$WINDOWS" | grep -q "$BEPO_BOT_WINDOW"; then
@@ -49,24 +49,24 @@ if echo "$WINDOWS" | grep -q "$BEPO_BOT_WINDOW"; then
         sleep 1
     fi
     
-    print_status $COLOR_GREEN "✅ Main bot stopped."
+    print_status $COLOR_GREEN "Main bot stopped."
 else
-    print_status $COLOR_YELLOW "⚠️  Bot window not found in session."
+    print_status $COLOR_YELLOW "Bot window not found in session."
 fi
 
 echo ""
-print_status $COLOR_GREEN "✅ Bot stopped successfully!" | tee -a $LOG_FILE
-print_status $COLOR_CYAN "📡 Monitor and offline response systems are STILL RUNNING"
-print_status $COLOR_CYAN "💡 Mention @Bepo in Discord to test offline responses"
+print_status $COLOR_GREEN "Bot stopped successfully!" | tee -a $LOG_FILE
+print_status $COLOR_CYAN "Monitor and offline response systems are STILL RUNNING"
+print_status $COLOR_CYAN "Mention @Bepo in Discord to test offline responses"
 echo ""
-print_status $COLOR_CYAN "📊 Current system status:"
+print_status $COLOR_CYAN "Current system status:"
 
 # Show current status
-./bepo-status.sh --quiet 2>/dev/null || echo "  (Run ./bepo-status.sh for detailed status)"
+./scripts/bepo-status.sh --quiet 2>/dev/null || echo "  (Run ./scripts/bepo-status.sh for detailed status)"
 
 echo ""
-print_status $COLOR_CYAN "🔄 Management commands:"
+print_status $COLOR_CYAN "Management commands:"
 echo "  Start bot only:     ./start-bot-only.sh"
 echo "  Start full system:  ./start-bepo.sh"
 echo "  Stop everything:    ./stop-bepo.sh"
-echo "  Check status:       ./bepo-status.sh"
+echo "  Check status:       ./scripts/bepo-status.sh"

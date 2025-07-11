@@ -61,28 +61,28 @@ const client = new Client({
 
 // Enhanced error handling for Discord client
 client.on('error', (error) => {
-  console.error('❌ Discord Client Error:', error);
+  console.error('Discord Client Error:', error);
   handleDiscordError(error, null, 'client');
 });
 
 client.on('warn', (warning) => {
-  console.warn('⚠️ Discord Client Warning:', warning);
+  console.warn('Discord Client Warning:', warning);
 });
 
 client.on('debug', (info) => {
   // Only log critical debug info to reduce noise
   if (info.includes('Session') && info.includes('READY')) {
-    console.log('🔍 Discord Session Ready');
+    console.log('Discord Session Ready');
   }
 });
 
 client.on('shardError', (error, shardId) => {
-  console.error(`❌ Shard ${shardId} Error:`, error);
+  console.error(`Shard ${shardId} Error:`, error);
   handleDiscordError(error, null, `shard_${shardId}`);
 });
 
 client.on('shardDisconnect', (event, shardId) => {
-  console.warn(`🔌 Shard ${shardId} Disconnected:`, event);
+  console.warn(`Shard ${shardId} Disconnected:`, event);
 });
 
 client.on('disconnect', () => {
@@ -124,64 +124,64 @@ async function gracefulShutdown() {
           uptime: 0,
           startTime: null
         });
-        console.log('📊 Bot status updated to offline');
+        console.log('Bot status updated to offline');
       }, (error) => {
-        console.error('❌ Failed to update bot status on shutdown:', error);
+        console.error('Failed to update bot status on shutdown:', error);
       }, 'status_update_shutdown');
     }
 
     // Save markov chain before shutdown
-    console.log('💾 Saving markov chain...');
+    console.log('Saving markov chain...');
     await safeAsync(async () => {
       await markovPersistence.saveChain(markov);
-      console.log('📁 Markov chain saved successfully');
+      console.log('Markov chain saved successfully');
     }, (error) => {
-      console.error('❌ Failed to save markov chain on shutdown:', error);
+      console.error('Failed to save markov chain on shutdown:', error);
     }, 'markov_save_shutdown');
 
     // Set Discord presence to invisible/offline before destroying
-    console.log('🔄 Setting Discord presence to offline...');
+    console.log('Setting Discord presence to offline...');
     if (client && client.user && client.readyState === 'READY') {
       try {
         await client.user.setPresence({
           status: 'invisible',
           activities: []
         });
-        console.log('👻 Discord presence set to invisible');
+        console.log('Discord presence set to invisible');
 
         // Give Discord a moment to register the status change
         await new Promise(resolve => setTimeout(resolve, 2000));
       } catch (presenceError) {
-        console.error('❌ Failed to set presence:', presenceError);
+        console.error('Failed to set presence:', presenceError);
       }
     }
 
     // Stop scheduled tasks
-    console.log('⏹️ Stopping scheduled tasks...');
+    console.log('Stopping scheduled tasks...');
 
     // Cleanup voice connections
-    console.log('🎵 Cleaning up voice connections...');
+    console.log('Cleaning up voice connections...');
     // This will be handled by individual command cleanup
 
     // Close database connections
-    console.log('🗄️ Closing database connections...');
+    console.log('Closing database connections...');
     // Supabase client will handle this automatically
 
     // Destroy Discord client
-    console.log('🤖 Destroying Discord client...');
+    console.log('Destroying Discord client...');
     if (client && client.readyState !== 'DESTROYED') {
       try {
         await client.destroy();
-        console.log('💥 Discord client destroyed');
+        console.log('Discord client destroyed');
       } catch (destroyError) {
-        console.error('❌ Error destroying client:', destroyError);
+        console.error('Error destroying client:', destroyError);
       }
     }
 
-    console.log('✅ Graceful shutdown completed');
+    console.log('Graceful shutdown completed');
     process.exit(0);
   } catch (shutdownError) {
-    console.error('❌ Error during graceful shutdown:', shutdownError);
+    console.error('Error during graceful shutdown:', shutdownError);
     process.exit(1);
   }
 }
@@ -287,7 +287,6 @@ client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
 client.commands.set("apexnotify", apexNotifyCommand);
-
 
 
 // OpenAI API key for xAI (Grok)
@@ -421,24 +420,24 @@ client.on("ready", async () => {
         uptime: 0,
         startTime: new Date().toISOString()
       });
-      console.log('📊 Bot status updated to online');
+      console.log('Bot status updated to online');
     }, (error) => {
-      console.error('❌ Failed to update bot status on startup:', error);
+      console.error('Failed to update bot status on startup:', error);
     }, 'status_update_startup');
   }
 
   // Initialize health monitoring with Discord client
   healthMonitor.setDiscordClient(client);
-  console.log(`🏥 Health monitoring started`);
+  console.log(`Health monitoring started`);
 
   // Initialize Unified Monitoring Service - this replaces the old offline notification system
   try {
     const unifiedMonitor = new UnifiedMonitoringService();
     // Store the monitor instance on the client for access elsewhere
     client.unifiedMonitor = unifiedMonitor;
-    console.log('🔍 Unified monitoring service initialized');
+    console.log('Unified monitoring service initialized');
   } catch (error) {
-    console.error('❌ Failed to initialize unified monitoring service:', error);
+    console.error('Failed to initialize unified monitoring service:', error);
   }
 
   startScheduledMessaging(client);
@@ -453,7 +452,7 @@ client.on("ready", async () => {
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {
     await safeAsync(async () => {
-      console.log('🧠 Running memory cleanup...');
+      console.log('Running memory cleanup...');
       const expiredCount = await cleanupExpiredMemories();
       const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
       const expiredServerCount = await cleanupExpiredServerMemories();
@@ -485,7 +484,7 @@ client.on("interactionCreate", async (interaction) => {
         console.error(`Command not found: ${interaction.commandName}`);
         if (!interaction.replied) {
           await interaction.reply({
-            content: '❌ Command not found or temporarily unavailable.',
+            content: 'Command not found or temporarily unavailable.',
             flags: MessageFlags.Ephemeral
           });
         }
@@ -548,7 +547,7 @@ client.on("interactionCreate", async (interaction) => {
           console.error('Role remove error:', error);
           if (!interaction.replied) {
             await interaction.reply({
-              content: "❌ Failed to remove role. I might not have the required permissions.",
+              content: "Failed to remove role. I might not have the required permissions.",
               flags: MessageFlags.Ephemeral
             });
           }
@@ -562,8 +561,8 @@ client.on("interactionCreate", async (interaction) => {
 
     // Try to respond to the user if we haven't already
     const errorMessage = isDiscordError && error.code === 50013
-      ? "❌ I don't have the required permissions to perform this action."
-      : "❌ Something went wrong while processing your request. Please try again.";
+      ? "I don't have the required permissions to perform this action."
+      : "Something went wrong while processing your request. Please try again.";
 
     try {
       if (interaction.replied || interaction.deferred) {
@@ -890,7 +889,7 @@ client.on("messageCreate", async (message) => {
         // Try to send a shorter error message instead
         if (i === 0) { // Only send error on first chunk to avoid spam
           await safeAsync(async () => {
-            await message.reply("❌ I encountered an error while sending my response. Please try again.");
+            await message.reply("I encountered an error while sending my response. Please try again.");
           }, null, 'error_reply_fallback');
         }
       }, `message_reply_chunk_${i}`);

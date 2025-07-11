@@ -2,12 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import fs from 'fs/promises';
 import path from 'path';
 
-// Safety check - prevent using real Discord IDs in tests
-const REAL_CHANNEL_ID = '1383109705706242150';
-const REAL_ROLE_ID = '1160342442072096788';
+// Test constants - these are NOT real Discord IDs
+const TEST_CHANNEL_ID = '1111111111111111111';
+const TEST_ROLE_ID = '2222222222222222222';
 
 describe('CS2 Notification System Integration Test', () => {
   let originalConsole;
+  let originalEnv;
   let testLogs = [];
 
   const TEMP_DIR = path.join(process.cwd(), 'temp-test');
@@ -15,6 +16,9 @@ describe('CS2 Notification System Integration Test', () => {
   const CHANNEL_CONFIG_FILE = path.join(TEMP_DIR, 'cs2-channel-config.json');
 
   beforeEach(async () => {
+    // Store original environment
+    originalEnv = { ...process.env };
+    
     // Capture console output for verification
     originalConsole = console;
     testLogs = [];
@@ -44,21 +48,28 @@ describe('CS2 Notification System Integration Test', () => {
 
     // Set test environment variables - USING MOCK IDs ONLY
     process.env.NODE_ENV = 'test';
-    process.env.GUILD_BZ = '2222222222222222222'; // MOCK GUILD ID
-    process.env.CS2_ROLE = '1111111111111111111'; // MOCK ROLE ID
+    process.env.GUILD_BZ = '3333333333333333333'; // TEST GUILD ID
+    process.env.CS2_ROLE = TEST_ROLE_ID; // TEST ROLE ID
     process.env.CS2_NOTIFICATION_CHANNELS = '1234567890123456789'; // MOCK CHANNEL ID
     
-    // Safety checks
-    if (process.env.CS2_NOTIFICATION_CHANNELS?.includes(REAL_CHANNEL_ID)) {
-      throw new Error('❌ SAFETY CHECK: Real Discord channel ID detected in integration test!');
+    // Safety checks - prevent accidental use of real Discord IDs
+    const realChannelId = '1383109705706242150'; // The actual Discord channel we want to avoid
+    const realRoleId = '1160342442072096788';     // The actual Discord role we want to avoid
+    
+    if (process.env.CS2_NOTIFICATION_CHANNELS?.includes(realChannelId)) {
+      throw new Error('❌ SAFETY CHECK: Real Discord channel ID detected in environment!');
     }
-    if (process.env.CS2_ROLE?.includes(REAL_ROLE_ID)) {
-      throw new Error('❌ SAFETY CHECK: Real Discord role ID detected in integration test!');
+    // Check original environment before we modified it
+    if (originalEnv.CS2_ROLE?.includes(realRoleId)) {
+      throw new Error('❌ SAFETY CHECK: Real Discord role ID detected in environment!');
     }
   });
 
   afterEach(async () => {
     global.console = originalConsole;
+    
+    // Restore original environment
+    process.env = originalEnv;
 
     // Clean up test files
     try {

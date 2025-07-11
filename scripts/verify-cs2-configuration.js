@@ -43,8 +43,8 @@ try {
   
   // 3. Verify target channel is configured
   console.log('\n🎯 Verifying target channel configuration...');
-  const targetChannel = '736781721386877073';
-  const oldChannel = '1383109705706242150';
+  const targetChannel = process.env.CS2_CHANNEL_ID || '736781721386877073'; // Default for backward compatibility
+  const oldChannel = process.env.CS2_OLD_CHANNEL_ID || '1383109705706242150'; // Legacy channel
   
   let targetFound = false;
   let oldFound = false;

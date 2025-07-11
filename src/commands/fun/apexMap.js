@@ -9,7 +9,7 @@ function createMapRotationEmbed(data) {
 
   const embed = new EmbedBuilder()
     .setColor('#B93038')
-    .setTitle('Current Apex Legends map')
+    .setTitle('🗺️ Current Apex Legends Map')
     .setDescription('Check out the current and upcoming maps for different modes in Apex Legends.')
     .addFields(
       {

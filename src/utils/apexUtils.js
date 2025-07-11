@@ -13,7 +13,7 @@ let patchNotesCache = {
  */
 async function fetchPatchNotesFromEA(count = 15) {
     try {
-        console.log('🎮 Fetching Apex Legends patch notes from EA news page...');
+        console.log('Fetching Apex Legends patch notes from EA news page...');
 
         // Fetch the main news page to get article links
         const response = await fetch(APEX_NEWS_URL, {
@@ -29,7 +29,7 @@ async function fetchPatchNotesFromEA(count = 15) {
         const html = await response.text();
         const articleLinks = extractArticleLinks(html);
 
-        console.log(`📄 Found ${articleLinks.length} article links`);
+        console.log(`Found ${articleLinks.length} article links`);
 
         if (articleLinks.length === 0) {
             console.warn('No article links found on news page');
@@ -53,7 +53,7 @@ async function fetchPatchNotesFromEA(count = 15) {
             }
         }
 
-        console.log(`✅ Successfully fetched ${patchNotes.length} patch notes`);
+        console.log(`Successfully fetched ${patchNotes.length} patch notes`);
         
         // Sort by date (newest first) - ensure proper date sorting
         const sortedNotes = patchNotes.sort((a, b) => {

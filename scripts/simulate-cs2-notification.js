@@ -490,7 +490,7 @@ async function main() {
   try {
     await simulator.runSimulation();
   } catch (error) {
-    console.error('❌ Simulation failed:', error.message);
+    console.error('Simulation failed:', error.message);
     process.exit(1);
   }
 }

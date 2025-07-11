@@ -294,7 +294,7 @@ class OfflineResponseSystem {
                     inline: true
                 }, {
                     name: '📞 Need Help?',
-                    value: 'Contact <@540624372398817312> for urgent issues',
+                    value: `Contact <@${process.env.ADMIN_USER_ID || 'administrator'}> for urgent issues`,
                     inline: true
                 });
             }

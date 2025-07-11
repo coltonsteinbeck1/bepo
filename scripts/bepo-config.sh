@@ -9,9 +9,9 @@ export BEPO_MONITOR_WINDOW="monitor"
 export BEPO_OFFLINE_WINDOW="offline"
 
 # Log Files
-export BEPO_BOT_LOG="serverOutput.log"
-export BEPO_MONITOR_LOG="monitorOutput.log"
-export BEPO_OFFLINE_LOG="offlineOutput.log"
+export BEPO_BOT_LOG="logs/serverOutput.log"
+export BEPO_MONITOR_LOG="logs/monitorOutput.log"
+export BEPO_OFFLINE_LOG="logs/offlineOutput.log"
 export BEPO_HEALTH_LOG="logs/health-$(date +%Y-%m-%d).json"
 
 # Service Configuration
@@ -96,15 +96,15 @@ get_bepo_pids() {
 # Function to display service status
 show_service_status() {
     echo ""
-    print_status $COLOR_CYAN "🔍 Bepo Service Status:"
+    print_status $COLOR_CYAN "Bepo Service Status:"
     
     # Check tmux session
     if tmux has-session -t $BEPO_SESSION_NAME 2>/dev/null; then
-        print_status $COLOR_GREEN "  📺 Tmux Session: Running"
+        print_status $COLOR_GREEN "  Tmux Session: Running"
         local windows=$(tmux list-windows -t $BEPO_SESSION_NAME -F "#{window_name}" 2>/dev/null | tr '\n' ' ')
         echo "    Windows: $windows"
     else
-        print_status $COLOR_RED "  📺 Tmux Session: Not running"
+        print_status $COLOR_RED "  Tmux Session: Not running"
     fi
     
     # Check individual services
@@ -113,29 +113,29 @@ show_service_status() {
     local offline_pids=$(get_bepo_pids "offline")
     
     if [ -n "$bot_pids" ]; then
-        print_status $COLOR_GREEN "  🤖 Bot Process: Running (PID: $bot_pids)"
+        print_status $COLOR_GREEN "  Bot Process: Running (PID: $bot_pids)"
     else
-        print_status $COLOR_RED "  🤖 Bot Process: Not running"
+        print_status $COLOR_RED "  Bot Process: Not running"
     fi
     
     if should_enable_service "monitor"; then
         if [ -n "$monitor_pids" ]; then
-            print_status $COLOR_GREEN "  🔍 Monitor Process: Running (PID: $monitor_pids)"
+            print_status $COLOR_GREEN "  Monitor Process: Running (PID: $monitor_pids)"
         else
-            print_status $COLOR_RED "  🔍 Monitor Process: Not running"
+            print_status $COLOR_RED "  Monitor Process: Not running"
         fi
     else
-        print_status $COLOR_YELLOW "  🔍 Monitor Process: Disabled"
+        print_status $COLOR_YELLOW "  Monitor Process: Disabled"
     fi
     
     if should_enable_service "offline"; then
         if [ -n "$offline_pids" ]; then
-            print_status $COLOR_GREEN "  📡 Offline Process: Running (PID: $offline_pids)"
+            print_status $COLOR_GREEN "  Offline Process: Running (PID: $offline_pids)"
         else
-            print_status $COLOR_RED "  📡 Offline Process: Not running"
+            print_status $COLOR_RED "  Offline Process: Not running"
         fi
     else
-        print_status $COLOR_YELLOW "  📡 Offline Process: Disabled"
+        print_status $COLOR_YELLOW "  Offline Process: Disabled"
     fi
     
     echo ""
@@ -151,7 +151,7 @@ setup_log_directories() {
 # Function to display configuration
 show_configuration() {
     echo ""
-    print_status $COLOR_PURPLE "⚙️  Bepo Configuration:"
+    print_status $COLOR_PURPLE "Bepo Configuration:"
     echo "  Bot Monitor: $ENABLE_BOT_MONITOR"
     echo "  Offline Mode: $ENABLE_OFFLINE_MODE"
     echo "  Auto Restart: $ENABLE_AUTO_RESTART"

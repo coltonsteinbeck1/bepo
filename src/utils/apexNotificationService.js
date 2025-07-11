@@ -30,7 +30,7 @@ let dynamicChannelConfig = null;
 async function initializeApexMonitoring(client) {
   botClient = client;
   
-  console.log('🎮 Initializing Apex Legends patch note monitoring...');
+  console.log('Initializing Apex Legends patch note monitoring...');
   
   // Get user-submitted channels only (no environment channels)
   const userChannels = await getNotificationChannels();
@@ -38,11 +38,11 @@ async function initializeApexMonitoring(client) {
   // Start monitoring if any channels are configured
   if (userChannels.length > 0) {
     startMonitoring();
-    console.log(`📡 Apex monitoring started for ${userChannels.length} user-submitted channels:`);
+    console.log(`Apex monitoring started for ${userChannels.length} user-submitted channels:`);
     console.log(`  - User channels: ${userChannels.join(', ')}`);
     console.log(`  - Environment channels: DISABLED (user-submitted only)`);
   } else {
-    console.log('⚠️  No Apex notification channels configured.');
+    console.log('No Apex notification channels configured.');
     console.log('   - Use /apexnotify setchannel to configure notification channels');
     console.log('   - Environment channels are disabled (user-submitted only)');
   }
@@ -56,7 +56,7 @@ function startMonitoring() {
     clearInterval(monitoringInterval);
   }
   
-  console.log(`🔄 Starting Apex patch note monitoring (checking every ${CHECK_INTERVAL / 60000} minutes)`);
+  console.log(`Starting Apex patch note monitoring (checking every ${CHECK_INTERVAL / 60000} minutes)`);
   
   monitoringInterval = setInterval(async () => {
     try {
@@ -77,7 +77,7 @@ function stopMonitoring() {
   if (monitoringInterval) {
     clearInterval(monitoringInterval);
     monitoringInterval = null;
-    console.log('⏹️  Apex patch note monitoring stopped');
+    console.log('Apex patch note monitoring stopped');
     return true;
   }
   return false;
@@ -88,12 +88,12 @@ function stopMonitoring() {
  */
 async function checkForNewPatchNotes() {
   try {
-    console.log('🔍 Checking for new Apex patch notes...');
+    console.log('Checking for new Apex patch notes...');
     
     const patchNotes = await getCachedPatchNotes(true); // Force refresh
     
     if (!patchNotes || patchNotes.length === 0) {
-      console.log('⚠️  No Apex patch notes found');
+      console.log('No Apex patch notes found');
       return;
     }
     
@@ -117,7 +117,7 @@ async function checkForNewPatchNotes() {
       // Update last patch info
       await saveLastPatchInfo(patchNotes[0]);
     } else {
-      console.log('✅ No new Apex patch notes found');
+      console.log('No new Apex patch notes found');
     }
     
   } catch (error) {
@@ -133,7 +133,7 @@ async function sendPatchNotification(patchNote) {
   const channels = await getNotificationChannels();
   
   if (channels.length === 0) {
-    console.log('⚠️  No notification channels configured for Apex updates');
+    console.log('No notification channels configured for Apex updates');
     return;
   }
   
@@ -172,7 +172,7 @@ async function sendCombinedPatchNotification(patchNotes) {
   const channels = await getNotificationChannels();
   
   if (channels.length === 0) {
-    console.log('⚠️  No notification channels configured for Apex updates');
+    console.log('No notification channels configured for Apex updates');
     return;
   }
   
@@ -264,7 +264,7 @@ function createCombinedPatchNotificationEmbed(patchNotes) {
       name: 'Apex Legends',
       iconURL: 'https://logoeps.com/wp-content/uploads/2019/03/apex-legends-vector-logo.png'
     })
-    .setTitle(`${patchNotes.length} New Apex Updates Available!`)
+    .setTitle(`🎮 ${patchNotes.length} New Apex Updates Available!`)
     .setTimestamp();
 
   // Add fields for each patch note (limit to first 10 to avoid Discord limits)
@@ -301,7 +301,7 @@ function createCombinedPatchNotificationEmbed(patchNotes) {
  */
 async function manualCheckForUpdates() {
   try {
-    console.log('🔍 Manual Apex patch note check triggered');
+    console.log('Manual Apex patch note check triggered');
     
     const patchNotes = await getCachedPatchNotes(true);
     
@@ -411,7 +411,7 @@ async function setNotificationChannel(channelId, guildId) {
       startMonitoring();
     }
     
-    console.log(`✅ Apex notification channel set: ${channelId}`);
+    console.log(`Apex notification channel set: ${channelId}`);
     return true;
   } catch (error) {
     console.error('Error setting Apex notification channel:', error);

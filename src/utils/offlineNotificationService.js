@@ -1,14 +1,14 @@
 // offlineNotificationService.js - DEPRECATED - Use UnifiedMonitoringService instead
 // This file is maintained for backwards compatibility only
 
-console.warn('⚠️  DEPRECATED: offlineNotificationService.js is deprecated.');
-console.warn('⚠️  Please use UnifiedMonitoringService from scripts/monitor-service.js instead.');
-console.warn('⚠️  This service provides auto-updating webhook embeds and better monitoring.');
+console.warn('DEPRECATED: offlineNotificationService.js is deprecated.');
+console.warn('Please use UnifiedMonitoringService from scripts/monitor-service.js instead.');
+console.warn('This service provides auto-updating webhook embeds and better monitoring.');
 
 // Minimal compatibility wrapper - most functionality moved to UnifiedMonitoringService
 class OfflineNotificationService {
     constructor() {
-        console.warn('⚠️  OfflineNotificationService is deprecated. Use UnifiedMonitoringService from scripts/monitor-service.js instead.');
+        console.warn('OfflineNotificationService is deprecated. Use UnifiedMonitoringService from scripts/monitor-service.js instead.');
     }
 
     // Legacy method for compatibility - redirects to simple status message generation
@@ -33,17 +33,17 @@ class OfflineNotificationService {
 
     // Deprecated methods - log warnings and do nothing
     async sendOfflineAlert(statusReport) {
-        console.warn('⚠️  sendOfflineAlert is deprecated. Use UnifiedMonitoringService instead.');
+        console.warn('sendOfflineAlert is deprecated. Use UnifiedMonitoringService instead.');
         return false;
     }
 
     async sendOnlineAlert(statusReport) {
-        console.warn('⚠️  sendOnlineAlert is deprecated. Use UnifiedMonitoringService instead.');
+        console.warn('sendOnlineAlert is deprecated. Use UnifiedMonitoringService instead.');
         return false;
     }
 
     loadConfiguration() {
-        console.warn('⚠️  loadConfiguration is deprecated. Use UnifiedMonitoringService instead.');
+        console.warn('loadConfiguration is deprecated. Use UnifiedMonitoringService instead.');
     }
 }
 

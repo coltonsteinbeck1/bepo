@@ -18,12 +18,12 @@ const requiredEnvVars = [
 ];
 
 const requiredFiles = [
-    'bepo-config.sh',
-    'bepo-status.sh',
-    'start-bepo.sh',
-    'stop-bepo.sh',
-    'stop-bot-only.sh',
-    'start-bot-only.sh',
+    'scripts/bepo-config.sh',
+    'scripts/bepo-status.sh',
+    'scripts/start-bepo.sh',
+    'scripts/stop-bepo.sh',
+    'scripts/stop-bot-only.sh',
+    'scripts/start-bot-only.sh',
     'scripts/offline-response-system.js',
     'scripts/bot-monitor.js',
     'src/utils/statusChecker.js',
@@ -144,7 +144,7 @@ function checkRequiredDirectories() {
 function checkScriptPermissions() {
     console.log('\n🔐 Checking Script Permissions...');
     
-    const scripts = ['start-bepo.sh', 'stop-bepo.sh', 'bepo-status.sh', 'bepo-config.sh'];
+    const scripts = ['scripts/start-bepo.sh', 'scripts/stop-bepo.sh', 'scripts/bepo-status.sh', 'scripts/bepo-config.sh'];
     
     for (const script of scripts) {
         const scriptPath = path.join(process.cwd(), script);
@@ -210,7 +210,7 @@ function generateTestCommands() {
     console.log('   ./start-bot-only.sh   # Starts ONLY the bot');
     console.log('');
     console.log('5. Monitor offline activity:');
-    console.log('   tail -f offlineOutput.log');
+    console.log('   tail -f logs/offlineOutput.log');
     console.log('');
     console.log('6. Check offline response history:');
     console.log('   cat logs/offline-responses.json | jq "."');

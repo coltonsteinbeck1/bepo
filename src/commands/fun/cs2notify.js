@@ -305,7 +305,7 @@ async function handleSetChannel(interaction) {
         content: '🎮 **CS2 Notifications Configured!**',
         embeds: [new EmbedBuilder()
           .setColor('#FF6B00')
-          .setTitle('CS2 Notification Channel Set')
+          .setTitle('🎮 CS2 Notification Channel Set')
           .setDescription('This channel will now receive CS2 patch note notifications when new updates are released.')
           .addFields({
             name: '🔔 What to expect',

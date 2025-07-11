@@ -1,10 +1,14 @@
 /**
  * Role Management Utilities
- * Handles Discord role operations and permissions
+ * Handles Discord role operations and permissions with multi-guild support
  */
 import { ButtonBuilder, ButtonStyle, ActionRowBuilder } from 'discord.js';
-import { getBZBannedRoles } from '../supabase/supabase.js';
 import { safeAsync } from './errorHandler.js';
+import { 
+  GuildConfigManager, 
+  GuildBannedRolesManager, 
+  PermissionManager 
+} from './guildConfig.js';
 
 /**
  * Role Management Operations
@@ -13,23 +17,12 @@ export class RoleManager {
   /**
    * Check if a member has admin permissions
    * @param {GuildMember} member - Discord guild member
+   * @param {string} guildId - Discord guild ID
+   * @param {string} level - Required permission level ('owner', 'admin', 'moderator')
    * @returns {boolean} True if member has admin permissions
    */
-  static isAdmin(member) {
-    if (!member) return false;
-    
-    // Check if user has Discord Administrator permission
-    if (member.permissions.has('Administrator')) {
-      return true;
-    }
-    
-    // Check if user is the CODE_MONKEY admin
-    const codeMonkeyId = process.env.CODE_MONKEY;
-    if (codeMonkeyId && member.user.id === codeMonkeyId) {
-      return true;
-    }
-    
-    return false;
+  static async isAdmin(member, guildId, level = 'moderator') {
+    return await PermissionManager.hasPermission(member, guildId, level === 'owner' ? 'admin' : 'moderate');
   }
 
   /**
@@ -39,12 +32,12 @@ export class RoleManager {
     return await safeAsync(async () => {
       await guild.roles.fetch();
       
-      const bzRolesData = await getBZBannedRoles();
-      const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+      const bannedRoleIds = await GuildBannedRolesManager.getBannedRoles(guild.id);
+      const bannedRolesSet = new Set(bannedRoleIds);
 
       const availableRoles = guild.roles.cache.filter(role => {
         try {
-          const roleId = Number(role.id);
+          const roleId = role.id;
           const isBanned = bannedRolesSet.has(roleId);
 
           return !role.managed &&
@@ -67,12 +60,12 @@ export class RoleManager {
     return await safeAsync(async () => {
       await guild.roles.fetch();
       
-      const bzRolesData = await getBZBannedRoles();
-      const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+      const bannedRoleIds = await GuildBannedRolesManager.getBannedRoles(guild.id);
+      const bannedRolesSet = new Set(bannedRoleIds);
 
       const removableRoles = guild.roles.cache.filter(role => {
         try {
-          const roleId = Number(role.id);
+          const roleId = role.id;
           const isBanned = bannedRolesSet.has(roleId);
 
           return !role.managed &&
@@ -187,9 +180,14 @@ export class RoleManager {
   /**
    * Check if server allows role commands
    */
-  static isRoleCommandAllowed(guildId) {
-    const allowedGuilds = [process.env.GUILD_BZ];
-    return allowedGuilds.includes(guildId);
+  static async isRoleCommandAllowed(guildId) {
+    try {
+      const config = await GuildConfigManager.getGuildConfig(guildId);
+      return config && config.role_commands_enabled;
+    } catch (error) {
+      console.error('Error checking role command permission:', error);
+      return false;
+    }
   }
 
   /**
@@ -199,16 +197,16 @@ export class RoleManager {
     return await safeAsync(async () => {
       await guild.roles.fetch();
       
-      const bzRolesData = await getBZBannedRoles();
-      const bannedRolesSet = new Set(bzRolesData.map(role => Number(role.role_id)));
+      const bannedRoleIds = await GuildBannedRolesManager.getBannedRoles(guild.id);
+      const bannedRolesSet = new Set(bannedRoleIds);
 
       const allRoles = guild.roles.cache;
       const managedRoles = allRoles.filter(role => role.managed);
-      const bannedRoles = allRoles.filter(role => bannedRolesSet.has(Number(role.id)));
+      const bannedRoles = allRoles.filter(role => bannedRolesSet.has(role.id));
       const assignableRoles = allRoles.filter(role => 
         !role.managed && 
         role.id !== guild.id && 
-        !bannedRolesSet.has(Number(role.id))
+        !bannedRolesSet.has(role.id)
       );
 
       return {

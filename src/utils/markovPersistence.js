@@ -28,7 +28,7 @@ export class MarkovPersistence {
       };
 
       await fs.writeFile(this.filePath, JSON.stringify(data, null, 2));
-      console.log(`📁 Markov chain saved with ${Object.keys(markovChain.chain).length} keys`);
+      console.log(`Markov chain saved with ${Object.keys(markovChain.chain).length} keys`);
       return true;
     } catch (error) {
       console.error('Failed to save markov chain:', error);
@@ -59,7 +59,7 @@ export class MarkovPersistence {
       return true;
     } catch (error) {
       if (error.code === 'ENOENT') {
-        console.log('📝 No existing markov chain file found, starting fresh');
+        console.log('No existing markov chain file found, starting fresh');
       } else {
         console.error('Failed to load markov chain:', error);
       }

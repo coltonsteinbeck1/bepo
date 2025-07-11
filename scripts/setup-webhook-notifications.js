@@ -20,7 +20,7 @@ function askQuestion(question) {
 }
 
 async function setupWebhooks() {
-    console.log('🔧 Setting up Discord Webhooks for Bot Offline Notifications\n');
+    console.log('Setting up Discord Webhooks for Bot Offline Notifications\n');
     
     console.log('To get a Discord webhook URL:');
     console.log('1. Go to your Discord server');
@@ -33,7 +33,7 @@ async function setupWebhooks() {
     if (webhookUrl.trim()) {
         // Validate webhook URL format
         if (!webhookUrl.includes('discord.com/api/webhooks/')) {
-            console.log('❌ Invalid webhook URL format');
+            console.log('Invalid webhook URL format');
             process.exit(1);
         }
 
@@ -60,8 +60,8 @@ async function setupWebhooks() {
         // Write back to .env file
         fs.writeFileSync(envPath, envContent);
         
-        console.log('✅ Webhook configured successfully!');
-        console.log('📍 Added to .env file as DISCORD_ALERT_WEBHOOK');
+        console.log('Webhook configured successfully!');
+        console.log('Added to .env file as DISCORD_ALERT_WEBHOOK');
         
         // Test the webhook
         const testNotification = await askQuestion('\nWould you like to send a test notification? (y/n): ');
@@ -70,10 +70,10 @@ async function setupWebhooks() {
             await testWebhook(webhookUrl);
         }
     } else {
-        console.log('⏭️ Webhook setup skipped');
+        console.log('Webhook setup skipped');
     }
 
-    console.log('\n📋 Next steps:');
+    console.log('\nNext steps:');
     console.log('1. Make sure your bot monitor is running: npm run monitor');
     console.log('2. The bot will now send notifications when it goes offline');
     console.log('3. Users can mention the bot to check its status when it\'s having issues');
@@ -123,13 +123,13 @@ async function testWebhook(webhookUrl) {
         }
         
         if (messageId) {
-            console.log('✅ Test notification sent successfully!');
+            console.log('Test notification sent successfully!');
             console.log('📬 Check your Discord channel for the test message');
         } else {
-            console.log('⚠️ Test notification failed - check the webhook URL');
+            console.log('Test notification failed - check the webhook URL');
         }
     } catch (error) {
-        console.log(`❌ Test failed: ${error.message}`);
+        console.log(`Test failed: ${error.message}`);
     }
 }
 

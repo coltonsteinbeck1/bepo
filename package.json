@@ -19,9 +19,12 @@
     "ytdl-core": "^4.11.5"
   },
   "name": "bepo",
-  "version": "1.0.0",
+  "version": "2.0.0",
+  "description": "A Discord bot with game notification services, voice interaction, and comprehensive monitoring capabilities",
   "type": "module",
   "main": "./src/bot.js",
+  "author": "CodeBreaker258",
+  "license": "MIT",
   "scripts": {
     "deploy": "node scripts/deploy-commands.js",
     "delete": "node scripts/delete-commands.js",
@@ -52,17 +55,17 @@
     "setup-webhooks": "node scripts/setup-webhook-notifications.js",
     "test-notifications": "node scripts/test-offline-notifications.js",
     "test-scenarios": "node scripts/test-offline-notifications.js scenarios",
-    "status": "./bepo-status.sh",
+    "status": "./scripts/bepo-status.sh",
     "status:detailed": "node scripts/check-bot-status-detailed.js",
     "setup-offline-responses": "node scripts/setup-offline-responses.js",
     "offline-monitor": "node scripts/offline-response-system.js",
     "logs": "tail -f logs/monitor.log",
     "logs:health": "tail -f logs/health-$(date +%Y-%m-%d).json",
-    "logs:bot": "tail -f serverOutput.log",
-    "logs:monitor": "tail -f monitorOutput.log",
-    "logs:offline": "tail -f offlineOutput.log",
-    "logs:all": "tail -f serverOutput.log monitorOutput.log offlineOutput.log",
-    "validate-offline": "node validate-offline-setup.js"
+    "logs:bot": "tail -f logs/serverOutput.log",
+    "logs:monitor": "tail -f logs/monitorOutput.log",
+    "logs:offline": "tail -f logs/offlineOutput.log",
+    "logs:all": "tail -f logs/serverOutput.log logs/monitorOutput.log logs/offlineOutput.log",
+    "validate-offline": "node scripts/validate-offline-setup.js"
   },
   "bin": {
     "bepo": "./src/cli.js"
@@ -71,9 +74,6 @@
     "node": "20.10.0",
     "npm": "10.2.3"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "devDependencies": {
     "@types/node": "^24.0.7",
     "@vitest/ui": "^3.2.4",

@@ -793,7 +793,7 @@ const matchPlaylistToSpotifyTracks = (youtubeVideos, spotifyTracks) => {
         }
         
         if (bestMatch) {
-            console.log(`[SPOTIFY_MATCH] ✅ Matched "${spotifyTrack.name}" to "${bestMatch.title}" (score: ${bestScore})`);
+            console.log(`[SPOTIFY_MATCH] Matched "${spotifyTrack.name}" to "${bestMatch.title}" (score: ${bestScore})`);
             usedVideoIndices.add(bestVideoIndex);
             
             matchedTracks.push({
@@ -808,7 +808,7 @@ const matchPlaylistToSpotifyTracks = (youtubeVideos, spotifyTracks) => {
                 originalIndex: i  // Add original index for sorting
             });
         } else {
-            console.log(`[SPOTIFY_MATCH] ❌ No good match found for "${spotifyTrack.name}"`);
+            console.log(`[SPOTIFY_MATCH] No good match found for "${spotifyTrack.name}"`);
         }
     }
     

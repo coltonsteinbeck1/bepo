@@ -136,7 +136,7 @@ class ErrorHandler {
         
         // Check if we're hitting error limits
         if (count >= this.maxErrorsPerHour) {
-            console.warn(`⚠️ High error rate detected for ${errorType}: ${count} errors this hour`);
+            console.warn(`High error rate detected for ${errorType}: ${count} errors this hour`);
             return true; // Indicates high error rate
         }
         
@@ -203,14 +203,14 @@ class ErrorHandler {
         try {
             return operation();
         } catch (error) {
-            console.error(`❌ Safe sync operation failed in ${context}:`, error);
+            console.error(`Safe sync operation failed in ${context}:`, error);
             this.logError(error, context);
             
             if (typeof fallback === 'function') {
                 try {
                     return fallback(error);
                 } catch (fallbackError) {
-                    console.error(`❌ Fallback operation also failed in ${context}:`, fallbackError);
+                    console.error(`Fallback operation also failed in ${context}:`, fallbackError);
                     return null;
                 }
             }
@@ -263,12 +263,12 @@ class ErrorHandler {
 
         // Handle specific Discord error types
         if (errorCode === 10062) { // Unknown interaction
-            console.warn('⚠️ Interaction expired or already acknowledged');
+            console.warn('Interaction expired or already acknowledged');
             return false; // Don't retry
         }
         
         if (errorCode === 50013) { // Missing permissions
-            console.warn('⚠️ Bot missing required permissions');
+            console.warn('Bot missing required permissions');
             if (interaction && !interaction.replied && !interaction.deferred) {
                 this.safeAsync(async () => {
                     await interaction.reply({
@@ -305,7 +305,7 @@ class ErrorHandler {
         }
 
         if (error.message?.includes('timeout')) {
-            console.warn('⏱️ Database operation timed out');
+            console.warn('Database operation timed out');
             return true; // Timeouts can be retried
         }
 
@@ -324,7 +324,7 @@ class ErrorHandler {
 
         // Handle specific voice errors
         if (error.message?.includes('VOICE_CONNECTION_TIMEOUT')) {
-            console.warn('⏱ Voice connection timed out');
+            console.warn('Voice connection timed out');
             return 'reconnect';
         }
 

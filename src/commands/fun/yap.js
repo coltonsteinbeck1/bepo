@@ -107,6 +107,7 @@ class RealtimeSession {
         this.ws = null;
         this.audioPlayer = createAudioPlayer();
         this.isConnected = false;
+        this.isCleaningUp = false;
         this.audioQueue = [];
         this.isPlaying = false;
         this.responseAudioBuffer = Buffer.alloc(0); // Accumulate full response
@@ -119,6 +120,12 @@ class RealtimeSession {
         this.minRecordingDuration = 1000; // minimum 1 second recording
         this.recordingStartTime = null;
         this.currentAudioStream = null;
+
+        // Rate limiting for OpenAI API
+        this.lastRequestTime = 0;
+        this.minRequestInterval = 5000; // Start with 5 seconds between requests
+        this.retryCount = 0;
+        this.maxRetries = 3;
 
         // User identification and memory context
         this.currentSpeakingUser = null;
@@ -151,9 +158,22 @@ class RealtimeSession {
             this.cleanup();
         });
 
+        this.connection.on(VoiceConnectionStatus.Connecting, () => {
+            console.log('Voice connection is connecting...');
+        });
+
+        this.connection.on(VoiceConnectionStatus.Destroyed, () => {
+            console.log('Voice connection destroyed');
+            this.cleanup();
+        });
+
         this.connection.on('error', (error) => {
             console.error('Voice connection error:', error);
             this.cleanup();
+        });
+
+        this.connection.on('stateChange', (oldState, newState) => {
+            console.log(`Connection state changed from ${oldState.status} to ${newState.status}`);
         });
     }
 
@@ -244,7 +264,6 @@ class RealtimeSession {
             }
         };
 
-        console.log('Sending initial session configuration');
         this.sendMessage(sessionConfig);
     }
 
@@ -286,11 +305,18 @@ class RealtimeSession {
             }
         };
 
-        console.log('Sending session configuration with user context and memory');
         this.sendMessage(sessionConfig);
     }
 
     startListening() {
+        console.log('Setting up voice receiver...');
+        
+        // Ensure receiver is available
+        if (!this.connection.receiver) {
+            console.error('Voice receiver not available');
+            return;
+        }
+
         // Set up audio receiving from Discord
         this.connection.receiver.speaking.on('start', (userId) => {
             console.log(`User ${userId} started speaking`);
@@ -302,6 +328,8 @@ class RealtimeSession {
             console.log(`User ${userId} stopped speaking`);
             this.stopRecording(userId);
         });
+
+        console.log('Voice receiver setup complete, listening for voice input...');
     }
 
     startInactivityTimer() {
@@ -413,45 +441,63 @@ class RealtimeSession {
             this.silenceTimer = null;
         }
 
-        this.currentAudioStream = this.connection.receiver.subscribe(userId, {
-            end: {
-                behavior: EndBehaviorType.AfterSilence,
-                duration: this.silenceThreshold,
-            },
-        });
+        try {
+            this.currentAudioStream = this.connection.receiver.subscribe(userId, {
+                end: {
+                    behavior: EndBehaviorType.AfterSilence,
+                    duration: this.silenceThreshold,
+                },
+            });
 
-        // Create Opus decoder
-        const opusDecoder = new prism.opus.Decoder({
-            rate: 48000,
-            channels: 2,
-            frameSize: 960
-        });
+            // Create Opus decoder with improved settings
+            const opusDecoder = new prism.opus.Decoder({
+                rate: 48000,
+                channels: 2,
+                frameSize: 960
+            });
 
-        this.currentAudioStream.pipe(opusDecoder);
+            this.currentAudioStream.pipe(opusDecoder);
 
-        opusDecoder.on('data', (pcmData) => {
-            try {
-                if (pcmData && pcmData.length > 0) {
-                    // Convert from 48kHz stereo PCM to 24kHz mono for OpenAI using cleaner method
-                    const convertedData = voiceSessionManager.constructor.convertToMono24kHz(pcmData);
-                    if (convertedData && convertedData.length > 0) {
-                        this.audioBuffer.push(convertedData);
-                        console.log(`Audio chunk: ${pcmData.length} bytes PCM -> ${convertedData.length} bytes mono`);
+            opusDecoder.on('data', (pcmData) => {
+                try {
+                    if (pcmData && pcmData.length > 0) {
+                        // Convert from 48kHz stereo PCM to 24kHz mono for OpenAI using cleaner method
+                        const convertedData = voiceSessionManager.constructor.convertToMono24kHz(pcmData);
+                        if (convertedData && convertedData.length > 0) {
+                            this.audioBuffer.push(convertedData);
+                            console.log(`Audio chunk: ${pcmData.length} bytes PCM -> ${convertedData.length} bytes mono`);
+                        } else {
+                            console.log('Warning: Audio conversion returned empty buffer');
+                        }
                     }
+                } catch (error) {
+                    console.error('Error processing decoded audio:', error);
+                    console.log('PCM data length:', pcmData ? pcmData.length : 'null');
                 }
-            } catch (error) {
-                console.error('Error processing decoded audio:', error);
-            }
-        });
+            });
 
-        opusDecoder.on('error', (error) => {
-            console.error('Opus decoder error:', error);
-        });
+            opusDecoder.on('error', (error) => {
+                console.error('Opus decoder error:', error);
+                // Try to continue recording despite decoder error
+            });
 
-        this.currentAudioStream.on('end', () => {
-            console.log('Audio stream ended');
-            this.finalizeRecording();
-        });
+            this.currentAudioStream.on('end', () => {
+                console.log('Audio stream ended');
+                this.finalizeRecording();
+            });
+
+            this.currentAudioStream.on('error', (error) => {
+                console.error('Audio stream error:', error);
+                // Clean up on stream error
+                this.isRecording = false;
+                this.audioBuffer = [];
+            });
+
+        } catch (error) {
+            console.error('Error setting up audio recording:', error);
+            this.isRecording = false;
+            this.audioBuffer = [];
+        }
     }
 
     stopRecording(userId) {
@@ -485,7 +531,7 @@ class RealtimeSession {
         const recordingDuration = Date.now() - this.recordingStartTime;
         console.log(`Recording duration: ${recordingDuration}ms, buffer chunks: ${this.audioBuffer.length}`);
 
-        // Log individual chunk sizes for debugging
+        // Log chunk information
         console.log('Individual chunk sizes:', this.audioBuffer.map(chunk => chunk.length));
 
         if (recordingDuration < this.minRecordingDuration) {
@@ -499,19 +545,26 @@ class RealtimeSession {
         const combinedAudio = Buffer.concat(this.audioBuffer);
         console.log(`Combined audio size: ${combinedAudio.length} bytes`);
 
-        // OpenAI expects at least 100ms of audio at 24kHz mono (16-bit)
-        // 24000 samples/sec * 0.2 sec * 2 bytes/sample = 9600 bytes minimum
-        // Let's be more conservative and require 200ms minimum
-        const minimumBytes = 9600; // 200ms at 24kHz mono
+        // OpenAI expects at least 0.1 seconds of audio at 24kHz mono (16-bit)
+        // 24000 samples/sec * 0.1 sec * 2 bytes/sample = 4800 bytes minimum
+        // Let's be more conservative and require 0.5 seconds minimum for better recognition
+        const minimumBytes = 24000; // 0.5 seconds at 24kHz mono
 
         if (combinedAudio.length >= minimumBytes) {
             // Fix duration calculation: bytes / (sample_rate * bytes_per_sample) * 1000 for ms
             const durationMs = (combinedAudio.length / 2) / 24000 * 1000;
             console.log(`✓ Sending ${combinedAudio.length} bytes of audio to OpenAI (${durationMs.toFixed(1)}ms)`);
-            this.sendAudioToOpenAI(combinedAudio);
+            
+            // Additional validation: ensure audio has actual content (not just silence)
+            const hasSignificantAudio = this.validateAudioContent(combinedAudio);
+            if (hasSignificantAudio) {
+                this.sendAudioToOpenAI(combinedAudio);
+            } else {
+                console.log('✗ Audio appears to be mostly silence, discarding');
+            }
         } else {
             const durationMs = (combinedAudio.length / 2) / 24000 * 1000;
-            console.log(`✗ Audio buffer too small: ${combinedAudio.length} bytes (${durationMs.toFixed(1)}ms), minimum required: ${minimumBytes} bytes (200ms)`);
+            console.log(`✗ Audio buffer too small: ${combinedAudio.length} bytes (${durationMs.toFixed(1)}ms), minimum required: ${minimumBytes} bytes (0.5s)`);
             console.log('Discarding short audio clip');
         }
 
@@ -526,6 +579,27 @@ class RealtimeSession {
         }
     }
 
+    validateAudioContent(audioBuffer) {
+        // Check if audio has significant content (not just silence/noise)
+        let significantSamples = 0;
+        const threshold = 500; // Amplitude threshold for "significant" audio
+        
+        for (let i = 0; i < audioBuffer.length - 1; i += 2) {
+            const sample = Math.abs(audioBuffer.readInt16LE(i));
+            if (sample > threshold) {
+                significantSamples++;
+            }
+        }
+        
+        const totalSamples = audioBuffer.length / 2;
+        const significantRatio = significantSamples / totalSamples;
+        
+        console.log(`Audio validation: ${significantSamples}/${totalSamples} significant samples (${(significantRatio * 100).toFixed(1)}%)`);
+        
+        // Require at least 5% of samples to be above threshold
+        return significantRatio > 0.05;
+    }
+
     sendAudioToOpenAI(audioData) {
         if (!this.isConnected || !this.ws) {
             console.log('Cannot send audio: not connected to OpenAI');
@@ -537,14 +611,43 @@ class RealtimeSession {
             return;
         }
 
+        // Rate limiting check
+        const now = Date.now();
+        if (now - this.lastRequestTime < this.minRequestInterval) {
+            const waitTime = this.minRequestInterval - (now - this.lastRequestTime);
+            console.log(`Rate limiting: waiting ${waitTime}ms before sending audio`);
+            setTimeout(() => this.sendAudioToOpenAI(audioData), waitTime);
+            return;
+        }
+        
+        this.lastRequestTime = now;
+
         try {
+            // Validate audio format before sending
+            console.log(`Preparing to send audio: ${audioData.length} bytes`);
+            
+            // Additional validation: check if it's properly formatted PCM data
+            if (audioData.length % 2 !== 0) {
+                console.log('Warning: Audio data length is odd, might indicate format issue');
+            }
+            
+            // Convert to base64 with better error handling
+            let base64Audio;
+            try {
+                base64Audio = audioData.toString('base64');
+                console.log(`Audio converted to base64: ${base64Audio.length} characters`);
+            } catch (base64Error) {
+                console.error('Error converting audio to base64:', base64Error);
+                return;
+            }
+
             // Send audio data to OpenAI Realtime API
             const audioMessage = {
                 type: 'input_audio_buffer.append',
-                audio: audioData.toString('base64')
+                audio: base64Audio
             };
 
-            console.log(`Sending audio append message: ${audioData.length} bytes`);
+            console.log(`Sending audio append message: ${audioData.length} bytes -> ${base64Audio.length} base64 chars`);
             this.sendMessage(audioMessage);
 
             // Commit the audio buffer to trigger processing
@@ -555,14 +658,14 @@ class RealtimeSession {
             console.log('Sending audio commit message');
             this.sendMessage(commitMessage);
 
-            // Trigger response generation
+            // Trigger response generation with improved instructions
             const responseMessage = {
                 type: 'response.create',
                 response: {
                     modalities: ['audio', 'text'],
                     instructions: this.currentSpeakingUser ? 
-                        `The user speaking is Discord user ID ${this.currentSpeakingUser}. Use the context provided in your system instructions to identify them and respond appropriately. If they ask about their identity, refer to the user information and memory context. Be personal and reference any relevant information you have about them.` :
-                        'Please respond to the user\'s audio input naturally and conversationally.'
+                        `The user speaking is Discord user ID ${this.currentSpeakingUser}. Use the context provided in your system instructions to identify them and respond appropriately. If they ask about their identity, refer to the user information and memory context. Be personal and reference any relevant information you have about them. Respond naturally and conversationally - this is voice chat, so keep responses concise but engaging.` :
+                        'Please respond to the user\'s audio input naturally and conversationally. Keep your response concise but engaging as this is voice chat.'
                 }
             };
 
@@ -570,6 +673,13 @@ class RealtimeSession {
             this.sendMessage(responseMessage);
         } catch (error) {
             console.error('Error sending audio to OpenAI:', error);
+            
+            // Send error feedback to user
+            if (this.currentSpeakingUser) {
+                this.interaction.followUp(
+                    `❌ Error processing audio input. Please try speaking again.`
+                ).catch(console.error);
+            }
         }
     }
 
@@ -620,6 +730,14 @@ class RealtimeSession {
                 case 'conversation.item.input_audio_transcription.completed':
                     console.log('Audio transcription completed:', message.transcript);
                     this.lastTranscript = message.transcript;
+                    
+                    // Reset rate limiting on successful transcription
+                    if (this.retryCount > 0) {
+                        console.log('✅ Transcription successful, resetting rate limiting');
+                        this.retryCount = 0;
+                        this.minRequestInterval = 5000; // Reset to default 5 seconds
+                    }
+                    
                     // Store the user's voice input as memory
                     if (this.currentSpeakingUser && message.transcript) {
                         this.storeVoiceMemory(this.currentSpeakingUser, `Voice: "${message.transcript}"`, 'conversation');
@@ -644,6 +762,53 @@ class RealtimeSession {
                     }
                     break;
 
+                case 'conversation.item.input_audio_transcription.failed':
+                    console.error('❌ Audio transcription failed:', message.error || 'Unknown transcription error');
+                    
+                    // Check if this is a rate limiting error
+                    const isRateLimit = message.error && 
+                        (message.error.message?.includes('429') || 
+                         message.error.message?.includes('Too Many Requests'));
+                    
+                    if (isRateLimit) {
+                        console.log('🔧 Rate limiting detected. Implementing exponential backoff...');
+                        this.minRequestInterval = Math.min(this.minRequestInterval * 2, 30000); // Max 30 seconds, exponential backoff
+                        this.retryCount++;
+                        
+                        if (this.currentSpeakingUser && this.retryCount <= this.maxRetries) {
+                            const waitTime = Math.round(this.minRequestInterval / 1000);
+                            this.interaction.followUp(
+                                `⏳ OpenAI rate limit hit. Waiting ${waitTime}s before next attempt... (${this.retryCount}/${this.maxRetries})`
+                            ).catch(console.error);
+                        } else if (this.retryCount > this.maxRetries) {
+                            this.interaction.followUp(
+                                `❌ OpenAI rate limit exceeded. Please wait a few minutes before trying again.`
+                            ).catch(console.error);
+                        }
+                    } else {
+                        console.log('🔧 This usually indicates an audio format issue. Checking audio conversion...');
+                        
+                        // Send a follow-up message to the user about the issue
+                        if (this.currentSpeakingUser) {
+                            try {
+                                const guild = this.interaction.guild;
+                                const member = await guild.members.fetch(this.currentSpeakingUser);
+                                const username = member ? (member.displayName || member.user.username) : 'Unknown User';
+                                
+                                this.interaction.followUp(
+                                    `⚠️ Audio transcription failed for ${username}. This might be due to:\n` +
+                                    `• Audio quality issues\n` +
+                                    `• Background noise\n` +
+                                    `• Speaking too quietly or too briefly\n` +
+                                    `\nTry speaking more clearly and for at least 1-2 seconds.`
+                                ).catch(console.error);
+                            } catch (error) {
+                                console.log('Could not send transcription error message:', error.message);
+                            }
+                        }
+                    }
+                    break;
+
                 case 'response.created':
                     console.log('Response generation started');
                     // Clear any previous response buffer
@@ -657,7 +822,7 @@ class RealtimeSession {
                     break;
 
                 case 'response.text.delta':
-                    // Capture text response for memory storage and debugging
+                    // Store text response for memory
                     if (message.delta) {
                         if (!this.lastResponseText) {
                             this.lastResponseText = '';
@@ -691,7 +856,7 @@ class RealtimeSession {
 
                 case 'response.done':
                     console.log('Full response completed');
-                    // Log the complete AI response for debugging
+                    // Log the complete AI response
                     if (this.lastResponseText) {
                         console.log(`COMPLETE AI RESPONSE: "${this.lastResponseText}"`);
                     } else {
@@ -711,6 +876,9 @@ class RealtimeSession {
 
                 default:
                     console.log('Unhandled message type:', message.type);
+                    if (message.type.startsWith('response.')) {
+                        console.log('Response message details:', JSON.stringify(message, null, 2));
+                    }
             }
         } catch (error) {
             console.error('Error handling realtime message:', error);
@@ -791,6 +959,12 @@ class RealtimeSession {
     }
 
     cleanup() {
+        if (this.isCleaningUp) {
+            console.log('Cleanup already in progress, skipping...');
+            return;
+        }
+        
+        this.isCleaningUp = true;
         console.log('Cleaning up Realtime session');
 
         if (this.silenceTimer) {
@@ -817,7 +991,7 @@ class RealtimeSession {
             this.audioPlayer.stop();
         }
 
-        if (this.connection) {
+        if (this.connection && this.connection.state.status !== VoiceConnectionStatus.Destroyed) {
             this.connection.destroy();
         }
 
@@ -827,7 +1001,9 @@ class RealtimeSession {
         }
 
         // Remove from session manager
-        voiceSessionManager.removeSession(this.connection.joinConfig.channelId);
+        if (this.connection && this.connection.joinConfig) {
+            voiceSessionManager.removeSession(this.connection.joinConfig.channelId);
+        }
 
         this.isConnected = false;
         this.isRecording = false;

@@ -28,13 +28,13 @@ class HealthMonitor {
 
         this.discordClient.on('ready', () => {
             this.isOnline = true;
-            console.log('🟢 Discord bot is ONLINE');
+            console.log('Discord bot is ONLINE');
             this.updateStatusFile();
         });
 
         this.discordClient.on('disconnect', () => {
             this.isOnline = false;
-            console.log('🔴 Discord bot is OFFLINE');
+            console.log('Discord bot is OFFLINE');
             this.updateStatusFile();
         });
 
@@ -121,10 +121,10 @@ class HealthMonitor {
         const health = errorHandler.getHealthStatus();
         
         // Log health status
-        console.log(`📊 Health Check - ${new Date().toISOString()}`);
-        console.log(`   Online: ${this.isOnline ? '🟢' : '🔴'} ${this.isOnline ? 'ONLINE' : 'OFFLINE'}`);
-        console.log(`   Healthy: ${health.healthy ? '✅' : '❌'}`);
-        console.log(`   Discord: ${this.discordClient?.isReady() ? '🔗 Connected' : '❌ Disconnected'}`);
+        console.log(`Health Check - ${new Date().toISOString()}`);
+        console.log(`   Online: ${this.isOnline ? 'ONLINE' : 'OFFLINE'}`);
+        console.log(`   Healthy: ${health.healthy ? 'YES' : 'NO'}`);
+        console.log(`   Discord: ${this.discordClient?.isReady() ? 'Connected' : 'Disconnected'}`);
         console.log(`   Errors (last hour): ${health.errorCount}`);
         console.log(`   Critical errors: ${health.criticalErrorCount}`);
         console.log(`   Uptime: ${Math.floor((Date.now() - this.startTime) / 60000)} minutes`);
@@ -135,19 +135,19 @@ class HealthMonitor {
         
         // Alert on unhealthy status
         if (!health.healthy) {
-            console.warn('🚨 HEALTH ALERT: Bot is in unhealthy state!');
+            console.warn('HEALTH ALERT: Bot is in unhealthy state!');
             this.logCriticalAlert(health);
         }
 
         // Alert on Discord disconnection
         if (this.isOnline && !this.discordClient?.isReady()) {
-            console.warn('🚨 DISCORD ALERT: Bot is online but Discord is disconnected!');
+            console.warn('DISCORD ALERT: Bot is online but Discord is disconnected!');
         }
 
         // Alert on high memory usage (> 500MB)
         const memoryMB = (health.memoryUsage?.used || 0) / 1024 / 1024;
         if (memoryMB > 500) {
-            console.warn(`🚨 MEMORY ALERT: High memory usage detected: ${Math.round(memoryMB)} MB`);
+            console.warn(`MEMORY ALERT: High memory usage detected: ${Math.round(memoryMB)} MB`);
         }
 
         this.lastHealthCheck = Date.now();

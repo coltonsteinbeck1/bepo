@@ -11,8 +11,8 @@ function getShutdownReason() {
         // Check for recent error logs
         const today = new Date().toISOString().split('T')[0];
         const errorFile = path.join(process.cwd(), 'logs', `critical-errors-${today}.json`);
-        const monitorLog = path.join(process.cwd(), 'monitorOutput.log');
-        const offlineLog = path.join(process.cwd(), 'offlineOutput.log');
+        const monitorLog = path.join(process.cwd(), 'logs', 'monitorOutput.log');
+        const offlineLog = path.join(process.cwd(), 'logs', 'offlineOutput.log');
         
         let reason = 'Unknown';
         let category = 'unknown'; // planned, error, manual, system
