@@ -1,7 +1,14 @@
 #!/bin/bash
 
 # Load configuration
-source ./scripts/bepo-config.sh
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/bepo-config.sh"
+
+# Debug: Check if variables are loaded
+if [ -z "$BEPO_SESSION_NAME" ]; then
+    echo "ERROR: Configuration not loaded properly. BEPO_SESSION_NAME is empty."
+    exit 1
+fi
 
 # Check if session already exists
 if tmux has-session -t $BEPO_SESSION_NAME 2>/dev/null; then
@@ -44,7 +51,7 @@ while true; do
 done
 
 # Start the main bot with proper logging
-echo "🤖 Starting main bot..."
+echo "Starting main bot..."
 # Clear any pending input and ensure we're at a clean prompt
 tmux send-keys -t $BEPO_SESSION_NAME:$BEPO_BOT_WINDOW C-c
 sleep 1
@@ -83,7 +90,7 @@ echo "Verifying service startup..."
 services_ok=true
 
 # Check bot process
-if ! pgrep -f "$BOT_PROCESS_PATTERN" > /dev/null; then
+if ! pgrep -f "node.*src/bot.js" > /dev/null; then
     echo "Main bot process not detected"
     services_ok=false
 else
@@ -92,7 +99,7 @@ fi
 
 # Check monitor process (if enabled)
 if [[ "$ENABLE_BOT_MONITOR" == "true" ]]; then
-    if ! pgrep -f "$MONITOR_PROCESS_PATTERN" > /dev/null; then
+    if ! pgrep -f "node.*monitor-service.js" > /dev/null; then
         echo "Monitor process not detected"
         services_ok=false
     else
@@ -102,7 +109,7 @@ fi
 
 # Check offline response process (if enabled)
 if [[ "$ENABLE_OFFLINE_MODE" == "true" ]]; then
-    if ! pgrep -f "$OFFLINE_PROCESS_PATTERN" > /dev/null; then
+    if ! pgrep -f "node.*offline-response-system.js" > /dev/null; then
         echo "Offline response process not detected"
         services_ok=false
     else
