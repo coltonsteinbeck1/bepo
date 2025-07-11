@@ -43,6 +43,7 @@ import {
 } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
+import { RoleManager } from "./utils/roleUtils.js";
 import healthMonitor from "./utils/healthMonitor.js";
 import { getStatusChecker } from "./utils/statusChecker.js";
 import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
@@ -511,13 +512,18 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         await safeAsync(async () => {
+          let result;
+          
           if (!member.roles.cache.has(roleId)) {
-            await member.roles.add(roleId);
-            await interaction.reply({ content: "Role added.", flags: MessageFlags.Ephemeral });
+            result = await RoleManager.addRole(member, roleId);
           } else {
-            await member.roles.remove(roleId);
-            await interaction.reply({ content: "Role removed.", flags: MessageFlags.Ephemeral });
+            result = await RoleManager.removeRole(member, roleId);
           }
+
+          await interaction.reply({ 
+            content: result.success ? result.message : `❌ ${result.message}`, 
+            flags: MessageFlags.Ephemeral 
+          });
         }, async (error) => {
           console.error('Role toggle error:', error);
           if (!interaction.replied) {
@@ -537,12 +543,12 @@ client.on("interactionCreate", async (interaction) => {
         }
 
         await safeAsync(async () => {
-          if (member.roles.cache.has(roleId)) {
-            await member.roles.remove(roleId);
-            await interaction.reply({ content: "Role removed.", flags: MessageFlags.Ephemeral });
-          } else {
-            await interaction.reply({ content: "You do not have this role.", flags: MessageFlags.Ephemeral });
-          }
+          const result = await RoleManager.removeRole(member, roleId);
+          
+          await interaction.reply({ 
+            content: result.success ? result.message : `❌ ${result.message}`, 
+            flags: MessageFlags.Ephemeral 
+          });
         }, async (error) => {
           console.error('Role remove error:', error);
           if (!interaction.replied) {
