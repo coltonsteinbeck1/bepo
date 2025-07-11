@@ -1,9 +1,0 @@
-
-> bepo@1.0.0 start:monitor
-> node scripts/bot-monitor.js
-
-✅ Offline notification service loaded
-[2025-07-08T00:50:35.588Z] 🔍 Bepo Monitor starting...
-[2025-07-08T00:50:35.718Z] 🔴 Bepo state changed: UNKNOWN → PROCESS_STOPPED
-[2025-07-08T00:50:35.719Z] ⚠️  Bepo is down! Process running: false, Last update: 4s ago
-[2025-07-08T00:50:35.720Z] 📬 Offline notification sent successfully

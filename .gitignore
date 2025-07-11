@@ -5,9 +5,14 @@ nohup.out
 src/images/image.png
 temp/
 logs/
+*.log
 serverOutput.log
 monitorOutput.log
 offlineOutput.log
+scripts/*.log
+scripts/serverOutput.log
+scripts/monitorOutput.log
+scripts/offlineOutput.log
 image.png
 config.toml
 data/
