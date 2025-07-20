@@ -640,13 +640,14 @@ client.on("messageCreate", async (message) => {
 
     // Only send status message if bot is actually offline/unhealthy AND this is a status request
     const messageContent = message.content.toLowerCase();
-    const isStatusRequest = messageContent.includes('status') ||
+    const isStatusRequest = (messageContent.includes('bot') && (
+      messageContent.includes('status') ||
       messageContent.includes('health') ||
-      messageContent.includes('/health') ||
       messageContent.includes('ping') ||
-      messageContent.includes('online');
+      messageContent.includes('online')
+    )) || messageContent.includes('/health');
 
-    // Only respond with status if explicitly requested or if bot is genuinely offline
+    // Only respond with status if explicitly requested with bot context or if bot is genuinely offline
     if (isStatusRequest && currentStatus && (!currentStatus.summary.operational || currentStatus.bot.reason)) {
       const statusMessage = generateStatusMessage(currentStatus);
       await safeAsync(async () => {
@@ -668,6 +669,7 @@ client.on("messageCreate", async (message) => {
 
     // Process message and check for images
     const messageData = await processMessageWithImages(message);
+    console.log(`[IMAGE DEBUG] Message data: hasImages=${messageData.hasImages}, imageUrls=${messageData.imageUrls.length}, hasGifs=${messageData.hasGifs}`);
 
     // 1) get existing context (with system prompt on first run)
     const context = await buildStreamlinedConversationContext(message);
@@ -675,6 +677,7 @@ client.on("messageCreate", async (message) => {
     let response;
 
     if (messageData.hasImages && messageData.imageUrls.length > 0) {
+      console.log(`[IMAGE DEBUG] Processing message with images - entering image processing branch`);
       // Use OpenAI with vision for image-containing messages
       const visionMessages = [...context];
 
@@ -687,6 +690,16 @@ client.on("messageCreate", async (message) => {
         imagePrompt = message.content || "this is a gif but i can only see the first frame... react to what i can see and acknowledge it's supposed to be animated. keep it real.";
       } else {
         imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
+      }
+
+      // Debug logging for image processing
+      console.log(`🖼️  Processing image message. Text length: ${imagePrompt.length} characters`);
+      
+      // Truncate very long text for vision model to prevent token limit issues
+      const MAX_VISION_TEXT_LENGTH = 1500; // Conservative limit for vision model
+      if (imagePrompt.length > MAX_VISION_TEXT_LENGTH) {
+        console.log(`⚠️  Text too long (${imagePrompt.length} chars), truncating to ${MAX_VISION_TEXT_LENGTH} chars`);
+        imagePrompt = imagePrompt.substring(0, MAX_VISION_TEXT_LENGTH) + "... [text truncated for image analysis]";
       }
 
       const userMessageContent = [
@@ -756,35 +769,8 @@ client.on("messageCreate", async (message) => {
         }
       }
 
-      // If no images were successfully processed, fall back to text-only
-      if (processedImages === 0) {
-        const userContent = messageData.processedContent;
-        appendToConversation(message, "user", userContent);
-        response = await safeAsync(async () => {
-          return await xAI.chat.completions.create({
-            model: "grok-3-mini-beta",
-            messages: [...context, {
-              role: "user",
-              content: userContent
-            }],
-          });
-        }, async (error) => {
-          const aiErrorResult = handleAIError(error, 'xai');
-          console.log("xAI connection Error:", error);
-
-          if (aiErrorResult.retry) {
-            // For retryable errors, return null so the retry can happen
-            return null;
-          } else {
-            // For non-retryable errors, send user message and return null
-            await safeAsync(async () => {
-              await message.reply("Model connection having issues - please try again in a moment");
-            }, null, 'ai_error_reply');
-            return null;
-          }
-        }, 'xai_api_call');
-      } else if (!response) {
-        // Process with vision model (only if we don't already have a response from GIF processing)
+      // Process with vision model if we have processed images and no GIF response yet
+      if (processedImages > 0 && !response) {
         visionMessages.push({
           role: "user",
           content: userMessageContent
@@ -805,6 +791,30 @@ client.on("messageCreate", async (message) => {
           }, null, 'vision_error_reply');
           return null;
         }, 'openai_vision_call');
+      }
+
+      // If no images were successfully processed OR vision failed, fall back to text-only
+      if (processedImages === 0 || !response) {
+        console.log("Falling back to text-only processing due to image processing failure or no images processed");
+        const userContent = messageData.processedContent;
+        appendToConversation(message, "user", userContent);
+        response = await safeAsync(async () => {
+          return await xAI.chat.completions.create({
+            model: "grok-3-mini-beta",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+          });
+        }, async (error) => {
+          const aiErrorResult = handleAIError(error, 'xai');
+          console.log("xAI fallback Error:", error);
+
+          await safeAsync(async () => {
+            await message.reply("Model connection having issues - please try again in a moment");
+          }, null, 'ai_error_reply');
+          return null;
+        }, 'xai_fallback_call');
       }
 
       // Store the processed message in conversation history

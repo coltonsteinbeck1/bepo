@@ -96,26 +96,32 @@ describe('Apex Utils', () => {
   });
 
   describe('filterPatchNotes', () => {
+    // Create dates relative to a fixed point to avoid weekly updates
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000);
+    const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
     const mockPatchNotes = [
       {
         id: '1',
         title: 'Season 25 Update',
         content: 'New legend Sparrow',
-        date: new Date('2025-07-05'), // 2 days ago, well within 7 days
+        date: oneDayAgo, // Recent - within 7 days
         tags: ['season', 'legend']
       },
       {
         id: '2',
         title: 'Hotfix Update',
         content: 'Bug fixes',
-        date: new Date('2025-06-20'), // 18 days ago 
+        date: tenDaysAgo, // Old - outside 7 days
         tags: ['hotfix', 'bug-fix']
       },
       {
         id: '3',
         title: 'Balance Changes',
         content: 'Weapon adjustments',
-        date: new Date('2025-06-15'), // 23 days ago
+        date: thirtyDaysAgo, // Very old
         tags: ['balance', 'weapon']
       }
     ];
@@ -140,7 +146,21 @@ describe('Apex Utils', () => {
 
     it('should filter by days ago', () => {
       const result = filterPatchNotes(mockPatchNotes, { daysAgo: 7 });
-      expect(result).toHaveLength(1); // Only the July 5 entry should be within 7 days
+      expect(result).toHaveLength(1); // Only the recent entry should be within 7 days
+      expect(result[0].title).toBe('Season 25 Update');
+    });
+
+    it('should filter by days ago - edge cases', () => {
+      // Test with different day ranges
+      const resultAll = filterPatchNotes(mockPatchNotes, { daysAgo: 365 });
+      expect(resultAll).toHaveLength(3); // All entries within a year
+
+      const resultNone = filterPatchNotes(mockPatchNotes, { daysAgo: 0 });
+      expect(resultNone).toHaveLength(0); // No entries from future
+
+      const resultRecent = filterPatchNotes(mockPatchNotes, { daysAgo: 5 });
+      expect(resultRecent).toHaveLength(1); // Only recent entry
+      expect(resultRecent[0].title).toBe('Season 25 Update');
     });
 
     it('should limit count', () => {

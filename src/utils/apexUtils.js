@@ -585,14 +585,14 @@ function filterPatchNotes(patchNotes, filters) {
     }
 
     // Filter by days ago
-    if (filters.daysAgo) {
+    if (filters.daysAgo !== undefined) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - filters.daysAgo);
         filtered = filtered.filter(note => note.date >= cutoffDate);
     }
 
     // Filter by months ago
-    if (filters.monthsAgo) {
+    if (filters.monthsAgo !== undefined) {
         const cutoffDate = new Date();
         cutoffDate.setMonth(cutoffDate.getMonth() - filters.monthsAgo);
         filtered = filtered.filter(note => note.date >= cutoffDate);

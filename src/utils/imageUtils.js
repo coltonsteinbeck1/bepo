@@ -89,7 +89,8 @@ export async function extractGifFrames(gifUrl, maxFrames = 5) {
       if (!response.ok) {
         throw new Error(`Failed to download GIF: ${response.status}`);
       }
-      buffer = await response.buffer();
+      const arrayBuffer = await response.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
     } else {
       // Read local file
       const localPath = gifUrl.replace('file://', '');
@@ -216,7 +217,8 @@ export async function convertImageToBase64(imageUrl) {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      buffer = await response.buffer();
+      const arrayBuffer = await response.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
       contentType = response.headers.get('content-type') || 'image/png';
     } else {
       // Read local file
@@ -314,7 +316,8 @@ export async function downloadImage(url) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const buffer = await response.buffer();
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
     
     // Basic validation - check if it's actually an image
     const contentType = response.headers.get('content-type');
@@ -349,20 +352,28 @@ export async function getAllImagesFromMessage(message) {
   const imageUrls = [];
   let hasGifs = false;
   
+  console.log(`[IMAGE DEBUG] Processing message for images...`);
+  console.log(`[IMAGE DEBUG] Message has ${message.attachments ? message.attachments.size : 0} attachments`);
+  
   // Check attachments
   if (message.attachments && message.attachments.size > 0) {
     message.attachments.forEach(attachment => {
+      console.log(`[IMAGE DEBUG] Checking attachment: ${attachment.name}, contentType: ${attachment.contentType}`);
       if (isDiscordImageAttachment(attachment)) {
+        console.log(`[IMAGE DEBUG] Found image attachment: ${attachment.url}`);
         imageUrls.push(attachment.url);
         if (isDiscordGif(attachment)) {
           hasGifs = true;
         }
+      } else {
+        console.log(`[IMAGE DEBUG] Attachment is not an image: ${attachment.contentType}`);
       }
     });
   }
   
   // Check for image URLs in message content
   const urlsInContent = extractImageUrls(message.content);
+  console.log(`[IMAGE DEBUG] Found ${urlsInContent.length} image URLs in content: ${JSON.stringify(urlsInContent)}`);
   urlsInContent.forEach(url => {
     imageUrls.push(url);
     if (isGifUrl(url)) {
@@ -370,5 +381,6 @@ export async function getAllImagesFromMessage(message) {
     }
   });
   
+  console.log(`[IMAGE DEBUG] Final result - imageUrls: ${imageUrls.length}, hasGifs: ${hasGifs}`);
   return { imageUrls, hasGifs };
 }

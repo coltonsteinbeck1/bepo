@@ -150,26 +150,32 @@ describe('Apex Notification System Integration', () => {
         });
 
         it('should filter patch notes correctly', async () => {
+            // Use relative dates to avoid weekly test updates
+            const now = new Date();
+            const recentDate = new Date(now.getTime() - 1 * 24 * 60 * 60 * 1000); // 1 day ago
+            const oldDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000); // 15 days ago
+            const veryOldDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 30 days ago
+
             const mockPatchNotes = [
                 {
-                    id: 'apex-2025-07-05-season26',
+                    id: 'apex-recent-season26',
                     title: 'Apex Legends: Season 26 Patch Notes',
                     content: 'New legend Viper introduced with tactical abilities',
-                    date: new Date('2025-07-05'),
+                    date: recentDate,
                     tags: ['season', 'legend', 'patch-notes']
                 },
                 {
-                    id: 'apex-2025-06-28-hotfix',
+                    id: 'apex-old-hotfix',
                     title: 'Hotfix Update',
                     content: 'Bug fixes for weapon balance',
-                    date: new Date('2025-06-28'),
+                    date: oldDate,
                     tags: ['hotfix', 'bug-fix']
                 },
                 {
-                    id: 'apex-2025-06-25-balance',
+                    id: 'apex-very-old-balance',
                     title: 'Balance Changes',
                     content: 'Weapon damage adjustments',
-                    date: new Date('2025-06-25'),
+                    date: veryOldDate,
                     tags: ['balance', 'weapon']
                 }
             ];
@@ -183,12 +189,16 @@ describe('Apex Notification System Integration', () => {
             const limitedResults = apexUtils.filterPatchNotes(mockPatchNotes, { count: 2 });
             expect(limitedResults).toHaveLength(2);
 
-            // Test date filtering (last 7 days from July 7)
+            // Test date filtering (last 7 days) - should include recent items
             const recentResults = apexUtils.filterPatchNotes(mockPatchNotes, { daysAgo: 7 });
             expect(recentResults.length).toBeGreaterThan(0);
-            expect(recentResults.every(note =>
-                new Date(note.date) >= new Date('2025-06-30')
-            )).toBe(true);
+            expect(recentResults.every(note => {
+                const cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                return new Date(note.date) >= cutoffDate;
+            })).toBe(true);
+
+            // Test that old items are filtered out
+            expect(recentResults.some(note => note.id === 'apex-old-hotfix')).toBe(false);
         });
 
         it('should handle content formatting and cleaning', async () => {
