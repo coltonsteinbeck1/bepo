@@ -1,34 +1,81 @@
 export default class MarkovChain {
-  constructor(order = 4) {
+  constructor(order = 2) {
     this.order = order;
     this.chain = {};
     this.sentenceStarters = new Set(); // Track sentence beginnings
     this.sentenceEnders = new Set(); // Track sentence endings
     this.wordFrequency = {}; // Track word frequency for better selection
     this.contextWeights = {}; // Weight certain transitions higher
+    // Add regex for user ID detection
+    this.userIdRegex = /<@!?(\d+)>/g;
+    // Store user ID to username mappings
+    this.userMappings = new Map();
+  }
+
+  // Method to set user mappings from Discord client
+  setUserMappings(client) {
+    if (client && client.users) {
+      client.users.cache.forEach(user => {
+        this.userMappings.set(user.id, user.displayName || user.username);
+      });
+    }
+  }
+
+  // Clean and preprocess text before training
+  preprocessText(text) {
+    // Replace user IDs with usernames or remove them
+    let cleanedText = text.replace(this.userIdRegex, (match, userId) => {
+      const username = this.userMappings.get(userId);
+      return username ? `@${username}` : ''; // Replace with @username or remove
+    });
+
+    // Remove URLs
+    cleanedText = cleanedText.replace(/https?:\/\/[^\s]+/g, '');
+    
+    // Remove excessive whitespace
+    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+    
+    if (!cleanedText || cleanedText.length < 10) return [];
+
+    // Split into sentences more flexibly
+    const sentences = cleanedText
+      .split(/[.!?]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 5 && s.split(' ').length >= 3) // Minimum 3 words
+      .map(s => s.replace(/[^\w\s'-@]/g, ' ').replace(/\s+/g, ' ').trim());
+    
+    return sentences;
   }
 
   train(text) {
-    // Normalize and split into sentences first
+    if (!text || text.length < 10) return;
+
+    // Preprocess the text
     const sentences = this.preprocessText(text);
+    if (!sentences || sentences.length === 0) return;
     
     for (const sentence of sentences) {
       const words = sentence.split(/\s+/).filter(word => word.length > 0);
-      if (words.length < this.order) continue;
+      if (words.length < this.order + 1) continue;
 
-      // Track sentence starters
+      // Track word frequency
+      words.forEach(word => {
+        this.wordFrequency[word] = (this.wordFrequency[word] || 0) + 1;
+      });
+
+      // Track sentence starters (first few words)
       if (words.length >= this.order) {
         const starter = words.slice(0, this.order).join(" ");
         this.sentenceStarters.add(starter);
       }
 
-      // Track sentence enders
+      // Track sentence enders (last few words) 
       if (words.length >= this.order) {
         const ender = words.slice(-this.order).join(" ");
         this.sentenceEnders.add(ender);
       }
 
-      // Build chain using a sliding window of "order" words as the key
+      // Build the chain with more flexible transitions
       for (let i = 0; i <= words.length - this.order; i++) {
         const key = words.slice(i, i + this.order).join(" ");
         const nextWord = words[i + this.order];
@@ -40,9 +87,6 @@ export default class MarkovChain {
         if (nextWord) {
           this.chain[key].push(nextWord);
           
-          // Track word frequency
-          this.wordFrequency[nextWord] = (this.wordFrequency[nextWord] || 0) + 1;
-          
           // Weight transitions based on context
           const transitionKey = `${key}|${nextWord}`;
           this.contextWeights[transitionKey] = (this.contextWeights[transitionKey] || 0) + 1;
@@ -52,14 +96,26 @@ export default class MarkovChain {
   }
 
   preprocessText(text) {
-    // Better text preprocessing
-    text = text.replace(/\s+/g, ' ').trim();
+    // Replace user IDs with usernames or remove them
+    let cleanedText = text.replace(this.userIdRegex, (match, userId) => {
+      const username = this.userMappings.get(userId);
+      return username ? `@${username}` : ''; // Replace with @username or remove
+    });
+
+    // Remove URLs
+    cleanedText = cleanedText.replace(/https?:\/\/[^\s]+/g, '');
     
-    // Split into sentences while preserving sentence structure
-    const sentences = text.split(/[.!?]+/)
+    // Remove excessive whitespace
+    cleanedText = cleanedText.replace(/\s+/g, ' ').trim();
+    
+    if (!cleanedText || cleanedText.length < 10) return [];
+
+    // Split into sentences more flexibly
+    const sentences = cleanedText
+      .split(/[.!?]+/)
       .map(s => s.trim())
-      .filter(s => s.length > 0)
-      .map(s => s.replace(/[^\w\s'-]/g, ' ').replace(/\s+/g, ' ').trim());
+      .filter(s => s.length > 5 && s.split(' ').length >= 3) // Minimum 3 words
+      .map(s => s.replace(/[^\w\s'-@]/g, ' ').replace(/\s+/g, ' ').trim());
     
     return sentences;
   }
@@ -119,133 +175,130 @@ export default class MarkovChain {
     return false;
   }
 
-  generate(startPhrase = null, length = 100, coherenceMode = true) {
-    const keys = Object.keys(this.chain);
-    if (!keys.length) return "";
-
-    let result = [];
-    let sentences = [];
-    let currentSentence = [];
-    
-    // Choose starting key: prefer sentence starters if available
-    let currentKey;
-    if (startPhrase && this.chain[startPhrase]) {
-      currentKey = startPhrase;
-    } else if (coherenceMode && this.sentenceStarters.size > 0) {
-      const starters = Array.from(this.sentenceStarters);
-      currentKey = starters[Math.floor(Math.random() * starters.length)];
-    } else {
-      currentKey = keys[Math.floor(Math.random() * keys.length)];
+  generate(startingPhrase = null, targetLength = 50, coherent = true) {
+    if (Object.keys(this.chain).length === 0) {
+      return "Not enough training data available.";
     }
 
-    currentSentence = currentKey.split(" ");
-    const usedPhrases = new Set([currentKey]);
-    const recentNgrams = new Set();
-    
-    let generatedWords = this.order;
-    const targetWords = length;
-    let loopCounter = 0;
-    const maxLoops = targetWords * 10; // Safety limit to prevent infinite loops
+    let words = [];
+    let currentKey = null;
 
-    while (generatedWords < targetWords && loopCounter < maxLoops) {
-      loopCounter++;
-      const nextWords = this.chain[currentKey];
+    // Find starting point
+    if (startingPhrase) {
+      const keys = Object.keys(this.chain);
+      const matchingKey = keys.find(key => 
+        key.toLowerCase().includes(startingPhrase.toLowerCase())
+      );
       
-      if (!nextWords || nextWords.length === 0) {
-        // End current sentence and start a new one
-        if (currentSentence.length > 0) {
-          sentences.push(currentSentence.join(" "));
-          currentSentence = [];
-        }
+      if (matchingKey) {
+        currentKey = matchingKey;
+        words = currentKey.split(' ');
+      }
+    }
+
+    // If no starting phrase or no match found, use a random sentence starter
+    if (!currentKey) {
+      if (this.sentenceStarters.size > 0) {
+        const starters = Array.from(this.sentenceStarters);
+        currentKey = starters[Math.floor(Math.random() * starters.length)];
+        words = currentKey.split(' ');
+      } else {
+        // Fallback to random key
+        const keys = Object.keys(this.chain);
+        currentKey = keys[Math.floor(Math.random() * keys.length)];
+        words = currentKey.split(' ');
+      }
+    }
+
+    // Generate text with more flexible constraints
+    let attempts = 0;
+    const maxAttempts = targetLength * 3; // Prevent infinite loops
+    
+    while (words.length < targetLength && attempts < maxAttempts) {
+      attempts++;
+      
+      const possibleNext = this.chain[currentKey];
+      if (!possibleNext || possibleNext.length === 0) {
+        // Try to find continuation with partial key match
+        const partialKey = words.slice(-Math.max(1, this.order - 1)).join(' ');
+        const matchingKeys = Object.keys(this.chain).filter(key => 
+          key.startsWith(partialKey)
+        );
         
-        // Pick a new sentence starter
-        if (coherenceMode && this.sentenceStarters.size > 0) {
-          const starters = Array.from(this.sentenceStarters).filter(key => !usedPhrases.has(key));
-          currentKey = starters.length > 0 
-            ? starters[Math.floor(Math.random() * starters.length)]
-            : Array.from(this.sentenceStarters)[Math.floor(Math.random() * this.sentenceStarters.size)];
+        if (matchingKeys.length > 0) {
+          currentKey = matchingKeys[Math.floor(Math.random() * matchingKeys.length)];
+          continue;
         } else {
-          const unusedKeys = keys.filter(key => !usedPhrases.has(key));
-          currentKey = unusedKeys.length > 0
-            ? unusedKeys[Math.floor(Math.random() * unusedKeys.length)]
-            : keys[Math.floor(Math.random() * keys.length)];
-        }
-        
-        currentSentence = currentKey.split(" ");
-        usedPhrases.add(currentKey);
-        generatedWords += this.order;
-        continue;
-      }
-
-      // Filter candidates to avoid repetition
-      const candidates = nextWords.filter(word => {
-        const keyWords = currentKey.split(" ");
-        keyWords.shift();
-        keyWords.push(word);
-        const nextNgram = keyWords.join(" ");
-
-        if (recentNgrams.has(nextNgram)) return false;
-
-        // Avoid immediate repetition in current sentence
-        const lastFewWords = currentSentence.slice(-3).join(" ");
-        if (lastFewWords.includes(word) && Math.random() < 0.7) {
-          return false;
-        }
-
-        return true;
-      });
-
-      if (candidates.length === 0) {
-        // End sentence if no good candidates
-        if (currentSentence.length > 0) {
-          sentences.push(currentSentence.join(" "));
-          currentSentence = [];
-        }
-        continue;
-      }
-
-      // Select next word using weighted selection
-      const nextWord = this.selectNextWord(candidates, currentKey);
-      currentSentence.push(nextWord);
-      generatedWords++;
-
-      // Update current key
-      const keyWords = currentKey.split(" ");
-      keyWords.shift();
-      keyWords.push(nextWord);
-      currentKey = keyWords.join(" ");
-
-      // Track recent ngrams
-      recentNgrams.add(currentKey);
-      if (recentNgrams.size > 15) {
-        recentNgrams.delete([...recentNgrams][0]);
-      }
-
-      usedPhrases.add(currentKey);
-
-      // Check if we should end the current sentence
-      if (this.shouldEndSentence(currentKey, currentSentence.length, targetWords / 3)) {
-        sentences.push(currentSentence.join(" "));
-        currentSentence = [];
-        
-        // Start new sentence if we haven't reached target length
-        if (generatedWords < targetWords && coherenceMode) {
-          const starters = Array.from(this.sentenceStarters).filter(key => !usedPhrases.has(key));
-          if (starters.length > 0) {
-            currentKey = starters[Math.floor(Math.random() * starters.length)];
-            currentSentence = currentKey.split(" ");
-            usedPhrases.add(currentKey);
-            generatedWords += this.order;
+          // Start a new sentence if we can't continue
+          if (coherent && words.length >= 10) {
+            break; // End naturally for coherent mode
+          } else {
+            // Pick a random new starting point
+            const keys = Object.keys(this.chain);
+            currentKey = keys[Math.floor(Math.random() * keys.length)];
+            continue;
           }
         }
       }
+
+      // Choose next word with some randomness
+      let nextWord;
+      if (coherent && possibleNext.length > 1) {
+        // In coherent mode, prefer more common continuations
+        const wordCounts = {};
+        possibleNext.forEach(word => {
+          wordCounts[word] = (wordCounts[word] || 0) + 1;
+        });
+        
+        // Sort by frequency and add some randomness
+        const sortedWords = Object.entries(wordCounts)
+          .sort(([,a], [,b]) => b - a)
+          .map(([word]) => word);
+        
+        // Pick from top 3 most common, or random if less options
+        const topChoices = sortedWords.slice(0, Math.min(3, sortedWords.length));
+        nextWord = topChoices[Math.floor(Math.random() * topChoices.length)];
+      } else {
+        // Random selection
+        nextWord = possibleNext[Math.floor(Math.random() * possibleNext.length)];
+      }
+
+      words.push(nextWord);
+
+      // Update current key for next iteration
+      if (words.length >= this.order) {
+        currentKey = words.slice(-this.order).join(' ');
+      }
+
+      // Check for natural sentence ending in coherent mode
+      if (coherent && words.length >= 15) {
+        const lastWord = words[words.length - 1];
+        // More flexible ending detection
+        if (lastWord.match(/[.!?]$/) || 
+            (words.length >= targetLength * 0.8 && Math.random() < 0.1)) {
+          break;
+        }
+      }
     }
 
-    // Add any remaining sentence
-    if (currentSentence.length > 0) {
-      sentences.push(currentSentence.join(" "));
+    // Clean up the result
+    let result = words.join(' ');
+    
+    // Ensure it ends properly if in coherent mode
+    if (coherent && !result.match(/[.!?]$/)) {
+      // Try to find a natural ending
+      const lastFewWords = words.slice(-3).join(' ');
+      if (this.sentenceEnders.has(lastFewWords)) {
+        result += '.';
+      } else if (words.length >= targetLength * 0.7) {
+        result += '.';
+      }
     }
 
-    return sentences.join(". ") + (sentences.length > 0 ? "." : "");
+    // Final cleanup - remove any remaining user ID patterns that might have slipped through
+    result = result.replace(this.userIdRegex, '');
+    result = result.replace(/\s+/g, ' ').trim();
+
+    return result || "Unable to generate meaningful text.";
   }
 }

@@ -25,7 +25,7 @@ describe('MarkovPersistence', () => {
     // Create a unique test file path for each test
     testFilePath = path.join(__dirname, '../../temp', `test-markov-${Date.now()}-${Math.random().toString(36).substr(2, 9)}.json`);
     persistence = new MarkovPersistence(testFilePath);
-    markovChain = new MarkovChain(3);
+    markovChain = new MarkovChain(2); // Use order 2 to match new default
   });
 
   afterEach(async () => {
@@ -70,7 +70,7 @@ describe('MarkovPersistence', () => {
       // Read and verify the saved data
       const savedData = JSON.parse(await fs.readFile(testFilePath, 'utf8'));
       
-      expect(savedData).toHaveProperty('order', 3);
+      expect(savedData).toHaveProperty('order', 2);
       expect(savedData).toHaveProperty('chain');
       expect(savedData).toHaveProperty('sentenceStarters');
       expect(savedData).toHaveProperty('sentenceEnders');
@@ -146,7 +146,7 @@ describe('MarkovPersistence', () => {
       const result = await persistence.loadChain(newMarkovChain);
       
       expect(result).toBe(true);
-      expect(newMarkovChain.order).toBe(3);
+      expect(newMarkovChain.order).toBe(2); // Should be overridden by loaded data
       expect(Object.keys(newMarkovChain.chain).length).toBeGreaterThan(0);
       expect(newMarkovChain.sentenceStarters.size).toBeGreaterThan(0);
       expect(newMarkovChain.sentenceEnders.size).toBeGreaterThan(0);
@@ -225,8 +225,8 @@ describe('MarkovPersistence', () => {
     it('should handle backward compatibility with missing fields', async () => {
       // Create data with only basic fields (simulating older version)
       const basicData = {
-        order: 3,
-        chain: { "hello world test": ["sentence"] },
+        order: 2,
+        chain: { "hello world": ["test"] },
         version: "1.0"
       };
       
@@ -236,7 +236,7 @@ describe('MarkovPersistence', () => {
       const result = await persistence.loadChain(markovChain);
       
       expect(result).toBe(true);
-      expect(markovChain.order).toBe(3);
+      expect(markovChain.order).toBe(2);
       expect(markovChain.chain).toEqual(basicData.chain);
       expect(markovChain.sentenceStarters.size).toBe(0); // Should default to empty
       expect(markovChain.sentenceEnders.size).toBe(0);

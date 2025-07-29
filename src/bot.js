@@ -398,7 +398,7 @@ function startScheduledMessaging(client) {
 // const chatContext = await getAllContext();
 const markovChannels = await getMarkovChannels();
 const markovChannelIds = markovChannels.map(channel => channel.channel_id);
-const markov = new MarkovChain(3); // Lower order for more creative output in chat context
+const markov = new MarkovChain(2); // Reduced from 3 to 2 for more creative but still coherent output
 const markovPersistence = new MarkovPersistence();
 
 // Load existing markov chain data
@@ -409,6 +409,10 @@ client.markov = markov;
 
 client.on("ready", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
+
+  // Set user mappings for markov chain
+  markov.setUserMappings(client);
+  console.log(`Markov chain configured with ${client.users.cache.size} user mappings`);
 
   // Update bot status to online
   const statusChecker = getStatusChecker();
@@ -590,6 +594,11 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
+  
+  // Update user mappings periodically (when new users are encountered)
+  if (!markov.userMappings.has(message.author.id)) {
+    markov.userMappings.set(message.author.id, message.author.displayName || message.author.username);
+  }
   
   // Only train on messages that have some substance (longer than 10 characters)
   // and filter out commands and mentions to improve training quality
@@ -921,10 +930,10 @@ client.on("messageCreate", async (message) => {
   if (markovChannelIds.includes(message.channelId.toString())) {
     if (Math.random() < 0.0033) {
       // Use enhanced generation with coherence mode enabled
-      const targetLength = Math.floor(Math.random() * 40) + 30; // 30-70 words for better sentences
+      const targetLength = Math.floor(Math.random() * 50) + 25; // 25-75 words for better variety
       const generatedText = markov.generate(null, targetLength, true); // Enable coherence mode
       
-      if (generatedText.trim().length > 20) { // Ensure minimum quality threshold
+      if (generatedText.trim().length > 15) { // Lower minimum quality threshold for more responses
         await safeAsync(async () => {
           await message.reply(generatedText);
         }, (error) => {

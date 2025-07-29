@@ -52,9 +52,11 @@ export default {
     const endersCount = markov.sentenceEnders.size;
     const uniqueWords = Object.keys(markov.wordFrequency).length;
     const totalWords = Object.values(markov.wordFrequency).reduce((sum, count) => sum + count, 0);
+    const userMappings = markov.userMappings.size;
     
-    // Find most common words
+    // Find most common words (excluding very short words for better stats)
     const topWords = Object.entries(markov.wordFrequency)
+      .filter(([word]) => word.length > 2) // Filter out very short words
       .sort(([,a], [,b]) => b - a)
       .slice(0, 5)
       .map(([word, count]) => `${word} (${count})`);
@@ -74,13 +76,18 @@ export default {
           inline: true
         },
         {
+          name: "User Data",
+          value: `**Known Users:** ${userMappings}\n**Text Preprocessing:** Enabled\n**User ID Filtering:** Active`,
+          inline: true
+        },
+        {
           name: "Most Common Words",
           value: topWords.join('\n') || "No data",
           inline: false
         }
       ],
       footer: {
-        text: "The bot learns from messages in designated channels"
+        text: "The bot learns from messages in designated channels • User IDs are filtered for better output"
       }
     };
 
@@ -105,6 +112,9 @@ export default {
     await interaction.deferReply();
 
     try {
+      // Update user mappings before generation
+      markov.setUserMappings(interaction.client);
+      
       // Generate text with the enhanced features
       let generatedText;
       
@@ -126,7 +136,7 @@ export default {
         generatedText = markov.generate(null, length, coherent);
       }
 
-      if (!generatedText || generatedText.trim().length < 10) {
+      if (!generatedText || generatedText.trim().length < 15) {
         return interaction.editReply({
           content: "❌ Failed to generate meaningful text. The training data might be insufficient."
         });
@@ -134,14 +144,14 @@ export default {
 
       // Add generation info
       const modeText = coherent ? "Coherent" : "Creative";
-      const wordCount = generatedText.replace(/\*.*?\*/g, '').split(' ').length; // Exclude italicized text from word count
-      const footer = `\n\n*Generated using ${modeText} mode • ${wordCount} words*`;
+      const wordCount = generatedText.replace(/\*.*?\*/g, '').split(' ').filter(w => w.length > 0).length; // Exclude italicized text from word count
+      const footer = `\n\n*Generated using ${modeText} mode • ${wordCount} words • User IDs filtered*`;
       
       const finalText = generatedText + footer;
       
       // Check length limit and split if necessary
       if (finalText.length > 2000) {
-        const truncated = generatedText.substring(0, 1900) + "..." + footer;
+        const truncated = generatedText.substring(0, 1850) + "..." + footer;
         await interaction.editReply(truncated);
       } else {
         await interaction.editReply(finalText);
