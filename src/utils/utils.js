@@ -77,14 +77,24 @@ export function isBotMessageOrPrefix(message) {
 }
 
 export function isBotMentioned(message, client) {
+  // Safeguard against null/undefined values
+  if (!message || !client || !client.user) {
+    return false;
+  }
+  
   // Check for direct bot mention
-  if (message.mentions.has(client.user.id)) {
+  if (message.mentions && message.mentions.users && message.mentions.users.has(client.user.id)) {
     return true;
   }
   
-  // Check for role mention (HOMONCULUS role)
-  if (process.env.HOMONCULUS && message.mentions.roles.has(process.env.HOMONCULUS)) {
+  // Check for role mention (HOMONCULUS role) - only if the role exists and message has role mentions
+  if (process.env.HOMONCULUS && message.mentions && message.mentions.roles && message.mentions.roles.has(process.env.HOMONCULUS)) {
     return true;
+  }
+  
+  // Additional safety check: ensure we're not detecting false positives from embeds or system messages
+  if (message.system || message.type !== 0) { // Type 0 is DEFAULT message type
+    return false;
   }
   
   return false;
@@ -618,11 +628,27 @@ export async function cleanDiscordMentions(text, client) {
         if (idMatch) {
           const userId = idMatch[0];
           const username = usernames[userId];
-          return username ? `@${username}` : match; // Keep original if username not found
+          if (username) {
+            // Check if the text around the mention already has @ symbol
+            const mentionStart = cleanedText.indexOf(match);
+            const charBefore = mentionStart > 0 ? cleanedText[mentionStart - 1] : '';
+            
+            // Only add @ if there isn't one already
+            if (charBefore === '@') {
+              return username; // Don't add another @
+            } else {
+              return `@${username}`; // Add @ prefix
+            }
+          }
+          return match; // Keep original if username not found
         }
         return match;
       });
     }
+    
+    // Clean up any double @ symbols that might have been created
+    cleanedText = cleanedText.replace(/@@+/g, '@');
+    
   } catch (error) {
     console.error('Error cleaning Discord mentions:', error);
     // Return original text if cleaning fails

@@ -590,6 +590,9 @@ client.on("interactionCreate", async (interaction) => {
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
+  // Add message ID tracking to prevent duplicate processing
+  const messageId = message.id;
+  
   // Update user mappings periodically (when new users are encountered)
   if (!markov.userMappings.has(message.author.id)) {
     markov.userMappings.set(message.author.id, message.author.displayName || message.author.username);
@@ -634,8 +637,16 @@ client.on("messageCreate", async (message) => {
     updateThreadActivity(message.channel.id);
   }
 
+  // Enhanced mention detection with debugging
+  const botMentioned = isBotMentioned(message, client);
+  
+  // Debug logging for mention detection (only when mentions are involved)
+  if (botMentioned || message.mentions.users.size > 0 || message.mentions.roles.size > 0) {
+    console.log(`[MENTION DEBUG] Message ${messageId}: botMentioned=${botMentioned}, userMentions=${message.mentions.users.size}, roleMentions=${message.mentions.roles.size}, content="${message.content}"`);
+  }
+
   // Check if bot was mentioned and respond with status if needed
-  if (isBotMentioned(message, client) && !isBotMessageOrPrefix(message, BOT_PREFIX) && !isInBotThread) {
+  if (botMentioned && !isBotMessageOrPrefix(message, BOT_PREFIX) && !isInBotThread) {
     // Check current bot health status
     const statusChecker = getStatusChecker();
     const currentStatus = await safeAsync(async () => {
@@ -661,7 +672,10 @@ client.on("messageCreate", async (message) => {
     }
   }
 
-  if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client) || isInBotThread) {
+  // Main message processing condition with enhanced logic
+  const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX) || botMentioned || isInBotThread;
+  
+  if (shouldProcessMessage) {
     // Start typing indicator immediately
     const sendTypingInterval = await sendTypingIndicator(message);
 
