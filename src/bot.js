@@ -193,56 +193,56 @@ function generateStatusMessage(statusReport) {
   const isOnline = statusReport.summary?.operational || statusReport.botStatus?.isOnline || false;
   const statusEmoji = isOnline ? '🟢' : '🔴';
   const statusText = isOnline ? 'ONLINE' : 'OFFLINE';
-  
+
   if (isOnline) {
     // Extract health data for online status
     const healthData = statusReport.health || {};
     const discordData = statusReport.discord || {};
     const botStatus = statusReport.botStatus || {};
-    
+
     let message = `${statusEmoji} **Bepo Status: ${statusText}**\n`;
     message += `✅ All systems operational\n`;
-    
+
     if (botStatus.uptime) {
       const uptime = formatUptime(botStatus.uptime);
       message += `⏱️ Uptime: ${uptime}\n`;
     }
-    
+
     if (healthData.memoryUsage) {
       const memMB = Math.round((healthData.memoryUsage.used / 1024 / 1024) * 100) / 100;
       message += `💾 Memory: ${memMB} MB\n`;
     }
-    
+
     if (discordData.connected) {
       message += `🌐 Discord: Connected (${discordData.guilds || 0} guilds, ${discordData.users || 0} users)\n`;
     }
-    
+
     if (healthData.errorCount !== undefined) {
       message += `🐛 Errors: ${healthData.errorCount}`;
     }
-    
+
     return message;
   } else {
     // Extract offline data - use same timestamp source as webhook
     let lastSeen = 'Unknown';
-    
+
     if (statusReport.botStatus?.lastSeen) {
       lastSeen = `<t:${Math.floor(new Date(statusReport.botStatus.lastSeen).getTime() / 1000)}:R>`;
     } else if (statusReport.bot?.lastSeen) {
       lastSeen = `<t:${Math.floor(new Date(statusReport.bot.lastSeen).getTime() / 1000)}:R>`;
     }
-    
+
     let reason = 'Bot process not detected';
     if (statusReport.botStatus?.reason) {
       reason = statusReport.botStatus.reason;
     } else if (statusReport.bot?.reason) {
       reason = statusReport.bot.reason;
     }
-    
+
     return `${statusEmoji} **Bepo Status: ${statusText}**\n` +
-           `🕒 Last seen: ${lastSeen}\n` +
-           `❓ Reason: ${reason}\n` +
-           `\n*Bepo may be temporarily unavailable. Please try again later.*`;
+      `🕒 Last seen: ${lastSeen}\n` +
+      `❓ Reason: ${reason}\n` +
+      `\n*Bepo may be temporarily unavailable. Please try again later.*`;
   }
 }
 
@@ -251,7 +251,7 @@ function formatUptime(seconds) {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
-  
+
   if (hours > 0) {
     return `${hours}h ${minutes}m ${secs}s`;
   } else if (minutes > 0) {
@@ -290,15 +290,10 @@ client.commands.set("apex", apexCommand);
 client.commands.set("apexnotify", apexNotifyCommand);
 
 
-// OpenAI API key for xAI (Grok)
+// xAI API for Grok-4 (unified text and vision)
 const xAI = new OpenAI({
   apiKey: process.env.xAI_KEY,
   baseURL: "https://api.x.ai/v1",
-});
-
-// OpenAI API for vision capabilities
-const openAI = new OpenAI({
-  apiKey: process.env.OPENAI_KEY,
 });
 
 // Initialize Supabase and get the bot token and prefix, and emojis
@@ -517,16 +512,16 @@ client.on("interactionCreate", async (interaction) => {
 
         await safeAsync(async () => {
           let result;
-          
+
           if (!member.roles.cache.has(roleId)) {
             result = await RoleManager.addRole(member, roleId);
           } else {
             result = await RoleManager.removeRole(member, roleId);
           }
 
-          await interaction.reply({ 
-            content: result.success ? result.message : `❌ ${result.message}`, 
-            flags: MessageFlags.Ephemeral 
+          await interaction.reply({
+            content: result.success ? result.message : `❌ ${result.message}`,
+            flags: MessageFlags.Ephemeral
           });
         }, async (error) => {
           console.error('Role toggle error:', error);
@@ -548,10 +543,10 @@ client.on("interactionCreate", async (interaction) => {
 
         await safeAsync(async () => {
           const result = await RoleManager.removeRole(member, roleId);
-          
-          await interaction.reply({ 
-            content: result.success ? result.message : `❌ ${result.message}`, 
-            flags: MessageFlags.Ephemeral 
+
+          await interaction.reply({
+            content: result.success ? result.message : `❌ ${result.message}`,
+            flags: MessageFlags.Ephemeral
           });
         }, async (error) => {
           console.error('Role remove error:', error);
@@ -594,20 +589,20 @@ client.on("interactionCreate", async (interaction) => {
 
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  
+
   // Update user mappings periodically (when new users are encountered)
   if (!markov.userMappings.has(message.author.id)) {
     markov.userMappings.set(message.author.id, message.author.displayName || message.author.username);
   }
-  
+
   // Only train on messages that have some substance (longer than 10 characters)
   // and filter out commands and mentions to improve training quality
-  if (message.content.length > 10 && 
-      !message.content.startsWith(BOT_PREFIX) && 
-      !message.mentions.users.has(client.user.id)) {
+  if (message.content.length > 10 &&
+    !message.content.startsWith(BOT_PREFIX) &&
+    !message.mentions.users.has(client.user.id)) {
     markov.train(message.content);
   }
-  
+
   // Meme reactions
   await memeFilter(message);
 
@@ -667,6 +662,7 @@ client.on("messageCreate", async (message) => {
   }
 
   if (isBotMessageOrPrefix(message, BOT_PREFIX) || isBotMentioned(message, client) || isInBotThread) {
+    // Start typing indicator immediately
     const sendTypingInterval = await sendTypingIndicator(message);
 
     if (message.content.match(/^reset bot$/i)) {
@@ -680,18 +676,22 @@ client.on("messageCreate", async (message) => {
     const messageData = await processMessageWithImages(message);
     console.log(`[IMAGE DEBUG] Message data: hasImages=${messageData.hasImages}, imageUrls=${messageData.imageUrls.length}, hasGifs=${messageData.hasGifs}`);
 
+    // Add timing for performance monitoring
+    const processingStartTime = Date.now();
+
     // 1) get existing context (with system prompt on first run)
     const context = await buildStreamlinedConversationContext(message);
 
     let response;
 
     if (messageData.hasImages && messageData.imageUrls.length > 0) {
-      console.log(`[IMAGE DEBUG] Processing message with images - entering image processing branch`);
-      // Use OpenAI with vision for image-containing messages
+      console.log(`[IMAGE DEBUG] Processing message with images - using Grok-4 vision`);
+
+      // Use Grok-4 with vision for image-containing messages
       const visionMessages = [...context];
 
       // Replace the system message with the image-specific one
-      visionMessages[0] = { role: "system", content: process.env.IMAGE_SYSTEM_PROMPT };
+      visionMessages[0] = { role: "system", content: process.env.MODEL_SYSTEM_MESSAGE };
 
       // Build the user message with image content
       let imagePrompt;
@@ -702,10 +702,10 @@ client.on("messageCreate", async (message) => {
       }
 
       // Debug logging for image processing
-      console.log(`🖼️  Processing image message. Text length: ${imagePrompt.length} characters`);
-      
-      // Truncate very long text for vision model to prevent token limit issues
-      const MAX_VISION_TEXT_LENGTH = 1500; // Conservative limit for vision model
+      console.log(`🖼️  Processing image message with Grok-4. Text length: ${imagePrompt.length} characters`);
+
+      // Grok-4 has a 256k context window, so we can be more generous with text length
+      const MAX_VISION_TEXT_LENGTH = 4000; // Increased limit for Grok-4
       if (imagePrompt.length > MAX_VISION_TEXT_LENGTH) {
         console.log(`⚠️  Text too long (${imagePrompt.length} chars), truncating to ${MAX_VISION_TEXT_LENGTH} chars`);
         imagePrompt = imagePrompt.substring(0, MAX_VISION_TEXT_LENGTH) + "... [text truncated for image analysis]";
@@ -749,7 +749,7 @@ client.on("messageCreate", async (message) => {
               break; // Process one GIF at a time for now
             } else {
               console.log("GIF frame extraction failed, falling back to single frame");
-              // Fall back to single frame processing
+              // Fall back to single frame processing with Grok-4
               const base64Image = await convertImageToBase64(imageUrl);
               userMessageContent.push({
                 type: "image_url",
@@ -761,7 +761,7 @@ client.on("messageCreate", async (message) => {
               processedImages++;
             }
           } else {
-            // Regular image processing
+            // Regular image processing with Grok-4
             const base64Image = await convertImageToBase64(imageUrl);
             userMessageContent.push({
               type: "image_url",
@@ -778,7 +778,7 @@ client.on("messageCreate", async (message) => {
         }
       }
 
-      // Process with vision model if we have processed images and no GIF response yet
+      // Process with Grok-4 vision if we have processed images and no GIF response yet
       if (processedImages > 0 && !response) {
         visionMessages.push({
           role: "user",
@@ -786,44 +786,48 @@ client.on("messageCreate", async (message) => {
         });
 
         response = await safeAsync(async () => {
-          return await openAI.chat.completions.create({
-            model: "gpt-4o-mini",
+          return await xAI.chat.completions.create({
+            model: "grok-4",
             messages: visionMessages,
-            max_tokens: 1000,
+            max_tokens: 2000,
+            temperature: 0.8, // Slightly lower for faster, more focused responses
+            stream: false, // Ensure we're not using streaming for better timing
           });
         }, async (error) => {
-          const aiErrorResult = handleAIError(error, 'openai');
-          console.log("OpenAI Image Error:", error);
+          const aiErrorResult = handleAIError(error, 'xai_vision');
+          console.log("Grok-4 Vision Error:", error);
 
           await safeAsync(async () => {
-            await message.reply("Image model connection having issues - please try again in a moment");
+            await message.reply("Grok-4 vision model having issues - please try again in a moment");
           }, null, 'vision_error_reply');
           return null;
-        }, 'openai_vision_call');
+        }, 'grok4_vision_call');
       }
 
-      // If no images were successfully processed OR vision failed, fall back to text-only
+      // If no images were successfully processed OR vision failed, fall back to text-only Grok-4
       if (processedImages === 0 || !response) {
-        console.log("Falling back to text-only processing due to image processing failure or no images processed");
+        console.log("Falling back to text-only Grok-4 processing due to image processing failure or no images processed");
         const userContent = messageData.processedContent;
         appendToConversation(message, "user", userContent);
         response = await safeAsync(async () => {
           return await xAI.chat.completions.create({
-            model: "grok-3-mini-beta",
+            model: "grok-4",
             messages: [...context, {
               role: "user",
               content: userContent
             }],
+            temperature: 0.8, // Balanced for speed and creativity
+            stream: false, // Disable streaming for better response timing
           });
         }, async (error) => {
           const aiErrorResult = handleAIError(error, 'xai');
-          console.log("xAI fallback Error:", error);
+          console.log("Grok-4 fallback Error:", error);
 
           await safeAsync(async () => {
-            await message.reply("Model connection having issues - please try again in a moment");
+            await message.reply("Grok-4 model connection having issues - please try again in a moment");
           }, null, 'ai_error_reply');
           return null;
-        }, 'xai_fallback_call');
+        }, 'grok4_fallback_call');
       }
 
       // Store the processed message in conversation history
@@ -831,27 +835,29 @@ client.on("messageCreate", async (message) => {
         appendToConversation(message, "user", message.content + " [User shared an image]");
       }
     } else {
-      // Use xAI (Grok) for text-only messages
+      // Use Grok-4 for text-only messages
       const userContent = messageData.processedContent;
       appendToConversation(message, "user", userContent);
 
       response = await safeAsync(async () => {
         return await xAI.chat.completions.create({
-          model: "grok-3-mini-beta",
+          model: "grok-4",
           messages: [...context, {
             role: "user",
             content: userContent
           }],
+          temperature: 0.8, // Balanced for speed and creativity
+          stream: false, // Disable streaming for better response timing
         });
       }, async (error) => {
         const aiErrorResult = handleAIError(error, 'xai');
-        console.log("xAI connection Error:", error);
+        console.log("Grok-4 connection Error:", error);
 
         await safeAsync(async () => {
-          await message.reply("Model connection having issues - please try again in a moment");
+          await message.reply("Grok-4 model connection having issues - please try again in a moment");
         }, null, 'ai_error_reply');
         return null;
-      }, 'xai_fallback_call');
+      }, 'grok4_call');
     }
 
     clearInterval(sendTypingInterval);
@@ -860,6 +866,10 @@ client.on("messageCreate", async (message) => {
       message.reply("No message recieved. I am struggling fr");
       return;
     }
+
+    // Calculate processing time for monitoring
+    const processingTime = Date.now() - processingStartTime;
+    console.log(`🕒 Processing completed in ${processingTime}ms`);
 
     const responseMessage = response.choices[0].message.content;
 
@@ -932,7 +942,7 @@ client.on("messageCreate", async (message) => {
       // Use enhanced generation with coherence mode enabled
       const targetLength = Math.floor(Math.random() * 50) + 25; // 25-75 words for better variety
       const generatedText = markov.generate(null, targetLength, true); // Enable coherence mode
-      
+
       if (generatedText.trim().length > 15) { // Lower minimum quality threshold for more responses
         await safeAsync(async () => {
           await message.reply(generatedText);

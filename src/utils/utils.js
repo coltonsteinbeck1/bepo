@@ -91,10 +91,19 @@ export function isBotMentioned(message, client) {
 }
 
 export async function sendTypingIndicator(message) {
+  // Send initial typing immediately
   await message.channel.sendTyping();
+  
+  // Continue sending typing every 8 seconds (reduced from 15 for more responsive feel)
+  // Discord typing indicators last ~10 seconds, so 8 seconds ensures continuous indication
   return setInterval(async () => {
-    await message.channel.sendTyping();
-  }, 15000);
+    try {
+      await message.channel.sendTyping();
+    } catch (error) {
+      // Silently handle typing errors (channel might be deleted, etc.)
+      console.log('Typing indicator error (non-critical):', error.message);
+    }
+  }, 8000);
 }
 
 export function processPreviousMessages(previousMessages) {
