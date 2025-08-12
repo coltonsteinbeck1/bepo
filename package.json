@@ -26,6 +26,11 @@
   "author": "CodeBreaker258",
   "license": "MIT",
   "scripts": {
+  "db:migrate": "supabase migration up",
+  "db:migrate:rag": "supabase db execute --file database/migrations/20250811_add_rag_tables.sql",
+  "rag:ingest": "node src/rag/ingestCsv.js",
+  "rag:ingest:json": "node src/rag/ingestJson.js",
+  "rag:ask": "node src/rag/ask.js",
     "deploy": "node scripts/deploy-commands.js",
     "delete": "node scripts/delete-commands.js",
     "generate": "node src/dalle/cli.js generate",

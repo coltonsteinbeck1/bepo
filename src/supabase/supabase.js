@@ -534,7 +534,31 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
       console.log(`No server ID provided, skipping server memories`);
     }
     
-    // Build context string
+        // Optionally include RAG context (from CSV-ingested docs)
+        let ragContext = '';
+        try {
+            if (process.env.RAG_ENABLED === 'true' && currentMessage && currentMessage.trim().length > 0) {
+                const { fetchRagMatches } = await import('../rag/ragService.js');
+                // Reuse this module's supabase client to avoid re-init
+                const filter = process.env.RAG_DATASET ? { dataset: process.env.RAG_DATASET } : {};
+                const matches = await fetchRagMatches(supabase, currentMessage, {
+                    matchCount: 5,
+                    threshold: 0.2,
+                    filter
+                });
+                if (matches && matches.length) {
+                    ragContext += '=== RETRIEVED KNOWLEDGE (CSV) ===\n';
+                    for (const m of matches) {
+                        ragContext += `• ${m.content}\n`;
+                    }
+                    ragContext += '\nUse the retrieved knowledge above when relevant.\n\n';
+                }
+            }
+        } catch (e) {
+            console.error('RAG retrieval failed:', e?.message || e);
+        }
+
+        // Build context string
     let context = '';
     
     // Add server memories first (they're important for server context)
@@ -585,7 +609,12 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
       console.log('No server memories found or no server ID provided');
     }
     
-    if (uniqueMemories.length > 0) {
+        // Add retrieved knowledge before memories for better grounding
+        if (ragContext) {
+            context += ragContext;
+        }
+
+        if (uniqueMemories.length > 0) {
       context += 'Previous Conversations:\n';
       uniqueMemories.slice(0, 5).forEach(memory => {
         const timeAgo = getTimeAgo(memory.updated_at);
