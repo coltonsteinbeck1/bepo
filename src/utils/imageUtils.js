@@ -212,14 +212,32 @@ export async function convertImageToBase64(imageUrl) {
     
     // Check if it's a local file path or URL
     if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      // Download from URL
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // Download from URL (with timeout & fallback)
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+      let response;
+      try {
+        response = await fetch(imageUrl, { signal: controller.signal });
+      } catch (err) {
+        throw new Error(`Network fetch failed for image: ${err.message}`);
+      } finally {
+        clearTimeout(timeout);
       }
-      const arrayBuffer = await response.arrayBuffer();
-      buffer = Buffer.from(arrayBuffer);
-      contentType = response.headers.get('content-type') || 'image/png';
+      if (!response || !response.ok) {
+        throw new Error(`HTTP error fetching image (status=${response?.status})`);
+      }
+      // Some environments may not support arrayBuffer if body consumed differently; guard
+      if (typeof response.arrayBuffer !== 'function') {
+        throw new Error('Response.arrayBuffer not available in fetch implementation');
+      }
+      try {
+        const arrayBuffer = await response.arrayBuffer();
+        buffer = Buffer.from(arrayBuffer);
+      } catch (err) {
+        throw new Error(`Failed reading image arrayBuffer: ${err.message}`);
+      }
+      const hdr = response.headers?.get ? response.headers.get('content-type') : null;
+      contentType = hdr && /image\//i.test(hdr) ? hdr : 'image/png';
     } else {
       // Read local file
       const localPath = imageUrl.replace('file://', '');
@@ -247,11 +265,18 @@ export async function convertImageToBase64(imageUrl) {
     }
     
     // Convert buffer to base64
+    if (!buffer || !Buffer.isBuffer(buffer)) {
+      throw new Error('Image download produced invalid buffer');
+    }
     const base64 = buffer.toString('base64');
+    if (!base64 || base64.length < 16) {
+      throw new Error('Encoded base64 string unexpectedly short');
+    }
     return `data:${contentType};base64,${base64}`;
   } catch (error) {
-    console.error("Error converting image to base64:", error);
-    throw new Error("Failed to process image for vision model");
+    console.error("Error converting image to base64:", error?.message || error);
+    // Re-throw with more context for upstream logging
+    throw new Error(`Failed to process image for vision model (${error?.message || 'unknown error'})`);
   }
 }
 

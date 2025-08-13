@@ -333,41 +333,37 @@ async function getUserMemoryStats(userId) {
 
 // Memory utility functions
 function extractKeywords(message) {
-  if (!message || typeof message !== 'string') return [];
-  
-  // Remove Discord mentions first
-  let cleanMessage = message.replace(/<@!?\d+>/g, '').trim();
-  
-  // If the message is too short after cleaning, provide some default search terms
-  if (cleanMessage.length < 3) {
-    console.log(`Message too short after cleaning mentions: "${cleanMessage}" - using fallback terms`);
-    return ['creator', 'who', 'what', 'plays', 'game']; // Common fallback terms
-  }
-  
-  // Remove common words and extract meaningful terms
-  const commonWords = ['the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'this', 'that', 'is', 'was', 'are', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could', 'should', 'can', 'may', 'might'];
-  
-  // Extract important question words and concepts that are likely in server memories
-  const importantTerms = ['who', 'what', 'when', 'where', 'how', 'why', 'creator', 'created', 'made', 'maker', 'plays', 'playing', 'game', 'games', 'final', 'fantasy', 'ff', 'bot', 'developer', 'built', 'coded', 'programming', 'most'];
-  
-  const words = cleanMessage.toLowerCase()
-    .replace(/[^\w\s]/g, ' ')
-    .split(/\s+/)
-    .filter(word => {
-      // Include important terms even if they're short, exclude common words
-      if (importantTerms.includes(word)) return true;
-      return word.length > 2 && !commonWords.includes(word);
-    })
-    .slice(0, 7); // Increased to 7 keywords to capture more context
-  
-  // If no meaningful words found, add some common search terms
-  if (words.length === 0) {
-    console.log(`No meaningful keywords found in "${cleanMessage}" - using fallback terms`);
-    return ['creator', 'who', 'what', 'plays', 'game'];
-  }
-  
-  console.log(`Extracted keywords from "${cleanMessage}": [${words.join(', ')}]`);
-  return words;
+    if (!message || typeof message !== 'string') return [];
+
+    let cleanMessage = message
+        .replace(/<@&?\d+>/g, '') // role mentions
+        .replace(/<@!?\d+>/g, '') // user mentions
+        .replace(/<#[0-9]+>/g, '') // channel mentions
+        .trim();
+
+    // Strip if only emojis/punctuation
+    if (cleanMessage && /^(?:[\p{P}\p{S}\s]|:[^:]+:)+$/u.test(cleanMessage)) {
+        cleanMessage = '';
+    }
+
+    if (cleanMessage.length < 3) {
+        return ['who','what','game'];
+    }
+
+    const commonWords = new Set(['the','a','an','and','or','but','in','on','at','to','for','of','with','by','i','you','he','she','it','we','they','this','that','is','was','are','were','be','been','have','has','had','do','does','did','will','would','could','should','can','may','might']);
+    const importantTerms = new Set(['who','what','when','where','how','why','creator','created','made','maker','plays','playing','game','games','final','fantasy','ff','bot','developer','built','coded','programming','most']);
+
+    const words = cleanMessage.toLowerCase()
+        .replace(/[^\w\s]/g, ' ')
+        .split(/\s+/)
+        .filter(Boolean)
+        .filter(w => importantTerms.has(w) || (w.length > 2 && !commonWords.has(w)))
+        .slice(0,7);
+
+    if (words.length === 0) {
+        return ['who','what','game'];
+    }
+    return words;
 }
 
 function getTimeAgo(timestamp) {
