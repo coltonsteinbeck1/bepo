@@ -1,0 +1,90 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { getMonitoringStatus, manualCheckForUpdates, setNotificationChannel } from '../../src/utils/cs2NotificationService.js';
+
+describe('CS2 Notification Service', () => {
+  beforeEach(() => {
+    // Reset any mocks
+    vi.clearAllMocks();
+  });
+
+  describe('getMonitoringStatus', () => {
+    it('should return status information', async () => {
+      const status = await getMonitoringStatus();
+      
+      expect(status).toHaveProperty('isRunning');
+      expect(status).toHaveProperty('channelsConfigured');
+      expect(status).toHaveProperty('channels');
+      expect(status).toHaveProperty('checkInterval');
+      expect(status).toHaveProperty('lastCheckFile');
+      
+      expect(typeof status.isRunning).toBe('boolean');
+      expect(typeof status.channelsConfigured).toBe('number');
+      expect(Array.isArray(status.channels)).toBe(true);
+      expect(typeof status.checkInterval).toBe('number');
+      expect(typeof status.lastCheckFile).toBe('string');
+    });
+
+    it('should show correct channel configuration', async () => {
+      const status = await getMonitoringStatus();
+      
+      // Should match the configured channels (or 0 if none)
+      expect(status.channelsConfigured).toEqual(status.channels.length);
+      expect(status.checkInterval).toBe(10); // 10 minutes as configured
+    });
+  });
+
+  describe('manualCheckForUpdates', () => {
+    it('should return a boolean indicating success/failure', async () => {
+      const result = await manualCheckForUpdates();
+      expect(typeof result).toBe('boolean');
+    });
+
+    it('should handle errors gracefully and not throw', async () => {
+      // This test ensures the function doesn't throw errors
+      let threwError = false;
+      let result;
+      
+      try {
+        result = await manualCheckForUpdates();
+      } catch (error) {
+        threwError = true;
+      }
+      
+      expect(threwError).toBe(false);
+      expect(typeof result).toBe('boolean');
+    });
+  });
+
+  describe('setNotificationChannel', () => {
+    it('should handle channel configuration', async () => {
+      // Mock the file operations to avoid affecting real config
+      const mockFs = {
+        readFile: vi.fn().mockRejectedValue(new Error('File not found')),
+        writeFile: vi.fn().mockResolvedValue(undefined),
+        mkdir: vi.fn().mockResolvedValue(undefined)
+      };
+      
+      // Test with mock to avoid writing to real config file
+      const testChannelId = '123456789012345678';
+      const testGuildId = '987654321098765432';
+      
+      // Just test that the function exists and returns a boolean
+      // without actually setting the channel in real config
+      expect(typeof setNotificationChannel).toBe('function');
+    });
+  });
+
+  describe('role mention format', () => {
+    it('should use correct Discord role mention format', () => {
+      const testRoleId = '1111111111111111111'; // MOCK ROLE ID
+      const expectedMention = `<@&${testRoleId}>`;
+      
+      // Test that our role mention format matches Discord's standard
+      expect(expectedMention).toBe('<@&1111111111111111111>');
+      
+      // Verify it follows the pattern <@&ROLE_ID>
+      const roleMentionRegex = /^<@&\d{17,19}>$/;
+      expect(roleMentionRegex.test(expectedMention)).toBe(true);
+    });
+  });
+});

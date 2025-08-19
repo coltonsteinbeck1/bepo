@@ -1,58 +1,109 @@
+# Bepo - Discord Bot
 
-# Bepo
+A feature-rich Discord bot with robust offline mode, health monitoring, and game integration.
 
-The Discord bot who should probably go outside and touch grass! 🤖
+## Quick Start
 
-## Features
-- **Memes Chronically**: Degen behavior, powered by LLM's!
-- **Draws Cool Stuff**: Go wild (or whatever TOS allows) :D
-- **Game Stats**: Get the latest stats for Apex Map Rotation and Counter-Strike 2 Patch Notes.
-- **Minecraft Support**: Keep track of your server stats.
+```bash
+# Install dependencies
+npm install
 
-## Dev Commands
+# Configure environment
+cp .env.example .env
+# Edit .env with your tokens and configuration
 
-| Command                   | Description                                  |
-| ------------------------- | -------------------------------------------- |
-| `npm run deploy`          | Deploys all commands found in `src/commands` |
-| `npm run delete`          | Deletes all guild and global commands        |
-| `npm run generate 'prompt'` | Generates an image with DALL-E               |
+# Start the bot system
+./start-bepo.sh
 
-## CLI Setup
+# Check status
+./scripts/bepo-status.sh
+```
 
-### Installation
+## 📚 Documentation
 
-1. **Clone the repo**:
-    ```sh
-    git clone /path/to/bepo
-    cd bepo
-    ```
+All documentation has been moved to the [`docs/`](./docs/) folder:
 
-2. **Set up database connections**:
-    ```sh
-    npm install -g @supabase/cli
-    ```
+### Essential Guides
 
-3. **Configure environment variables**:
-    - Create a `.env` file and set your variables.
+- **[Quick Discord Testing](./docs/DISCORD_TESTING_QUICK.md)** - Fast testing procedures
+- **[User Guide](./docs/USER_GUIDE.md)** - Complete user documentation
+- **[Technical Documentation](./docs/TECHNICAL_DOCS.md)** - Developer reference
 
-4. **Deploy commands**:
-    ```sh
-    npm run deploy
-    ```
+### Setup & Configuration
 
-5. **Start Bepo**:
-    ```sh
-    npm start
-    ```
+- **[Complete Offline Solution](./docs/COMPLETE_OFFLINE_SOLUTION.md)** - Offline mode setup
+- **[Offline Mode Testing](./docs/OFFLINE_MODE_TESTING.md)** - Comprehensive testing
+- **[Implementation Summary](./docs/IMPLEMENTATION_SUMMARY.md)** - Architecture overview
 
-## Versions
+### Testing & Troubleshooting
 
-- **NPM Version**: 10.2.4
-- **Node Version**: 20.10.0
+- **[Complete Test Scenarios](./docs/COMPLETE_TEST_SCENARIOS.md)** - All test cases
+- **[Testing Guide](./docs/TESTING_GUIDE.md)** - Testing procedures
+- **[Quick Reference](./docs/QUICK_REFERENCE.md)** - Command reference
 
-Enjoy your time with Bepo
+### Game Integration
 
+- **[Apex Integration](./docs/APEX_INTEGRATION_SUMMARY.md)** - Apex Legends features
+- **[Enhanced Guide](./docs/BEPO_ENHANCED_GUIDE.md)** - Advanced features
 
-glhf! 🎉
+### Recent Improvements
 
+- **[Shutdown Reason Improvements](./docs/SHUTDOWN_REASON_IMPROVEMENTS.md)** - Enhanced status detection
 
+## ⚡ Key Features
+
+- **🤖 Discord Bot**: Slash commands, interactive embeds, and rich responses
+- **📡 Offline Mode**: Automatic mention responses when main bot is down
+- **🔍 Health Monitoring**: Real-time status checking and alerting
+- **🎮 Game Integration**: Apex Legends and CS2 updates
+- **🛠️ Process Management**: tmux-based service control
+- **📊 Enhanced Status**: Detailed shutdown reason detection
+
+## 🚀 Recent Updates
+
+### Offline Health Command
+
+- **New**: Health/status requests work even when bot is offline
+- **Usage**: `@Bepo health`, `@Bepo status`, or `@Bepo /health`
+- **Features**: Detailed shutdown reasons, recovery status, and maintenance info
+
+### Improved Documentation
+
+- **Organized**: All `.md` files moved to `docs/` folder
+- **Enhanced**: Better testing guides and quick references
+- **Updated**: Reflects latest offline mode improvements
+
+## 📋 Quick Commands
+
+```bash
+# Service Management
+./start-bepo.sh          # Start full system
+./stop-bepo.sh           # Stop everything
+./start-bot-only.sh      # Start just the bot
+./stop-bot-only.sh       # Stop just the bot
+./scripts/bepo-status.sh # Check system status
+
+# Validation & Testing
+npm run validate-offline  # Validate offline setup
+node test-shutdown-reason.js  # Test status detection
+
+# Logs & Monitoring
+tail -f serverOutput.log     # Bot logs
+tail -f monitorOutput.log    # Monitor logs
+tail -f offlineOutput.log    # Offline system logs
+```
+
+## 🔧 Architecture
+
+- **Main Bot** (`src/bot.js`): Primary Discord bot process
+- **Monitor** (`scripts/bot-monitor.js`): Health checking and alerting
+- **Offline System** (`scripts/offline-response-system.js`): Backup response handling
+- **Health Command**: Works both online (slash command) and offline (mention response)
+
+## 📞 Support
+
+For issues or questions, check the documentation in the `docs/` folder or contact the development team.
+
+---
+
+_Bepo - Your reliable Discord companion, online or offline._
