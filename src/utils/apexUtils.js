@@ -578,24 +578,24 @@ function filterPatchNotes(patchNotes, filters) {
     if (filters.keyword) {
         const keyword = filters.keyword.toLowerCase();
         filtered = filtered.filter(note =>
-            note.title.toLowerCase().includes(keyword) ||
-            note.content.toLowerCase().includes(keyword) ||
-            note.tags.some(tag => tag.includes(keyword))
+            (note.title && note.title.toLowerCase().includes(keyword)) ||
+            (note.content && note.content.toLowerCase().includes(keyword)) ||
+            (note.tags && Array.isArray(note.tags) && note.tags.some(tag => tag.toLowerCase().includes(keyword)))
         );
     }
 
     // Filter by days ago
-    if (filters.daysAgo !== undefined) {
+    if (filters.daysAgo !== undefined && filters.daysAgo !== null) {
         const cutoffDate = new Date();
         cutoffDate.setDate(cutoffDate.getDate() - filters.daysAgo);
-        filtered = filtered.filter(note => note.date >= cutoffDate);
+        filtered = filtered.filter(note => note.date && note.date >= cutoffDate);
     }
 
     // Filter by months ago
-    if (filters.monthsAgo !== undefined) {
+    if (filters.monthsAgo !== undefined && filters.monthsAgo !== null) {
         const cutoffDate = new Date();
         cutoffDate.setMonth(cutoffDate.getMonth() - filters.monthsAgo);
-        filtered = filtered.filter(note => note.date >= cutoffDate);
+        filtered = filtered.filter(note => note.date && note.date >= cutoffDate);
     }
 
     // Limit count

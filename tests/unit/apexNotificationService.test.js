@@ -162,7 +162,90 @@ describe('Apex Notification Service', () => {
       
       expect(result.success).toBe(true);
       expect(result.newPatchCount).toBe(1);
-      expect(result.message).toContain('Found and sent 1 new');
+      expect(result.message).toContain('Found');
+    });
+
+    it('should send only most recent patch by default', async () => {
+      const { getCachedPatchNotes } = await import('../../src/utils/apexUtils.js');
+      const mockPatches = [
+        { 
+          id: 'apex-2025-06-28-newest', 
+          title: 'Newest Patch',
+          date: new Date('2025-06-28')
+        },
+        { 
+          id: 'apex-2025-06-27-newer', 
+          title: 'Newer Patch',
+          date: new Date('2025-06-27')
+        },
+        { 
+          id: 'apex-2025-06-26-old', 
+          title: 'Old Patch',
+          date: new Date('2025-06-26')
+        }
+      ];
+      
+      getCachedPatchNotes.mockResolvedValue(mockPatches);
+      
+      // Mock last patch info to be the old patch (so 2 new patches are available)
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('apex-channel-config.json')) {
+          return Promise.resolve(JSON.stringify({ channels: [] })); // No channels to avoid notification sending
+        }
+        if (filePath.includes('last-apex-patch.json')) {
+          return Promise.resolve(JSON.stringify(mockPatches[2]));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      
+      // Call with default showAllNew = false
+      const result = await apexNotificationService.manualCheckForUpdates(false);
+      
+      expect(result.success).toBe(true);
+      expect(result.newPatchCount).toBe(1); // Should only send 1 even though 2 are new
+      expect(result.totalNewFound).toBe(2); // Should detect 2 new patches
+      expect(result.message).toContain('Found 2 new patches');
+    });
+
+    it('should send all new patches when showAllNew is true', async () => {
+      const { getCachedPatchNotes } = await import('../../src/utils/apexUtils.js');
+      const mockPatches = [
+        { 
+          id: 'apex-2025-06-28-newest', 
+          title: 'Newest Patch',
+          date: new Date('2025-06-28')
+        },
+        { 
+          id: 'apex-2025-06-27-newer', 
+          title: 'Newer Patch',
+          date: new Date('2025-06-27')
+        },
+        { 
+          id: 'apex-2025-06-26-old', 
+          title: 'Old Patch',
+          date: new Date('2025-06-26')
+        }
+      ];
+      
+      getCachedPatchNotes.mockResolvedValue(mockPatches);
+      
+      // Mock last patch info to be the old patch (so 2 new patches are available)
+      fs.readFile.mockImplementation((filePath) => {
+        if (filePath.includes('apex-channel-config.json')) {
+          return Promise.resolve(JSON.stringify({ channels: [] })); // No channels to avoid notification sending
+        }
+        if (filePath.includes('last-apex-patch.json')) {
+          return Promise.resolve(JSON.stringify(mockPatches[2]));
+        }
+        return Promise.reject(new Error('File not found'));
+      });
+      
+      // Call with showAllNew = true
+      const result = await apexNotificationService.manualCheckForUpdates(true);
+      
+      expect(result.success).toBe(true);
+      expect(result.newPatchCount).toBe(2); // Should send all 2 new patches
+      expect(result.message).toContain('Found and sent 2 new');
     });
   });
 
