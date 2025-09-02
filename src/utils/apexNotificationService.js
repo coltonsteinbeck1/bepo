@@ -84,7 +84,7 @@ function stopMonitoring() {
 }
 
 /**
- * Check for new patch notes and send notifications
+ * Check for new patch notes and send notifications (automated monitoring)
  */
 async function checkForNewPatchNotes() {
   try {
@@ -98,24 +98,19 @@ async function checkForNewPatchNotes() {
     }
     
     const lastPatch = await getLastPatchInfo();
-    const newPatchNotes = [];
     
-    for (const patch of patchNotes) {
-      if (!lastPatch || patch.id !== lastPatch.id) {
-        newPatchNotes.push(patch);
-      } else {
-        break; // Stop when we hit a known patch
-      }
-    }
+    // Check if the most recent patch is new
+    const mostRecentPatch = patchNotes[0];
+    const isNewPatch = !lastPatch || mostRecentPatch.id !== lastPatch.id;
     
-    if (newPatchNotes.length > 0) {
-      console.log(`🆕 Found ${newPatchNotes.length} new Apex patch note(s)`);
+    if (isNewPatch) {
+      console.log(`🆕 Found new Apex patch note: ${mostRecentPatch.title}`);
       
-      // Send single combined notification for all new patches
-      await sendCombinedPatchNotification(newPatchNotes);
+      // For automated notifications, only send the most recent patch
+      await sendPatchNotification(mostRecentPatch);
       
       // Update last patch info
-      await saveLastPatchInfo(patchNotes[0]);
+      await saveLastPatchInfo(mostRecentPatch);
     } else {
       console.log('No new Apex patch notes found');
     }
@@ -218,7 +213,7 @@ function createPatchNotificationEmbed(patchNote) {
     .setColor('#FF0000') // Red color matching apex command embeds
     .setAuthor({ 
       name: 'Apex Legends',
-      iconURL: 'https://logoeps.com/wp-content/uploads/2019/03/apex-legends-vector-logo.png'
+      iconURL: 'https://logos-world.net/wp-content/uploads/2021/02/Apex-Legends-Logo.png'
     })
     .setTitle(patchNote.title || 'Apex Legends Update')
     .setTimestamp(patchNote.date);
@@ -262,7 +257,7 @@ function createCombinedPatchNotificationEmbed(patchNotes) {
     .setColor('#FF0000') // Red color matching apex command embeds
     .setAuthor({ 
       name: 'Apex Legends',
-      iconURL: 'https://logoeps.com/wp-content/uploads/2019/03/apex-legends-vector-logo.png'
+      iconURL: 'https://logos-world.net/wp-content/uploads/2021/02/Apex-Legends-Logo.png'
     })
     .setTitle(`🎮 ${patchNotes.length} New Apex Updates Available!`)
     .setTimestamp();
@@ -297,9 +292,10 @@ function createCombinedPatchNotificationEmbed(patchNotes) {
 
 /**
  * Manual check for updates (triggered by command)
+ * @param {boolean} showAllNew - Whether to show all new patches or just the latest
  * @returns {Object} Result of the check
  */
-async function manualCheckForUpdates() {
+async function manualCheckForUpdates(showAllNew = true) {
   try {
     console.log('Manual Apex patch note check triggered');
     
@@ -325,20 +321,38 @@ async function manualCheckForUpdates() {
     }
     
     if (newPatchCount > 0) {
-      // Process new patches
-      const newPatches = patchNotes.slice(0, newPatchCount);
-      
-      // Send single combined notification for all new patches
-      await sendCombinedPatchNotification(newPatches);
-      
-      await saveLastPatchInfo(patchNotes[0]);
-      
-      return {
-        success: true,
-        message: `Found and sent ${newPatchCount} new Apex patch note(s)!`,
-        newPatchCount,
-        latestPatch: patchNotes[0]
-      };
+      if (showAllNew && newPatchCount > 1) {
+        // Process all new patches for manual check
+        const newPatches = patchNotes.slice(0, newPatchCount);
+        
+        // Send combined notification for all new patches
+        await sendCombinedPatchNotification(newPatches);
+        
+        await saveLastPatchInfo(patchNotes[0]);
+        
+        return {
+          success: true,
+          message: `Found and sent ${newPatchCount} new Apex patch note(s)!`,
+          newPatchCount,
+          latestPatch: patchNotes[0]
+        };
+      } else {
+        // Send only the most recent patch (same behavior as automated)
+        const mostRecentPatch = patchNotes[0];
+        await sendPatchNotification(mostRecentPatch);
+        
+        await saveLastPatchInfo(mostRecentPatch);
+        
+        return {
+          success: true,
+          message: newPatchCount > 1 
+            ? `Found ${newPatchCount} new patches. Sent the most recent one. Use /apex to see all.`
+            : 'Found and sent 1 new Apex patch note!',
+          newPatchCount: 1, // Only sent 1 even if more were found
+          latestPatch: mostRecentPatch,
+          totalNewFound: newPatchCount
+        };
+      }
     } else {
       return {
         success: true,
