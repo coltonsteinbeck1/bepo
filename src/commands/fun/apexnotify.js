@@ -22,6 +22,12 @@ const apexNotifyCommand = {
             subcommand
                 .setName('check')
                 .setDescription('Manually check for new Apex Legends patch notes')
+                .addBooleanOption(option =>
+                    option
+                        .setName('show_all')
+                        .setDescription('Show all new patches (default: false, only most recent)')
+                        .setRequired(false)
+                )
         )
         .addSubcommand(subcommand =>
             subcommand
@@ -192,7 +198,10 @@ async function handleStatus(interaction) {
 async function handleManualCheck(interaction) {
     await interaction.deferReply();
 
-    const result = await manualCheckForUpdates();
+    // Check if user wants to see all new patches or just the most recent
+    const showAll = interaction.options.getBoolean('show_all') || false;
+    
+    const result = await manualCheckForUpdates(showAll);
 
     const embed = new EmbedBuilder()
         .setTimestamp()
@@ -206,7 +215,9 @@ async function handleManualCheck(interaction) {
         if (result.newPatchCount > 0) {
             embed.addFields({
                 name: '📊 Results',
-                value: `Found **${result.newPatchCount}** new patch note(s)`,
+                value: result.totalNewFound > 1 && !showAll
+                    ? `Found **${result.totalNewFound}** new patches, sent **${result.newPatchCount}** (most recent)`
+                    : `Found and sent **${result.newPatchCount}** new patch note(s)`,
                 inline: true
             });
 
@@ -214,6 +225,15 @@ async function handleManualCheck(interaction) {
                 embed.addFields({
                     name: '📝 Latest Patch',
                     value: `**${result.latestPatch.title}**\n*${new Date(result.latestPatch.date).toLocaleDateString()}*`,
+                    inline: false
+                });
+            }
+
+            // Add helpful tip if multiple patches were found but not all shown
+            if (result.totalNewFound > 1 && !showAll) {
+                embed.addFields({
+                    name: '💡 Tip',
+                    value: `Use \`/apexnotify check show_all:true\` to send all ${result.totalNewFound} patches, or \`/apex count:${result.totalNewFound}\` to view them`,
                     inline: false
                 });
             }
@@ -478,7 +498,8 @@ async function handleHelp(interaction) {
             name: '📋 Available Commands',
             value:
                 '**`/apexnotify status`** - View current monitoring status\n' +
-                '**`/apexnotify check`** - Manually check for new patch notes\n' +
+                '**`/apexnotify check`** - Check for new patch notes (most recent only)\n' +
+                '**`/apexnotify check show_all:true`** - Check and send all new patches\n' +
                 '**`/apexnotify setchannel`** - Set notification channel (admin)\n' +
                 '**`/apexnotify removechannel`** - Remove current channel (admin)\n' +
                 '**`/apexnotify start`** - Start monitoring (admin)\n' +
@@ -514,12 +535,21 @@ async function handleHelp(interaction) {
             inline: false
         })
         .addFields({
-            name: '⚙️ Configuration',
+            name: '⚙️ Notification Behavior',
             value:
-                '• Notifications are sent when new patch notes are detected\n' +
-                '• System monitors EA\'s official Apex Legends news feed\n' +
+                '• **Automatic Monitoring**: Only sends the most recent patch when new updates are detected\n' +
+                '• **Manual Checks**: Send only the most recent by default (use `show_all:true` for all new patches)\n' +
+                '• **Multiple Patches**: Use `/apex count:X` to view multiple patches without sending notifications\n' +
+                '• **System monitors EA\'s official Apex Legends news feed**',
+            inline: false
+        })
+        .addFields({
+            name: '🔧 Configuration',
+            value:
                 '• Only administrators can configure notification settings\n' +
-                '• All users can check for updates and view patch notes',
+                '• All users can check for updates and view patch notes\n' +
+                '• Supports role mentions and multiple notification channels\n' +
+                '• Automatic monitoring checks every 10 minutes',
             inline: false
         })
         .addFields({
