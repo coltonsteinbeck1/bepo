@@ -39,7 +39,7 @@ import {
   isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
   sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads,
   updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences,
-  getBotManagedThreadInfo
+  getBotManagedThreadInfo, looksLikeAsciiArt
 } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
@@ -951,7 +951,14 @@ client.on("messageCreate", async (message) => {
 
     return;
   }
+  
+  // Check for markov generation in designated channels
   if (markovChannelIds.includes(message.channelId.toString())) {
+    // Skip markov generation for ASCII art
+    if (looksLikeAsciiArt(message.content)) {
+      return;
+    }
+    
     if (Math.random() < 0.0033) {
       // Use enhanced generation with coherence mode enabled
       const targetLength = Math.floor(Math.random() * 50) + 25; // 25-75 words for better variety

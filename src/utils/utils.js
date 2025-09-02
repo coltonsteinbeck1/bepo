@@ -72,8 +72,29 @@ export function isGroupPing(message) {
   return message.content.includes('@everyone') || message.content.includes('@here');
 }
 
-export function isBotMessageOrPrefix(message) {
-  return message.author.bot || message.content.startsWith(BOT_PREFIX);
+export function isBotMessageOrPrefix(message, BOT_PREFIX) {
+  if (message.author.bot) {
+    return true;
+  }
+  
+  if (!BOT_PREFIX || !message.content.startsWith(BOT_PREFIX)) {
+    return false;
+  }
+  
+  // If the message is just the prefix repeated (like ////) or only ASCII art, don't treat as command
+  const contentAfterPrefix = message.content.substring(BOT_PREFIX.length);
+  
+  // Check if it's ASCII art first
+  if (looksLikeAsciiArt(message.content)) {
+    return false;
+  }
+  
+  // Check if it's just repeated prefix characters or only special characters (not a real command)
+  const isJustPrefixRepeat = contentAfterPrefix.split('').every(char => char === BOT_PREFIX);
+  const hasAlphanumeric = /[a-zA-Z0-9]/.test(contentAfterPrefix);
+  
+  // Only treat as command if there's actual alphanumeric content after prefix
+  return !isJustPrefixRepeat && hasAlphanumeric;
 }
 
 export function isBotMentioned(message, client) {
@@ -274,7 +295,43 @@ export async function getReferencedMessageContext(message) {
   }
 }
 
+// Function to detect ASCII art and prevent unwanted reactions
+export function looksLikeAsciiArt(content) {
+  // Skip empty or very short messages
+  if (!content || content.trim().length < 3) {
+    return false;
+  }
+
+  // Count special characters commonly used in ASCII art
+  const specialChars = content.match(/[^\w\s]/g) || [];
+  const totalChars = content.length;
+  const specialCharRatio = specialChars.length / totalChars;
+
+  // Check for common ASCII art patterns
+  const hasRepeatingSlashes = /[\/\\]{2,}/.test(content);
+  const hasSlashPatterns = /[\/\\]/.test(content) && content.length < 50; // Single slashes in short messages
+  const hasBoxDrawing = /[─│┌┐└┘├┤┬┴┼]/.test(content);
+  const hasSymbolCombos = /[_\-=+|<>(){}[\]~`^*#@$%&]/.test(content) && specialCharRatio > 0.2;
+  const hasHighSpecialCharRatio = specialCharRatio > 0.3; // 30% or more special chars
+  
+  // Check for typical ASCII art line patterns
+  const hasAsciiLines = /^[\s\/\\|_\-=+*#@$%&^~`(){}\[\]<>]*$/m.test(content);
+  
+  // Very short messages with slashes are likely ASCII art
+  const isShortWithSlashes = content.length <= 20 && /[\/\\]/.test(content);
+
+  // Consider it ASCII art if it matches any of these patterns
+  return hasRepeatingSlashes || hasSlashPatterns || hasBoxDrawing || hasSymbolCombos || 
+         hasAsciiLines || isShortWithSlashes || 
+         (content.length > 20 && hasHighSpecialCharRatio);
+}
+
 export async function memeFilter(message) {
+  // Skip reactions for ASCII art
+  if (looksLikeAsciiArt(message.content)) {
+    return;
+  }
+
   const randomLoveEmoji = loveEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomDislikeEmoji = dislikeEmojis[Math.floor(Math.random() * loveEmojis.length)];
   const randomPrayerEmoji = prayEmojis[Math.floor(Math.random() * prayEmojis.length)];
@@ -326,7 +383,7 @@ export async function memeFilter(message) {
   }
 
   if (
-    (message.content.includes("OW") ||
+    (/\bOW\b/i.test(message.content) ||
       message.content.toLowerCase().includes("overwatch") ||
       message.content.toLowerCase().includes("valorant")) &&
     !message.author.bot
