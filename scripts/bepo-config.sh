@@ -9,10 +9,10 @@ export BEPO_MONITOR_WINDOW="monitor"
 export BEPO_OFFLINE_WINDOW="offline"
 
 # Log Files
-export BEPO_BOT_LOG="logs/serverOutput.log"
-export BEPO_MONITOR_LOG="logs/monitorOutput.log"
-export BEPO_OFFLINE_LOG="logs/offlineOutput.log"
-export BEPO_HEALTH_LOG="logs/health-$(date +%Y-%m-%d).json"
+export BEPO_BOT_LOG="logs/operational/bot-$(date +%Y-%m-%d).log"
+export BEPO_MONITOR_LOG="logs/operational/monitor-$(date +%Y-%m-%d).log"
+export BEPO_OFFLINE_LOG="logs/operational/offline-$(date +%Y-%m-%d).log"
+export BEPO_HEALTH_LOG="logs/health/daily/health-$(date +%Y-%m-%d).json"
 
 # Service Configuration
 export ENABLE_BOT_MONITOR=${ENABLE_BOT_MONITOR:-true}

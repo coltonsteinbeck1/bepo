@@ -592,7 +592,7 @@ client.on("messageCreate", async (message) => {
 
   // Add message ID tracking to prevent duplicate processing
   const messageId = message.id;
-  
+
   // Update user mappings periodically (when new users are encountered)
   if (!markov.userMappings.has(message.author.id)) {
     markov.userMappings.set(message.author.id, message.author.displayName || message.author.username);
@@ -639,7 +639,7 @@ client.on("messageCreate", async (message) => {
 
   // Enhanced mention detection with debugging
   const botMentioned = isBotMentioned(message, client);
-  
+
   // Debug logging for mention detection (only when mentions are involved)
   if (botMentioned || message.mentions.users.size > 0 || message.mentions.roles.size > 0) {
     console.log(`[MENTION DEBUG] Message ${messageId}: botMentioned=${botMentioned}, userMentions=${message.mentions.users.size}, roleMentions=${message.mentions.roles.size}, content="${message.content}"`);
@@ -674,7 +674,7 @@ client.on("messageCreate", async (message) => {
 
   // Main message processing condition with enhanced logic
   const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX) || botMentioned || isInBotThread;
-  
+
   if (shouldProcessMessage) {
     // Start typing indicator immediately
     const sendTypingInterval = await sendTypingIndicator(message);
@@ -835,10 +835,10 @@ client.on("messageCreate", async (message) => {
           });
         }, async (error) => {
           const aiErrorResult = handleAIError(error, 'xai');
-          console.log("Grok-4 fallback Error:", error);
+          console.log("3 fallback Error:", error);
 
           await safeAsync(async () => {
-            await message.reply("Grok-4 model connection having issues - please try again in a moment");
+            await message.reply("Grok-3 model connection having issues - please try again in a moment");
           }, null, 'ai_error_reply');
           return null;
         }, 'grok4_fallback_call');
@@ -849,13 +849,13 @@ client.on("messageCreate", async (message) => {
         appendToConversation(message, "user", message.content + " [User shared an image]");
       }
     } else {
-      // Use Grok-4 for text-only messages
+      // Use Grok-3 mini for text-only messages
       const userContent = messageData.processedContent;
       appendToConversation(message, "user", userContent);
 
       response = await safeAsync(async () => {
         return await xAI.chat.completions.create({
-          model: "grok-4",
+          model: "grok-3-mini",
           messages: [...context, {
             role: "user",
             content: userContent
@@ -865,10 +865,10 @@ client.on("messageCreate", async (message) => {
         });
       }, async (error) => {
         const aiErrorResult = handleAIError(error, 'xai');
-        console.log("Grok-4 connection Error:", error);
+        console.log("Grok-3 connection Error:", error);
 
         await safeAsync(async () => {
-          await message.reply("Grok-4 model connection having issues - please try again in a moment");
+          await message.reply("Grok-3 model connection having issues - please try again in a moment");
         }, null, 'ai_error_reply');
         return null;
       }, 'grok4_call');
@@ -951,14 +951,14 @@ client.on("messageCreate", async (message) => {
 
     return;
   }
-  
+
   // Check for markov generation in designated channels
   if (markovChannelIds.includes(message.channelId.toString())) {
     // Skip markov generation for ASCII art
     if (looksLikeAsciiArt(message.content)) {
       return;
     }
-    
+
     if (Math.random() < 0.0033) {
       // Use enhanced generation with coherence mode enabled
       const targetLength = Math.floor(Math.random() * 50) + 25; // 25-75 words for better variety

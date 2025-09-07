@@ -2,6 +2,20 @@
 import fs from 'fs';
 import path from 'path';
 
+// Import the new independent verification system
+let IndependentStatusVerifier;
+try {
+    const module = await import('./independentStatusVerifier.js');
+    IndependentStatusVerifier = module.IndependentStatusVerifier;
+} catch (error) {
+    console.warn('IndependentStatusVerifier not available, using legacy status checking only');
+    IndependentStatusVerifier = null;
+}
+
+// Feature flags - can be controlled via environment variables
+const ENABLE_INDEPENDENT_VERIFICATION = process.env.ENABLE_INDEPENDENT_VERIFICATION !== 'false';
+const ENABLE_ENHANCED_REPORTING = process.env.ENABLE_ENHANCED_REPORTING !== 'false';
+
 /**
  * Get detailed shutdown reason from logs
  * @returns {string} Human-readable reason for shutdown
@@ -268,14 +282,15 @@ export function getHealthFromLogs() {
 }
 
 /**
- * Get a comprehensive status report
+ * Get a comprehensive status report with enhanced verification
  * @returns {Object} Complete status report
  */
-export function getStatusReport() {
+export async function getStatusReport() {
     const botStatus = checkBotStatus();
     const healthStatus = getHealthFromLogs();
     
-    return {
+    // Base report using legacy methods
+    const baseReport = {
         timestamp: new Date().toISOString(),
         bot: botStatus,
         health: healthStatus,
@@ -286,6 +301,100 @@ export function getStatusReport() {
                 'OFFLINE',
             uptime: botStatus.data?.botStatus?.uptime || 0
         }
+    };
+    
+    // Enhanced verification if available and enabled
+    if (ENABLE_INDEPENDENT_VERIFICATION && IndependentStatusVerifier) {
+        try {
+            const verifier = new IndependentStatusVerifier({
+                // Use updated log paths from log organization
+                statusFile: path.join(process.cwd(), 'logs', 'health', 'status', 'bot-status.json')
+            });
+            
+            const verification = await verifier.verifyBotStatus();
+            
+            // Add verification results to the report
+            baseReport.verification = {
+                enabled: true,
+                consensus: verification.consensus,
+                confidence: verification.confidence,
+                onlineScore: verification.onlineScore,
+                details: verification.results?.successful || [],
+                methods: verification.results?.successful?.reduce((acc, method) => {
+                    acc[method.method] = {
+                        online: method.online,
+                        confidence: method.confidence,
+                        weight: method.weight,
+                        details: method.details
+                    };
+                    return acc;
+                }, {}) || {},
+                summary: verification.details,
+                verification: verification.verification,
+                timestamp: verification.timestamp
+            };
+            
+            // Override summary status if verification disagrees with high confidence
+            if (verification.confidence > 0.7 && verification.online !== baseReport.summary.operational) {
+                console.warn(`Status verification disagreement detected: Legacy=${baseReport.summary.operational}, Verification=${verification.online} (confidence: ${verification.confidence})`);
+                
+                baseReport.summary.operational = verification.online;
+                baseReport.summary.status = verification.online ? 'OPERATIONAL' : 'OFFLINE';
+                baseReport.summary.verificationOverride = true;
+                baseReport.summary.overrideReason = `High-confidence verification (${verification.confidence}) disagreed with legacy status`;
+            }
+            
+        } catch (error) {
+            console.warn('Enhanced verification failed:', error.message);
+            baseReport.verification = {
+                enabled: true,
+                error: error.message,
+                fallback: true
+            };
+        }
+    } else {
+        baseReport.verification = {
+            enabled: false,
+            reason: !ENABLE_INDEPENDENT_VERIFICATION ? 'Disabled by configuration' : 'IndependentStatusVerifier not available'
+        };
+    }
+    
+    return baseReport;
+}
+
+/**
+ * Get a quick status check using enhanced verification
+ * @returns {Object} Quick status result
+ */
+export async function getQuickStatus() {
+    if (ENABLE_INDEPENDENT_VERIFICATION && IndependentStatusVerifier) {
+        try {
+            const verifier = new IndependentStatusVerifier({
+                statusFile: path.join(process.cwd(), 'logs', 'health', 'status', 'bot-status.json')
+            });
+            
+            const result = await verifier.quickVerify();
+            return {
+                online: result.online,
+                confidence: result.confidence,
+                consensus: result.consensus,
+                enhanced: true,
+                timestamp: result.timestamp
+            };
+        } catch (error) {
+            console.warn('Quick verification failed, falling back to legacy:', error.message);
+        }
+    }
+    
+    // Fallback to legacy method
+    const legacyStatus = checkBotStatus();
+    return {
+        online: legacyStatus.online,
+        confidence: 0.6, // Medium confidence for legacy method
+        consensus: legacyStatus.online ? 'legacy_online' : 'legacy_offline',
+        enhanced: false,
+        timestamp: new Date().toISOString(),
+        fallback: true
     };
 }
 
@@ -345,10 +454,76 @@ export default {
 
 // Export a factory function for consistency with other modules
 export function getStatusChecker() {
-    return {
+    // Enhanced status checker with independent verification capabilities
+    const enhancedChecker = {
+        // Legacy compatibility methods (maintain exact existing API)
         getBotStatus: getStatusReport,
         checkOnline: checkBotStatus,
         getHealth: getHealthFromLogs,
-        updateBotStatus: updateBotStatus
+        updateBotStatus: updateBotStatus,
+        
+        // Direct function access (backward compatibility)
+        checkBotStatus,
+        getHealthFromLogs,
+        getStatusReport,
+        updateBotStatus,
+        
+        // Enhanced methods
+        getQuickStatus,
+        
+        // Configuration information
+        config: {
+            independentVerification: ENABLE_INDEPENDENT_VERIFICATION,
+            enhancedReporting: ENABLE_ENHANCED_REPORTING,
+            hasIndependentVerifier: !!IndependentStatusVerifier
+        },
+        
+        // New method: Get independent verification instance
+        createIndependentVerifier(options = {}) {
+            if (!IndependentStatusVerifier) {
+                throw new Error('IndependentStatusVerifier not available');
+            }
+            
+            const defaultOptions = {
+                statusFile: path.join(process.cwd(), 'logs', 'health', 'status', 'bot-status.json'),
+                maxFileAge: 5 * 60 * 1000, // 5 minutes
+                timeout: 10000 // 10 seconds
+            };
+            
+            return new IndependentStatusVerifier({ ...defaultOptions, ...options });
+        },
+        
+        // Enhanced monitoring integration point
+        async performEnhancedCheck() {
+            if (ENABLE_INDEPENDENT_VERIFICATION && IndependentStatusVerifier) {
+                try {
+                    const verifier = this.createIndependentVerifier();
+                    return await verifier.verifyBotStatus();
+                } catch (error) {
+                    console.warn('Enhanced check failed:', error.message);
+                    return {
+                        online: false,
+                        confidence: 0.1,
+                        consensus: 'error',
+                        error: error.message,
+                        fallback: true,
+                        timestamp: new Date().toISOString()
+                    };
+                }
+            }
+            
+            // Fallback to legacy check
+            const legacyStatus = checkBotStatus();
+            return {
+                online: legacyStatus.online,
+                confidence: 0.6,
+                consensus: legacyStatus.online ? 'legacy_online' : 'legacy_offline',
+                enhanced: false,
+                fallback: true,
+                timestamp: new Date().toISOString()
+            };
+        }
     };
+    
+    return enhancedChecker;
 }
