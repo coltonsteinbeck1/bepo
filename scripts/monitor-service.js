@@ -318,16 +318,19 @@ class UnifiedMonitoringService {
                 console.log(`✅ Updated webhook message for ${isOnline ? 'online' : 'offline'} status`);
                 return status.webhookMessageId;
             } else {
-                // Send new message
-                const response = await axios.post(this.webhookUrl, {
+                // Send new message with ?wait=true to get message ID back
+                const webhookUrlWithWait = `${this.webhookUrl}?wait=true`;
+                const response = await axios.post(webhookUrlWithWait, {
                     embeds: [embed]
                 });
                 
-                const messageId = response.data.id;
+                const messageId = response.data?.id;
                 console.log(`✅ Sent new webhook notification for ${isOnline ? 'online' : 'offline'} status (Message ID: ${messageId || 'undefined'})`);
                 
                 // Store message ID for future updates
-                this.updateStatus({ webhookMessageId: messageId });
+                if (messageId) {
+                    this.updateStatus({ webhookMessageId: messageId });
+                }
                 return messageId;
             }
         } catch (error) {

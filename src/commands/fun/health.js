@@ -129,11 +129,15 @@ async function createHealthEmbed(detailed = false) {
     const memoryMB = Math.round((health.memoryUsage?.used || 0) / 1024 / 1024);
     const memoryTotal = Math.round((health.memoryUsage?.total || 0) / 1024 / 1024);
 
-    // Use the same logic as offline system for consistency
+    // Use the enhanced status verification system for more accurate status
     const isOperational = systemStatus.summary.operational;
     const statusEmoji = isOperational ? '🟢' : '🔴';
     const statusText = isOperational ? 'ONLINE' : 'OFFLINE';
     const statusColor = isOperational ? (health.healthy ? '#00ff00' : '#ffaa00') : '#ff0000';
+
+    // Get confidence level from verification if available
+    const confidence = systemStatus.verification?.confidence || 0.6;
+    const consensusText = systemStatus.verification?.consensus || 'legacy_check';
 
     // Create base embed
     const embed = new EmbedBuilder()
@@ -142,7 +146,7 @@ async function createHealthEmbed(detailed = false) {
         .addFields(
             {
                 name: '🤖 Bot Status',
-                value: `**Status:** ${statusEmoji} ${statusText}\n**Health:** ${health.healthy ? '✅ Healthy' : '❌ Unhealthy'}`,
+                value: `**Status:** ${statusEmoji} ${statusText}\n**Health:** ${health.healthy ? '✅ Healthy' : '❌ Unhealthy'}\n**Confidence:** ${Math.round(confidence * 100)}% (${consensusText})`,
                 inline: true
             },
             {
@@ -236,6 +240,28 @@ async function createHealthEmbed(detailed = false) {
                 inline: true
             }
         );
+
+        // Add verification information if available
+        if (systemStatus.verification?.enabled) {
+            const verification = systemStatus.verification;
+            let verificationText = `**Enabled:** ✅ Yes\n**Confidence:** ${Math.round(verification.confidence * 100)}%\n**Consensus:** ${verification.consensus}`;
+            
+            if (verification.methods) {
+                const methodStatus = Object.entries(verification.methods)
+                    .map(([method, data]) => {
+                        const status = data.online === null ? '⚪' : (data.online ? '🟢' : '🔴');
+                        return `${status} ${method}: ${Math.round(data.confidence * 100)}%`;
+                    })
+                    .join('\n');
+                verificationText += `\n**Methods:**\n${methodStatus}`;
+            }
+
+            embed.addFields({
+                name: '🔍 Status Verification',
+                value: verificationText,
+                inline: false
+            });
+        }
     }
 
     // Add warnings and status descriptions
