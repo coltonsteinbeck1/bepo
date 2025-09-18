@@ -31,6 +31,8 @@ import cs2Prices from "./commands/fun/cs2Prices.js"
 import yapCommand from "./commands/fun/yap.js";
 import stopyapCommand from "./commands/fun/stopyap.js";
 import markovCommand from "./commands/fun/markov.js";
+import gifCommand from "./commands/fun/gif.js";
+import jigginCommand from "./commands/fun/jigglin.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { MarkovPersistence } from "./utils/markovPersistence.js";
 import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
@@ -284,6 +286,8 @@ client.commands.set("thread", threadCommand);
 client.commands.set("yap", yapCommand);
 client.commands.set("stopyap", stopyapCommand);
 client.commands.set("markov", markovCommand);
+client.commands.set("gif", gifCommand);
+client.commands.set("jigglin", jigginCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
