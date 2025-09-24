@@ -10,6 +10,31 @@ export default class MarkovChain {
     this.userIdRegex = /<@!?(\d+)>/g;
     // Store user ID to username mappings
     this.userMappings = new Map();
+    
+    // Performance caches to avoid repeated expensive operations
+    this._chainKeys = null; // Cache for Object.keys(this.chain)
+    this._startersArray = null; // Cache for Array.from(this.sentenceStarters)
+    this._endersArray = null; // Cache for Array.from(this.sentenceEnders)
+    this._isDirty = true; // Track if caches need refresh
+    this._lastCacheRefresh = 0; // Timestamp of last cache refresh
+  }
+
+  // Refresh performance caches when needed
+  _refreshCaches() {
+    const now = Date.now();
+    // Only refresh if dirty and at least 100ms have passed to batch updates
+    if (this._isDirty && (now - this._lastCacheRefresh) > 100) {
+      this._chainKeys = Object.keys(this.chain);
+      this._startersArray = Array.from(this.sentenceStarters);
+      this._endersArray = Array.from(this.sentenceEnders);
+      this._isDirty = false;
+      this._lastCacheRefresh = now;
+    }
+  }
+
+  // Mark caches as dirty (called after training)
+  _markDirty() {
+    this._isDirty = true;
   }
 
   // Method to set user mappings from Discord client
@@ -93,6 +118,9 @@ export default class MarkovChain {
         }
       }
     }
+    
+    // Mark caches as dirty after training
+    this._markDirty();
   }
 
   preprocessText(text) {
@@ -176,7 +204,10 @@ export default class MarkovChain {
   }
 
   generate(startingPhrase = null, targetLength = 50, coherent = true) {
-    if (Object.keys(this.chain).length === 0) {
+    // Refresh performance caches before generation
+    this._refreshCaches();
+    
+    if (this._chainKeys.length === 0) {
       return "Not enough training data available.";
     }
 
@@ -185,8 +216,7 @@ export default class MarkovChain {
 
     // Find starting point
     if (startingPhrase) {
-      const keys = Object.keys(this.chain);
-      const matchingKey = keys.find(key => 
+      const matchingKey = this._chainKeys.find(key => 
         key.toLowerCase().includes(startingPhrase.toLowerCase())
       );
       
@@ -198,14 +228,12 @@ export default class MarkovChain {
 
     // If no starting phrase or no match found, use a random sentence starter
     if (!currentKey) {
-      if (this.sentenceStarters.size > 0) {
-        const starters = Array.from(this.sentenceStarters);
-        currentKey = starters[Math.floor(Math.random() * starters.length)];
+      if (this._startersArray.length > 0) {
+        currentKey = this._startersArray[Math.floor(Math.random() * this._startersArray.length)];
         words = currentKey.split(' ');
       } else {
         // Fallback to random key
-        const keys = Object.keys(this.chain);
-        currentKey = keys[Math.floor(Math.random() * keys.length)];
+        currentKey = this._chainKeys[Math.floor(Math.random() * this._chainKeys.length)];
         words = currentKey.split(' ');
       }
     }
@@ -221,7 +249,7 @@ export default class MarkovChain {
       if (!possibleNext || possibleNext.length === 0) {
         // Try to find continuation with partial key match
         const partialKey = words.slice(-Math.max(1, this.order - 1)).join(' ');
-        const matchingKeys = Object.keys(this.chain).filter(key => 
+        const matchingKeys = this._chainKeys.filter(key => 
           key.startsWith(partialKey)
         );
         
@@ -234,8 +262,7 @@ export default class MarkovChain {
             break; // End naturally for coherent mode
           } else {
             // Pick a random new starting point
-            const keys = Object.keys(this.chain);
-            currentKey = keys[Math.floor(Math.random() * keys.length)];
+            currentKey = this._chainKeys[Math.floor(Math.random() * this._chainKeys.length)];
             continue;
           }
         }

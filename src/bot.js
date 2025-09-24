@@ -41,7 +41,7 @@ import {
   isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
   sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads,
   updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences,
-  getBotManagedThreadInfo, looksLikeAsciiArt
+  getBotManagedThreadInfo, looksLikeAsciiArt, cleanupMemoryCache
 } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
@@ -384,19 +384,29 @@ function startScheduledMessaging(client) {
     }, 'thread_validation_cleanup');
   }, 2 * 60 * 60 * 1000); // Every 2 hours
 
-  // Auto-save markov chain every 30 minutes
+  // Auto-save markov chain every hour (reduced frequency for performance)
   setInterval(async () => {
     await safeAsync(async () => {
       await markovPersistence.saveChain(markov);
     }, (error) => {
       console.error('Markov chain auto-save error - will retry next cycle:', error);
     }, 'markov_auto_save');
-  }, 30 * 60 * 1000); // Every 30 minutes
+  }, 60 * 60 * 1000); // Every hour (increased from 30 minutes)
 }
 
 // const chatContext = await getAllContext();
-const markovChannels = await getMarkovChannels();
-const markovChannelIds = markovChannels.map(channel => channel.channel_id);
+let markovChannels = [];
+let markovChannelIds = [];
+
+try {
+  markovChannels = await getMarkovChannels();
+  markovChannelIds = markovChannels.map(channel => channel.channel_id);
+  console.log(`Initialized with ${markovChannelIds.length} markov channels`);
+} catch (error) {
+  console.error('Failed to initialize markov channels, continuing without them:', error);
+  markovChannelIds = []; // Empty array as fallback
+}
+
 const markov = new MarkovChain(2); // Reduced from 3 to 2 for more creative but still coherent output
 const markovPersistence = new MarkovPersistence();
 
@@ -453,6 +463,22 @@ client.on("ready", async () => {
   // Initialize Apex Legends patch note monitoring
   await initializeApexMonitoring(client);
 
+  // Retry markov channels initialization if it failed earlier
+  if (markovChannelIds.length === 0) {
+    console.log('Retrying markov channels initialization...');
+    setTimeout(async () => {
+      try {
+        const retryChannels = await getMarkovChannels();
+        if (retryChannels && retryChannels.length > 0) {
+          markovChannelIds.splice(0, markovChannelIds.length, ...retryChannels.map(c => c.channel_id));
+          console.log(`Successfully initialized ${markovChannelIds.length} markov channels on retry`);
+        }
+      } catch (error) {
+        console.error('Retry of markov channels initialization failed:', error);
+      }
+    }, 30000); // Retry after 30 seconds
+  }
+
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {
     await safeAsync(async () => {
@@ -467,14 +493,19 @@ client.on("ready", async () => {
     }, 'memory_cleanup');
   }, 6 * 60 * 60 * 1000); // Every 6 hours
 
-  // Auto-save markov chain every 30 minutes
+  // Auto-save markov chain every hour (reduced frequency for performance)
   setInterval(async () => {
     await safeAsync(async () => {
       await markovPersistence.saveChain(markov);
     }, (error) => {
       console.error('Markov chain auto-save error - will retry next cycle:', error);
     }, 'markov_auto_save');
-  }, 30 * 60 * 1000); // Every 30 minutes
+  }, 60 * 60 * 1000); // Every hour (increased from 30 minutes)
+  
+  // Clean up expired memory context cache entries every 10 minutes
+  setInterval(() => {
+    cleanupMemoryCache();
+  }, 10 * 60 * 1000); // Every 10 minutes
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -607,7 +638,14 @@ client.on("messageCreate", async (message) => {
   if (message.content.length > 10 &&
     !message.content.startsWith(BOT_PREFIX) &&
     !message.mentions.users.has(client.user.id)) {
-    markov.train(message.content);
+    // Make training asynchronous to not block message processing
+    setImmediate(() => {
+      try {
+        markov.train(message.content);
+      } catch (error) {
+        console.error('Markov training error:', error);
+      }
+    });
   }
 
   // Meme reactions

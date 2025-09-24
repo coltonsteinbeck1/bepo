@@ -77,7 +77,7 @@ describe('MarkovPersistence', () => {
       expect(savedData).toHaveProperty('wordFrequency');
       expect(savedData).toHaveProperty('contextWeights');
       expect(savedData).toHaveProperty('lastSaved');
-      expect(savedData).toHaveProperty('version', '2.0');
+      expect(savedData).toHaveProperty('version', '2.1');
       
       // Verify data types
       expect(typeof savedData.order).toBe('number');
@@ -268,7 +268,7 @@ describe('MarkovPersistence', () => {
       if (stats.uniqueWords !== undefined) {
         expect(stats.uniqueWords).toBeGreaterThanOrEqual(0);
       }
-      expect(stats.version).toBe('2.0');
+      expect(stats.version).toBe('2.1');
     });
 
     it('should return null for non-existent file', async () => {

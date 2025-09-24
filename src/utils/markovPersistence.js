@@ -8,10 +8,43 @@ const __dirname = path.dirname(__filename);
 export class MarkovPersistence {
   constructor(filePath = null) {
     this.filePath = filePath || path.join(__dirname, '../../data/markov-chain.json');
+    this.lastSaveSize = 0; // Track size to avoid unnecessary saves
+    this.lastSaveTime = 0; // Track time to avoid frequent saves
+    this.isDirty = false; // Track if changes need saving
+    this.pendingSave = false; // Track if save is in progress
   }
 
-  async saveChain(markovChain) {
+  // Mark chain as dirty (needs saving)
+  markDirty() {
+    this.isDirty = true;
+  }
+
+  async saveChain(markovChain, force = false) {
     try {
+      const currentSize = Object.keys(markovChain.chain).length;
+      const now = Date.now();
+      const timeSinceLastSave = now - this.lastSaveTime;
+      
+      // Only save if:
+      // - Forced
+      // - Chain has grown significantly (50+ new entries)  
+      // - At least 5 minutes have passed since last save AND chain has some growth
+      // - Chain is dirty and significant time has passed
+      if (!force && 
+          (currentSize - this.lastSaveSize < 50) && 
+          (timeSinceLastSave < 5 * 60 * 1000) && // 5 minutes
+          !this.isDirty) {
+        return true;
+      }
+      
+      // Avoid multiple concurrent saves
+      if (this.pendingSave) {
+        console.log('Save already in progress, skipping...');
+        return true;
+      }
+      
+      this.pendingSave = true;
+      
       // Ensure directory exists
       const dir = path.dirname(this.filePath);
       await fs.mkdir(dir, { recursive: true });
@@ -24,13 +57,23 @@ export class MarkovPersistence {
         wordFrequency: markovChain.wordFrequency,
         contextWeights: markovChain.contextWeights,
         lastSaved: new Date().toISOString(),
-        version: '2.0' // Track version for future compatibility
+        version: '2.1' // Increment version for performance improvements
       };
 
-      await fs.writeFile(this.filePath, JSON.stringify(data, null, 2));
-      console.log(`Markov chain saved with ${Object.keys(markovChain.chain).length} keys`);
+      // Use atomic write with temporary file for safety
+      const tempFilePath = this.filePath + '.tmp';
+      await fs.writeFile(tempFilePath, JSON.stringify(data, null, 2));
+      await fs.rename(tempFilePath, this.filePath);
+      
+      this.lastSaveSize = currentSize;
+      this.lastSaveTime = now;
+      this.isDirty = false;
+      this.pendingSave = false;
+      
+      console.log(`Markov chain saved with ${currentSize} keys (growth: ${currentSize - this.lastSaveSize})`);
       return true;
     } catch (error) {
+      this.pendingSave = false;
       console.error('Failed to save markov chain:', error);
       return false;
     }

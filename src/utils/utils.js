@@ -29,7 +29,24 @@ const BOT_PREFIX = process.env.PREFIX;
 
 export const convoStore = new Map();
 export const botThreadStore = new Map(); // Store for tracking bot-created threads
+export const memoryContextCache = new Map(); // Cache for memory contexts to reduce DB queries
 export const EXPIRATION_MS = 1000 * 60 * 30;
+export const MEMORY_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+
+// Clean up expired memory context cache entries
+export function cleanupMemoryCache() {
+  const now = Date.now();
+  let cleanedCount = 0;
+  for (const [key, value] of memoryContextCache.entries()) {
+    if (now - value.timestamp > MEMORY_CACHE_TTL) {
+      memoryContextCache.delete(key);
+      cleanedCount++;
+    }
+  }
+  if (cleanedCount > 0) {
+    console.log(`Cleaned up ${cleanedCount} expired memory cache entries`);
+  }
+}
 
 export const loadJSON = (path) =>
   JSON.parse(fs.readFileSync(new URL(path, import.meta.url)));
@@ -176,8 +193,23 @@ export async function buildStreamlinedConversationContext(message) {
   const serverId = message.guild?.id;
   
   if (!convoStore.has(key)) {
-    // Build initial memory context - ALWAYS include server ID
-    const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
+    // Check memory cache first to avoid database queries
+    const cacheKey = `memory:${message.author.id}:${serverId || 'no-server'}`;
+    let memoryContext = '';
+    const cached = memoryContextCache.get(cacheKey);
+    
+    if (cached && (Date.now() - cached.timestamp) < MEMORY_CACHE_TTL) {
+      memoryContext = cached.content;
+      console.log(`Using cached memory context for ${key} (${memoryContext.length} chars)`);
+    } else {
+      // Build fresh memory context and cache it
+      memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
+      memoryContextCache.set(cacheKey, {
+        content: memoryContext,
+        timestamp: Date.now()
+      });
+      console.log(`Built and cached fresh memory context for ${key} (${memoryContext.length} chars)`);
+    }
     
     // Combine system message with memory context
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
@@ -210,17 +242,31 @@ export async function buildStreamlinedConversationContext(message) {
       entry.actualThreadId = message.channel.id;
     }
     
-    // Refresh memory context more frequently for server memories (every 2 minutes or every 5 messages)
+    // Refresh memory context less frequently to reduce DB load (every 10 minutes or every 15 messages)
     const now = new Date();
     const timeSinceRefresh = now - (entry.lastMemoryRefresh || entry.startTime);
-    const shouldRefresh = timeSinceRefresh > 2 * 60 * 1000 || // 2 minutes (reduced from 5)
-                         entry.messageCount % 5 === 0; // every 5 messages (reduced from 10)
+    const shouldRefresh = timeSinceRefresh > 10 * 60 * 1000 || // 10 minutes (increased from 2)
+                         entry.messageCount % 15 === 0; // every 15 messages (increased from 5)
     
     if (shouldRefresh) {
       console.log(`Refreshing memory context for ${key} (time: ${Math.floor(timeSinceRefresh/1000)}s, messages: ${entry.messageCount})`);
       
-      // Build fresh memory context - ALWAYS include server ID
-      const memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
+      // Check cache first before rebuilding
+      const cacheKey = `memory:${message.author.id}:${serverId || 'no-server'}`;
+      let memoryContext = '';
+      const cached = memoryContextCache.get(cacheKey);
+      
+      if (cached && (Date.now() - cached.timestamp) < MEMORY_CACHE_TTL) {
+        memoryContext = cached.content;
+        console.log(`Using cached memory context during refresh for ${key}`);
+      } else {
+        // Build fresh memory context - ALWAYS include server ID
+        memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
+        memoryContextCache.set(cacheKey, {
+          content: memoryContext,
+          timestamp: Date.now()
+        });
+      }
       
       // Update the system message with fresh context
       const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
