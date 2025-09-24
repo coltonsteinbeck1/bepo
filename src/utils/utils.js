@@ -17,6 +17,7 @@ export const DALLE_DIR_PATH = path.join(__dirname, "..", "dalle");
 export const IMAGE_PATH = path.join(__dirname, "images/image.png")
 
 const CHILLIN_CHANNEL = process.env.CHILLIN_CHANNEL;
+const JIGGLING_CAT_GIF_PATH = path.join(__dirname, "..", "images", "jigglingCat.gif");
 const loveEmojis = ["🥰", "😍", "😘", "❤", "💖", "💕", "😻"];
 const dislikeEmojis = ["😒", "🙄", "😕", "😠", "👎", "😡", "😤", "😣"];
 const prayEmojis = ["🙏", "🛐", "✝️", "☪️", "📿"];
@@ -437,8 +438,14 @@ export async function sendGameTimeMessage(client) {
   try {
     const channel = await client.channels.fetch(CHILLIN_CHANNEL);
     if (channel) {
-      await channel.send("It's game time (?) 🚂🚂🚂");
-      console.log("Sent game time message");
+      const attachment = new AttachmentBuilder(JIGGLING_CAT_GIF_PATH);
+      await channel.send({
+        content: "It's game time!!! 🚂🚂🚂",
+        files: [attachment]
+      });
+      console.log("Sent game time message with jiggling cat gif");
+    } else {
+      console.error(`Channel not found: ${CHILLIN_CHANNEL}`);
     }
   } catch (error) {
     console.error("Error sending game time message:", error);
