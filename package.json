@@ -16,6 +16,7 @@
     "sharp": "^0.34.2",
     "yargs": "^17.7.2",
     "youtube-dl-exec": "^3.0.22",
+    "yt-dlp-wrap": "^2.3.12",
     "ytdl-core": "^4.11.5"
   },
   "name": "bepo",
