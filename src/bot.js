@@ -688,7 +688,7 @@ client.on("messageCreate", async (message) => {
   }
 
   // Check if bot was mentioned and respond with status if needed
-  if (botMentioned && !isBotMessageOrPrefix(message, BOT_PREFIX) && !isInBotThread) {
+  if (botMentioned && !isBotMessageOrPrefix(message, BOT_PREFIX, client.commands) && !isInBotThread) {
     // Check current bot health status
     const statusChecker = getStatusChecker();
     const currentStatus = await safeAsync(async () => {
@@ -715,7 +715,7 @@ client.on("messageCreate", async (message) => {
   }
 
   // Main message processing condition with enhanced logic
-  const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX) || botMentioned || isInBotThread;
+  const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX, client.commands) || botMentioned || isInBotThread;
   
   if (shouldProcessMessage) {
     // Start typing indicator immediately

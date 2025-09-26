@@ -90,7 +90,7 @@ export function isGroupPing(message) {
   return message.content.includes('@everyone') || message.content.includes('@here');
 }
 
-export function isBotMessageOrPrefix(message, BOT_PREFIX) {
+export function isBotMessageOrPrefix(message, BOT_PREFIX, validCommands = null) {
   if (message.author.bot) {
     return true;
   }
@@ -107,12 +107,49 @@ export function isBotMessageOrPrefix(message, BOT_PREFIX) {
     return false;
   }
   
-  // Check if it's just repeated prefix characters or only special characters (not a real command)
+  // Check if it's just repeated prefix characters
   const isJustPrefixRepeat = contentAfterPrefix.split('').every(char => char === BOT_PREFIX);
-  const hasAlphanumeric = /[a-zA-Z0-9]/.test(contentAfterPrefix);
+  if (isJustPrefixRepeat) {
+    return false;
+  }
   
-  // Only treat as command if there's actual alphanumeric content after prefix
-  return !isJustPrefixRepeat && hasAlphanumeric;
+  // Extract the potential command name (first word after prefix)
+  const potentialCommand = contentAfterPrefix.trim().split(/\s+/)[0].toLowerCase();
+  
+  // If it looks like a command attempt (starts with /) but isn't a valid command
+  // and is longer than a reasonable command length, treat it as regular text
+  if (potentialCommand.length > 20) {
+    console.log(`[COMMAND FILTER] Ignoring long potential command: "${potentialCommand.substring(0, 30)}..."`);
+    return false;
+  }
+  
+    // Use dynamic command collection if provided, otherwise fall back to static list
+  let commandList;
+  if (validCommands && validCommands.has) {
+    // Convert Discord.js Collection to array for includes() check
+    commandList = Array.from(validCommands.keys());
+  } else {
+    // Fallback static list for backwards compatibility
+    commandList = [
+      'play', 'poll', 'draw', 'ping', 'maprotation', 'cs2', 'cs2notify', 
+      'minecraftserver', 'rolesupport', 'reset', 'cs2prices', 'continue', 
+      'review', 'memory', 'updatememory', 'servermemory', 'updateservermemory',
+      'digest', 'thread', 'yap', 'stopyap', 'markov', 'gif', 'jigglin',
+      'debug-memory', 'health', 'apex', 'apexnotify'
+    ];
+  }
+  
+  // If it's a valid command, allow it through
+  if (commandList.includes(potentialCommand)) {
+    return true;
+  }
+  
+  // For short text after prefix that isn't a valid command, still allow it
+  // (this maintains compatibility for short conversational messages like "/test")
+  const hasAlphanumeric = /[a-zA-Z0-9]/.test(contentAfterPrefix);
+  const isShortText = contentAfterPrefix.trim().length <= 10;
+  
+  return hasAlphanumeric && isShortText;
 }
 
 export function isBotMentioned(message, client) {
