@@ -971,9 +971,95 @@ async function getServerMemoryByPartialId(partialId, serverId = null) {
     return matchingMemories.length > 0 ? matchingMemories[0] : null;
 }
 
-export { 
-    getAllGuilds, 
-    getMarkovChannels, 
+// Thread tracking functions using existing messages table
+async function storeMessageThread(messageData) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([messageData])
+            .select();
+        
+        if (error) {
+            console.error('Error storing message in messages table:', error);
+            return null;
+        }
+        
+        return data[0];
+    } catch (error) {
+        console.error('Error in storeMessageThread:', error);
+        return null;
+    }
+}
+
+async function getMessageThread(messageId) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('message_id', messageId)
+            .single();
+        
+        if (error) {
+            console.error('Error fetching message thread:', error);
+            return null;
+        }
+        
+        return { ...data, thread_id: data.thread };
+    } catch (error) {
+        console.error('Error in getMessageThread:', error);
+        return null;
+    }
+}
+
+async function getThreadMessages(threadId, limit = 20) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('thread', threadId)
+            .order('created_at', { ascending: true })
+            .limit(limit);
+        
+        if (error) {
+            console.error('Error fetching thread messages:', error);
+            return [];
+        }
+        
+        return data || [];
+    } catch (error) {
+        console.error('Error in getThreadMessages:', error);
+        return [];
+    }
+}
+
+async function cleanupOldMessageThreads(daysOld = 7) {
+    try {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        
+        const { data, error } = await supabase
+            .from('messages')
+            .delete()
+            .lt('created_at', cutoffDate.toISOString())
+            .not('thread', 'is', null);
+        
+        if (error) {
+            console.error('Error cleaning up old message threads:', error);
+            return 0;
+        }
+        
+        const deletedCount = data ? data.length : 0;
+        console.log(`Cleaned up ${deletedCount} old thread messages`);
+        return deletedCount;
+    } catch (error) {
+        console.error('Error in cleanupOldMessageThreads:', error);
+        return 0;
+    }
+}
+
+export {
+    getAllGuilds,
+    getMarkovChannels,
     getAllUsers, 
     getConfig, 
     insertImages, 
@@ -1011,6 +1097,11 @@ export {
     // Get functions for verification
     getUserMemoryById,
     getServerMemoryById,
-    getServerMemoryByPartialId
+    getServerMemoryByPartialId,
+    // Thread tracking functions
+    storeMessageThread,
+    getMessageThread,
+    getThreadMessages,
+    cleanupOldMessageThreads
 }
 

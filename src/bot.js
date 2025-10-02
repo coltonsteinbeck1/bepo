@@ -35,7 +35,7 @@ import gifCommand from "./commands/fun/gif.js";
 import jigginCommand from "./commands/fun/jigglin.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { MarkovPersistence } from "./utils/markovPersistence.js";
-import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
+import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories, cleanupOldMessageThreads } from "./supabase/supabase.js";
 import {
   memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing,
   isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
@@ -52,6 +52,14 @@ import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
 import { initializeApexMonitoring } from "./utils/apexNotificationService.js";
 // Import the new unified monitoring service
 import UnifiedMonitoringService from '../scripts/monitor-service.js';
+// Import reply chain tracking
+import { 
+  isReplyMessage, 
+  processMessageForThread, 
+  getThreadMessages, 
+  buildThreadContextString,
+  getThreadContext 
+} from "./utils/replyUtils.js";
 
 dotenv.config();
 
@@ -486,7 +494,8 @@ client.on("ready", async () => {
       const expiredCount = await cleanupExpiredMemories();
       const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
       const expiredServerCount = await cleanupExpiredServerMemories();
-      console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, and ${expiredServerCount} expired server memories`);
+      const threadCount = await cleanupOldMessageThreads(7); // Clean up threads older than 7 days
+      console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, ${expiredServerCount} expired server memories, and ${threadCount} old thread messages`);
     }, (error) => {
       handleDatabaseError(error, 'memory_cleanup');
       console.error('Memory cleanup error - will retry next cycle:', error);
@@ -728,6 +737,32 @@ client.on("messageCreate", async (message) => {
       return message.reply("Your conversation has been reset.");
     }
 
+    // SIMPLE thread context - just get immediate reply context (no database)
+    let threadContext = '';
+    let isReply = isReplyMessage(message);
+    
+    if (isReply) {
+      console.log(`[THREAD] Reply detected: ${message.id} -> ${message.reference.messageId}`);
+      
+      // Get immediate context from Discord API (no DB needed)
+      const replyContext = await safeAsync(async () => {
+        const referencedMessage = await message.fetchReference();
+        if (referencedMessage) {
+          return {
+            author: referencedMessage.author.username,
+            content: referencedMessage.content,
+            isBot: referencedMessage.author.bot
+          };
+        }
+        return null;
+      }, null, 'reply_context');
+      
+      if (replyContext) {
+        threadContext = `--- Reply Context ---\nReplying to ${replyContext.author}: "${replyContext.content}"\n--- End Context ---\n`;
+        console.log(`[THREAD] Reply context built (${threadContext.length} chars)`);
+      }
+    }
+
     // Process message and check for images
     const messageData = await processMessageWithImages(message);
     console.log(`[IMAGE DEBUG] Message data: hasImages=${messageData.hasImages}, imageUrls=${messageData.imageUrls.length}, hasGifs=${messageData.hasGifs}`);
@@ -755,6 +790,12 @@ client.on("messageCreate", async (message) => {
         imagePrompt = message.content || "this is a gif but i can only see the first frame... react to what i can see and acknowledge it's supposed to be animated. keep it real.";
       } else {
         imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
+      }
+      
+      // Add thread context if available
+      if (threadContext) {
+        imagePrompt = threadContext + '\n' + imagePrompt;
+        console.log(`[THREAD] Added reply context to image message (${threadContext.length} chars)`);
       }
 
       // Debug logging for image processing
@@ -892,7 +933,14 @@ client.on("messageCreate", async (message) => {
       }
     } else {
       // Use Grok-4 for text-only messages
-      const userContent = messageData.processedContent;
+      let userContent = messageData.processedContent;
+      
+      // Add thread context if available
+      if (threadContext) {
+        userContent = threadContext + '\n' + userContent;
+        console.log(`[THREAD] Added reply context to message (${threadContext.length} chars)`);
+      }
+      
       appendToConversation(message, "user", userContent);
 
       response = await safeAsync(async () => {
@@ -964,6 +1012,8 @@ client.on("messageCreate", async (message) => {
       // Don't fail the response if memory storage fails - this is graceful degradation
       return null;
     }, 'memory_storage');
+
+    // Thread tracking complete - no database storage needed for now
 
     // Auto-thread creation disabled - threads can be created manually if needed
 

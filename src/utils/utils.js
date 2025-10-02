@@ -30,8 +30,10 @@ const BOT_PREFIX = process.env.PREFIX;
 export const convoStore = new Map();
 export const botThreadStore = new Map(); // Store for tracking bot-created threads
 export const memoryContextCache = new Map(); // Cache for memory contexts to reduce DB queries
+export const threadContextCache = new Map(); // Cache for thread contexts to avoid DB queries
 export const EXPIRATION_MS = 1000 * 60 * 30;
 export const MEMORY_CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache TTL
+export const THREAD_CACHE_TTL = 2 * 60 * 1000; // 2 minutes cache TTL for threads
 
 // Clean up expired memory context cache entries
 export function cleanupMemoryCache() {
@@ -43,8 +45,21 @@ export function cleanupMemoryCache() {
       cleanedCount++;
     }
   }
+  
+  // Also cleanup thread cache
+  if (global.threadCache) {
+    let threadCleanedCount = 0;
+    for (const [key, value] of global.threadCache.entries()) {
+      if (now - value.timestamp > THREAD_CACHE_TTL) {
+        global.threadCache.delete(key);
+        threadCleanedCount++;
+      }
+    }
+    cleanedCount += threadCleanedCount;
+  }
+  
   if (cleanedCount > 0) {
-    console.log(`Cleaned up ${cleanedCount} expired memory cache entries`);
+    console.log(`Cleaned up ${cleanedCount} expired cache entries`);
   }
 }
 
