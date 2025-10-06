@@ -590,12 +590,32 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
     }
     
     if (uniqueMemories.length > 0) {
-      context += 'Previous Conversations:\n';
-      uniqueMemories.slice(0, 4).forEach(memory => { // Reduced from 5 to 4
-        const timeAgo = getTimeAgo(memory.updated_at);
-        context += `- ${memory.memory_content} (${timeAgo})\n`;
+      // Filter out memories that might contain false ping count information
+      const filteredMemories = uniqueMemories.filter(memory => {
+        const content = memory.memory_content.toLowerCase();
+        // Skip memories that contain potentially false ping/mention counts
+        const hasCountPattern = content.match(/(?:four|twice|three|five|\d+)\s*times.*(?:ping|mention|said)/i) ||
+                               content.match(/me\?\s*(?:twice|four|three|five|\d+)/i) ||
+                               content.match(/(?:ping|mention).*(?:four|twice|three|five|\d+).*(?:times|time)/i);
+        
+        if (hasCountPattern) {
+          console.log(`[MEMORY_FILTER] Filtered out potentially false memory: "${memory.memory_content.substring(0, 100)}..."`);
+          return false;
+        }
+        return true;
       });
-      context += '\n';
+      
+      if (filteredMemories.length > 0) {
+        console.log(`[MEMORY_FILTER] Using ${filteredMemories.length}/${uniqueMemories.length} memories after filtering`);
+        context += 'Previous Conversations:\n';
+        filteredMemories.slice(0, 4).forEach(memory => { // Reduced from 5 to 4
+          const timeAgo = getTimeAgo(memory.updated_at);
+          context += `- ${memory.memory_content} (${timeAgo})\n`;
+        });
+        context += '\n';
+      } else {
+        console.log(`[MEMORY_FILTER] All ${uniqueMemories.length} memories filtered out due to potential false information`);
+      }
     }
     
     if (summaries.length > 0) {

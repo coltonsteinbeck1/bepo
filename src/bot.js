@@ -757,9 +757,11 @@ client.on("messageCreate", async (message) => {
         return null;
       }, null, 'reply_context');
       
-      if (replyContext) {
+      if (replyContext && !replyContext.isBot) {
         threadContext = `--- Reply Context ---\nReplying to ${replyContext.author}: "${replyContext.content}"\n--- End Context ---\n`;
         console.log(`[THREAD] Reply context built (${threadContext.length} chars)`);
+      } else if (replyContext && replyContext.isBot) {
+        console.log(`[THREAD] Skipping bot message from reply context to prevent hallucination propagation`);
       }
     }
 
