@@ -5,6 +5,7 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 ## Recent Updates (July 2025)
 
 ### Major Refactoring & Improvements
+
 - Code organization refactored for better maintainability and performance
 - Business logic separated from commands into dedicated utility modules
 - Enhanced error handling with comprehensive tracking and retry mechanisms
@@ -12,6 +13,7 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 - Comprehensive unit test coverage for all major utilities
 
 ### Thread Management Safeguards
+
 - Robust thread tracking that survives title changes and bot restarts
 - Automatic recovery and re-establishment of thread tracking after disruptions
 - Multi-step validation with comprehensive thread existence checking
@@ -22,6 +24,7 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 - Permission-aware handling of archived threads and permission errors
 
 ### Memory System Enhancements
+
 - All memory logic moved to dedicated `memoryUtils.js` for better organization
 - Enhanced memory update commands with admin capabilities and override permissions
 - Support for partial memory ID resolution for easier updates
@@ -29,12 +32,14 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 - Smart context integration where AI automatically references relevant memories
 
 ### Digest System Improvements
+
 - Updated to use `grok-2-1212` for better digest generation
 - Robust fallback summaries when AI generation fails
 - Digest generation moved to `digestUtils.js` with comprehensive error handling
 - Support for flexible time periods: 1h, 12h, daily, and weekly digests
 
 ### Health Monitoring & Reliability
+
 - Real-time bot performance monitoring with detailed statistics
 - Different error handling for Discord, database, and AI errors
 - Comprehensive error logging with categorization and recovery tracking
@@ -45,24 +50,28 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 ## Features
 
 ### Advanced Memory System
+
 - Personal memory: Remembers conversations, preferences, and personal details across interactions
 - Server memory: Shared knowledge base that all server members can contribute to and reference
 - Memory management: View, search, update, and clear memories with sophisticated filtering
 - Smart context: AI automatically references relevant memories during conversations
 
 ### Gaming & Entertainment
+
 - AI-powered meme generation and responses
 - AI image generation with DALL-E integration
 - Game integration: Real-time Apex Legends map rotation and CS2 skin prices
 - Minecraft server management with AWS-powered start/stop/status controls
 
 ### Conversation & AI
+
 - Smart conversations with advanced AI chat using memory context
 - Thread management: Create organized Discord threads for longer conversations
 - Voice integration: YAP system for voice channel interactions
 - Digest system: AI-powered server activity summaries with customizable time periods
 
 ### Server Management
+
 - Role management: Self-assignable roles with permission controls
 - Health monitoring: Comprehensive bot health checks and error tracking
 - Thread safeguards: Robust thread management surviving restarts and changes
@@ -140,11 +149,13 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 ## 🚀 Quick Start Guide
 
 **New to Bepo?** Check out the **[Simplified Bepo Guide](./BEPO_GUIDE.md)** for:
+
 - APEX Mode setup (gaming notifications)
-- OFFLINE Mode features (continuous operation)  
+- OFFLINE Mode features (continuous operation)
 - Essential commands and testing scenarios
 
 ### Core Operations
+
 ```bash
 npm start                 # Start Bepo with all services
 npm stop                  # Stop all Bepo services
@@ -205,6 +216,7 @@ npm restart              # Restart everything
 - `healthMonitor.js`: System health tracking and performance metrics
 
 ### Reliability Features
+
 - Thread safeguards: Automatic recovery from thread title changes and bot restarts
 - Memory persistence: Robust database operations with transaction safety
 - Error recovery: Automatic retry mechanisms with exponential backoff
@@ -213,6 +225,7 @@ npm restart              # Restart everything
 ## Development & Testing
 
 ### Test Suite
+
 ```bash
 npm test                                   # Run all tests (unit + integration)
 npm run test:unit                          # Run unit tests only
@@ -220,12 +233,14 @@ npm run test:integration                   # Run integration tests only
 ```
 
 ### Test Coverage
+
 - 64 total tests covering all major functionality
 - Unit tests for all utility modules and error handling
 - Integration tests for bot initialization and command loading
 - Mock implementations for external APIs to prevent costs during testing
 
 ### Deployment
+
 ```bash
 npm run deploy                             # Deploy slash commands to Discord
 npm start                                  # Start the bot in production
@@ -235,6 +250,7 @@ npm run dev                               # Start in development mode
 ## Configuration & Environment
 
 ### Required Environment Variables
+
 ```bash
 # Discord Configuration
 BOT_TOKEN=your_discord_bot_token
@@ -255,12 +271,14 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
 ### Database Schema
+
 - Memory tables: User and server memory storage with metadata and expiration handling
 - Thread tracking: Bot-managed thread information, activity tracking, and recovery data
 - Health metrics: Error logs, performance data, and automated recovery tracking
 - Configuration: Server-specific settings, preferences, and admin overrides
 
 ### Memory Types
+
 - `conversation`: User messages and bot responses with automatic cleanup
 - `preference`: User settings (name, timezone, language, interests)
 - `conversation_summary`: Condensed conversation overviews for context
@@ -270,6 +288,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ## Usage Examples
 
 ### Setting Up Personal Preferences
+
 ```
 /memory set key:name value:Alex                    # Set your name
 /memory set key:timezone value:EST                 # Set your timezone
@@ -278,6 +297,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
 ### Thread Management
+
 ```
 /thread AI Discussion                              # Create named thread
 /thread                                           # Create auto-named thread
@@ -286,6 +306,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
 ### Memory Management
+
 ```
 /memory search query:"project ideas"               # Search your memories
 /updatememory id:abc123 content:"Updated content"  # Update by full ID
@@ -294,6 +315,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
 ### Server Memory
+
 ```
 /servermemory add "Server rules: Be respectful" title:"Rules"
 /servermemory search query:"rules"
@@ -302,6 +324,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ```
 
 ### Health & Diagnostics
+
 ```
 /health                                           # Full system health check
 /debug-memory user:@someone                       # Debug user memory (admin)
@@ -319,12 +342,14 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ## Contributing
 
 ### Development Guidelines
+
 - Code organization: Keep business logic in utility modules
 - Error handling: Use `safeAsync` wrapper for all async operations
 - Testing: Add tests for new features and bug fixes
 - Documentation: Update README and technical docs for changes
 
 ### Testing Standards
+
 - Mock external APIs: Prevent costs during testing
 - Comprehensive coverage: Test both success and failure scenarios
 - Integration tests: Verify commands load and function properly
