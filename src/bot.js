@@ -33,6 +33,7 @@ import stopyapCommand from "./commands/fun/stopyap.js";
 import markovCommand from "./commands/fun/markov.js";
 import gifCommand from "./commands/fun/gif.js";
 import jigginCommand from "./commands/fun/jigglin.js";
+import recordCommand from "./commands/fun/record.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { MarkovPersistence } from "./utils/markovPersistence.js";
 import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories, cleanupOldMessageThreads } from "./supabase/supabase.js";
@@ -300,7 +301,7 @@ client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
 client.commands.set("apexnotify", apexNotifyCommand);
-
+client.commands.set("record", recordCommand);
 
 // xAI API for Grok-4 (unified text and vision)
 const xAI = new OpenAI({
@@ -424,7 +425,7 @@ await markovPersistence.loadChain(markov);
 // Make markov instance available to commands
 client.markov = markov;
 
-client.on("ready", async () => {
+client.on("clientReady", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
 
   // Set user mappings for markov chain
@@ -929,21 +930,23 @@ client.on("messageCreate", async (message) => {
         }, 'grok4_fallback_call');
       }
 
-      // Store the processed message in conversation history
+      // Store the processed message in conversation history (without thread context)
       if (response) {
-        appendToConversation(message, "user", message.content + " [User shared an image]");
+        appendToConversation(message, "user", messageData.processedContent + " [User shared an image]");
       }
     } else {
       // Use Grok-4 for text-only messages
       let userContent = messageData.processedContent;
       
-      // Add thread context if available
+      // Add thread context if available (for AI context only, NOT stored in conversation)
       if (threadContext) {
         userContent = threadContext + '\n' + userContent;
         console.log(`[THREAD] Added reply context to message (${threadContext.length} chars)`);
       }
       
-      appendToConversation(message, "user", userContent);
+      // Store ONLY the processed content (without thread context) in conversation history
+      // This prevents thread context from accumulating and causing hallucinations
+      appendToConversation(message, "user", messageData.processedContent);
 
       response = await safeAsync(async () => {
         return await xAI.chat.completions.create({
@@ -983,10 +986,11 @@ client.on("messageCreate", async (message) => {
 
     // Store memory after successful conversation
     await safeAsync(async () => {
-      // Store the user's message as memory
+      // Store the user's message as memory (use processedContent to avoid storing thread context)
+      // This prevents reply context from being stored in memory and causing hallucinations
       await storeUserMemory(
         message.author.id,
-        `User said: "${message.content}" in ${message.channel.name || 'DM'}`,
+        `User said: "${messageData.processedContent}" in ${message.channel.name || 'DM'}`,
         'conversation',
         {
           channel_id: message.channel.id,

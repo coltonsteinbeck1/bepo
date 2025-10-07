@@ -1077,6 +1077,193 @@ async function cleanupOldMessageThreads(daysOld = 7) {
     }
 }
 
+// Video generation functions
+async function insertVideo(userId, guildId, channelId, prompt, referenceImages = [], metadata = {}) {
+    const { data, error } = await supabase
+        .from('videos')
+        .insert([{
+            user_id: userId,
+            guild_id: guildId,
+            channel_id: channelId,
+            prompt: prompt,
+            reference_images: referenceImages,
+            status: 'pending',
+            metadata: metadata
+        }])
+        .select();
+    
+    if (error) {
+        console.error('Error inserting video:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function updateVideoStatus(videoId, status, videoUrl = null, errorMessage = null) {
+    const updates = {
+        status: status,
+        updated_at: new Date().toISOString()
+    };
+    
+    if (videoUrl) {
+        updates.video_url = videoUrl;
+    }
+    
+    if (status === 'completed') {
+        updates.completed_at = new Date().toISOString();
+    }
+    
+    if (errorMessage) {
+        updates.error_message = errorMessage;
+    }
+    
+    const { data, error } = await supabase
+        .from('videos')
+        .update(updates)
+        .eq('id', videoId)
+        .select();
+    
+    if (error) {
+        console.error('Error updating video status:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function updateVideoWithOpenAIId(videoId, openaiVideoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .update({ 
+            video_id: openaiVideoId,
+            status: 'processing',
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', videoId)
+        .select();
+    
+    if (error) {
+        console.error('Error updating video with OpenAI ID:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function getVideoById(videoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('id', videoId)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching video:', error);
+        return null;
+    }
+    return data;
+}
+
+async function getVideoByOpenAIId(openaiVideoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('video_id', openaiVideoId)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching video by OpenAI ID:', error);
+        return null;
+    }
+    return data;
+}
+
+async function getUserVideos(userId, limit = 10) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    
+    if (error) {
+        console.error('Error fetching user videos:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function getGuildVideos(guildId, limit = 20) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('guild_id', guildId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    
+    if (error) {
+        console.error('Error fetching guild videos:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function getVideoStats(userId = null) {
+    let query = supabase
+        .from('videos')
+        .select('status, created_at');
+    
+    if (userId) {
+        query = query.eq('user_id', userId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        console.error('Error fetching video stats:', error);
+        return { total: 0, byStatus: {} };
+    }
+    
+    const stats = { 
+        total: data?.length || 0, 
+        byStatus: {
+            pending: 0,
+            processing: 0,
+            completed: 0,
+            failed: 0
+        }
+    };
+    
+    data?.forEach(video => {
+        stats.byStatus[video.status] = (stats.byStatus[video.status] || 0) + 1;
+    });
+    
+    return stats;
+}
+
+async function cleanupOldVideos(daysOld = 30) {
+    try {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        
+        const { data, error } = await supabase
+            .from('videos')
+            .delete()
+            .lt('created_at', cutoffDate.toISOString())
+            .in('status', ['completed', 'failed']);
+        
+        if (error) {
+            console.error('Error cleaning up old videos:', error);
+            return 0;
+        }
+        
+        const deletedCount = data ? data.length : 0;
+        console.log(`Cleaned up ${deletedCount} old videos`);
+        return deletedCount;
+    } catch (error) {
+        console.error('Error in cleanupOldVideos:', error);
+        return 0;
+    }
+}
+
 export {
     getAllGuilds,
     getMarkovChannels,
@@ -1122,6 +1309,16 @@ export {
     storeMessageThread,
     getMessageThread,
     getThreadMessages,
-    cleanupOldMessageThreads
+    cleanupOldMessageThreads,
+    // Video functions
+    insertVideo,
+    updateVideoStatus,
+    updateVideoWithOpenAIId,
+    getVideoById,
+    getVideoByOpenAIId,
+    getUserVideos,
+    getGuildVideos,
+    getVideoStats,
+    cleanupOldVideos
 }
 

@@ -134,6 +134,7 @@ A feature-rich Discord bot powered by AI with memory, server management, gaming 
 
 ```
 /draw <prompt> [style]                     # Generate AI artwork with DALL-E
+/record <prompt> [resolution] [images]     # Generate AI videos with Sora 2 (see VIDEO_GENERATION.md)
 ```
 
 ## 🚀 Quick Start Guide
@@ -310,6 +311,7 @@ MODEL_SYSTEM_MESSAGE=your_system_prompt
 ## Additional Documentation
 
 - [User Guide](USER_GUIDE.md) - Complete command reference and usage
+- [Video Generation Guide](VIDEO_GENERATION.md) - AI video creation with Sora 2 ⭐ NEW
 - [Technical Documentation](TECHNICAL_DOCS.md) - Development and architecture details
 - [Testing Guide](TESTING_GUIDE.md) - Test procedures and scenarios
 - [Troubleshooting](TROUBLESHOOTING.md) - Common issues and solutions
