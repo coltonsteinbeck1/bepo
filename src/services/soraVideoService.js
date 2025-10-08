@@ -43,61 +43,61 @@ export async function generateVideo(prompt, imageUrls = [], options = {}) {
 
     // NOTE: Duration and other parameters are NOT supported by the API yet
     // The duration is determined by the model itself based on the prompt
-    
+
     // Add reference image if provided
     // OpenAI Sora 2 supports ONE reference image via 'input_reference' parameter
     // The image must be uploaded as a file (not base64) and match the video resolution EXACTLY
     if (imageUrls.length > 0) {
       console.log(`   🖼️ Processing reference image: ${imageUrls[0]}`);
-      
+
       try {
         // Download the image
         const imageResponse = await axios.get(imageUrls[0], {
           responseType: "arraybuffer",
           timeout: 10000,
         });
-        
+
         // Convert to Buffer for file upload
         const imageBuffer = Buffer.from(imageResponse.data);
         const contentType = imageResponse.headers["content-type"] || "image/jpeg";
-        
+
         console.log(`   ✓ Downloaded reference image: ${imageBuffer.length} bytes, type: ${contentType}`);
-        
+
         // Get image dimensions to validate against video resolution
         const sharp = (await import('sharp')).default;
         const imageMetadata = await sharp(imageBuffer).metadata();
         const imageWidth = imageMetadata.width;
         const imageHeight = imageMetadata.height;
-        
+
         console.log(`   ℹ️ Reference image dimensions: ${imageWidth}x${imageHeight}`);
-        
+
         // Parse requested video resolution
         const [videoWidth, videoHeight] = (resolution || "1280x720").split('x').map(Number);
         console.log(`   ℹ️ Requested video resolution: ${videoWidth}x${videoHeight}`);
-        
+
         // Validate that image matches video resolution EXACTLY
         if (imageWidth !== videoWidth || imageHeight !== videoHeight) {
           const errorMsg = `Reference image (${imageWidth}x${imageHeight}) must EXACTLY match video resolution (${videoWidth}x${videoHeight})`;
           console.error(`   ❌ ${errorMsg}`);
           throw new Error(errorMsg);
         }
-        
+
         console.log(`   ✓ Image dimensions match video resolution`);
-        
+
         // Determine file extension from content type
         let extension = 'jpg';
         if (contentType.includes('png')) extension = 'png';
         else if (contentType.includes('webp')) extension = 'webp';
         else if (contentType.includes('jpeg') || contentType.includes('jpg')) extension = 'jpg';
-        
+
         // Use OpenAI's toFile helper to create a proper File object with MIME type
         const { toFile } = await import('openai/uploads');
         const fileObject = await toFile(imageBuffer, `reference.${extension}`, { type: contentType });
-        
+
         payload.input_reference = fileObject;
-        
+
         console.log(`   ✓ Added reference image to payload (${extension}, ${contentType})`);
-        
+
         if (imageUrls.length > 1) {
           console.log(`   ⚠️ Note: Only the first image will be used (API supports 1 image)`);
         }
@@ -127,18 +127,18 @@ export async function generateVideo(prompt, imageUrls = [], options = {}) {
     };
   } catch (error) {
     console.error("❌ Error generating video with Sora:", error);
-    
+
     // Log detailed error info for debugging
     if (error.response) {
       console.error("   Response status:", error.response.status);
       console.error("   Response data:", JSON.stringify(error.response.data, null, 2));
     }
-    
+
     // Log error details for better debugging
     if (error.error) {
       console.error("   Error object:", JSON.stringify(error.error, null, 2));
     }
-    
+
     if (error.code) {
       console.error("   Error code:", error.code);
     }
@@ -229,14 +229,14 @@ export async function checkVideoStatus(videoId) {
 export async function retrieveVideoContent(videoId) {
   try {
     console.log(`📥 Retrieving video content for ${videoId}...`);
-    
+
     // Use the correct OpenAI SDK method: downloadContent
     // This returns a Response object with the video binary data
     const response = await openai.videos.downloadContent(videoId);
-    
+
     // Response is a fetch Response object, convert to Buffer
     let videoBuffer;
-    
+
     if (response instanceof Buffer) {
       videoBuffer = response;
     } else if (response.arrayBuffer) {
@@ -254,10 +254,10 @@ export async function retrieveVideoContent(videoId) {
       // Try to convert directly
       videoBuffer = Buffer.from(response);
     }
-    
+
     console.log(`✅ Retrieved video content: ${videoBuffer.length} bytes`);
     return videoBuffer;
-    
+
   } catch (error) {
     console.error(`❌ Error retrieving video content for ${videoId}:`, error);
     throw new Error(`Failed to retrieve video content: ${error.message}`);
@@ -288,7 +288,7 @@ export async function pollVideoStatus(videoId, maxAttempts = 180, intervalMs = 1
       // Terminal states - return immediately
       if (status.status === "completed") {
         console.log(`✅ Video generation completed! Retrieving video content...`);
-        
+
         // Retrieve the actual video content
         try {
           const videoBuffer = await retrieveVideoContent(videoId);
@@ -319,7 +319,7 @@ export async function pollVideoStatus(videoId, maxAttempts = 180, intervalMs = 1
       // "processing" - actively generating the video
       // "in_progress" - alternative status name that might be used
       const isProcessing = ["queued", "processing", "in_progress"].includes(status.status);
-      
+
       if (isProcessing) {
         console.log(`   ⏳ Video still ${status.status}... (${Math.round((attempts + 1) * intervalMs / 60000)} minutes elapsed)`);
       } else {
@@ -331,13 +331,13 @@ export async function pollVideoStatus(videoId, maxAttempts = 180, intervalMs = 1
       attempts++;
     } catch (error) {
       consecutiveErrors++;
-      
+
       // Check if it's a network error
-      const isNetworkError = error.message?.includes("Connection error") || 
-                             error.message?.includes("ENOTFOUND") ||
-                             error.message?.includes("fetch failed") ||
-                             error.code === "ENOTFOUND" ||
-                             error.cause?.code === "ENOTFOUND";
+      const isNetworkError = error.message?.includes("Connection error") ||
+        error.message?.includes("ENOTFOUND") ||
+        error.message?.includes("fetch failed") ||
+        error.code === "ENOTFOUND" ||
+        error.cause?.code === "ENOTFOUND";
 
       if (isNetworkError) {
         console.warn(`🌐 Network error during polling (attempt ${attempts + 1}, consecutive errors: ${consecutiveErrors}):`, error.message);
@@ -351,7 +351,7 @@ export async function pollVideoStatus(videoId, maxAttempts = 180, intervalMs = 1
         return {
           success: false,
           completed: false,
-          error: isNetworkError 
+          error: isNetworkError
             ? `Network connectivity issues. Video may still be processing. Check OpenAI dashboard with video ID: ${videoId}`
             : `Polling failed after ${consecutiveErrors} consecutive errors: ${error.message}`,
         };
@@ -365,7 +365,7 @@ export async function pollVideoStatus(videoId, maxAttempts = 180, intervalMs = 1
       // Exponential backoff for network errors, normal interval otherwise
       const backoffMultiplier = isNetworkError ? Math.min(consecutiveErrors, 3) : 1;
       const waitTime = intervalMs * backoffMultiplier;
-      
+
       console.log(`   ⏳ Retrying in ${waitTime / 1000} seconds...`);
       await new Promise((resolve) => setTimeout(resolve, waitTime));
       attempts++;

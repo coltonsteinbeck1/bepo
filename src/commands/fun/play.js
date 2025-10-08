@@ -23,27 +23,61 @@ export { musicQueues };
 // Helper function to get audio stream using yt-dlp
 const getAudioStream = async (url) => {
     console.log(`[AUDIO] Getting stream using yt-dlp for: ${url}`);
-    try {
-        const audioUrl = await youtubedl(url, {
-            format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
-            getUrl: true,
-            quiet: true,
-            noWarnings: true,
-            noCheckCertificates: true,
-            preferFreeFormats: true
-        });
-        console.log('[AUDIO] Got audio URL from yt-dlp');
-        const response = await fetch(audioUrl);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch audio: ${response.statusText}`);
+    
+    // Try multiple format options in order of preference
+    const formatOptions = [
+        'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
+        'bestaudio/best',
+        'best[ext=m4a]/best[ext=webm]/best'
+    ];
+    
+    let lastError = null;
+    
+    for (const format of formatOptions) {
+        try {
+            console.log(`[AUDIO] Trying format: ${format}`);
+            const audioUrl = await youtubedl(url, {
+                format: format,
+                getUrl: true,
+                quiet: true,
+                noWarnings: true,
+                noCheckCertificates: true,
+                preferFreeFormats: true,
+                addHeader: [
+                    'User-Agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36'
+                ]
+            });
+            console.log(`[AUDIO] Successfully got audio URL with format: ${format}`);
+            
+            const response = await fetch(audioUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+                    'Accept': '*/*',
+                    'Accept-Language': 'en-US,en;q=0.9',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                    'Range': 'bytes=0-'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Failed to fetch audio: ${response.statusText}`);
+            }
+            
+            const stream = Readable.fromWeb(response.body);
+            console.log('[AUDIO] Created audio stream successfully');
+            return { stream, type: StreamType.Arbitrary };
+            
+        } catch (error) {
+            console.log(`[AUDIO] Format ${format} failed: ${error.message}`);
+            lastError = error;
+            // Continue to next format option
         }
-        const stream = Readable.fromWeb(response.body);
-        console.log('[AUDIO] Created audio stream successfully');
-        return { stream, type: StreamType.Arbitrary };
-    } catch (error) {
-        console.error('[AUDIO] Error getting audio stream:', error);
-        throw error;
     }
+    
+    // If all formats failed, throw the last error
+    console.error('[AUDIO] All format options failed');
+    throw lastError || new Error('Failed to get audio stream with any format');
 };
 
 // Helper function to get video info using yt-dlp
@@ -97,6 +131,48 @@ const searchYouTube = async (query, limit = 1) => {
     } catch (error) {
         console.error('[YOUTUBE_SEARCH] Error searching YouTube:', error);
         return [];
+    }
+};
+
+// Helper function to get YouTube playlist information and videos
+const getYouTubePlaylistInfo = async (playlistUrl) => {
+    console.log(`[YOUTUBE_PLAYLIST] Getting playlist info for: ${playlistUrl}`);
+    try {
+        const playlistData = await youtubedl(playlistUrl, {
+            dumpSingleJson: true,
+            noWarnings: true,
+            flatPlaylist: true,
+            skipDownload: true,
+            noCheckCertificates: true
+        });
+
+        if (!playlistData.entries || playlistData.entries.length === 0) {
+            console.log('[YOUTUBE_PLAYLIST] No entries found in playlist');
+            return null;
+        }
+
+        const videos = playlistData.entries
+            .filter(entry => entry && entry.id) // Filter out null/invalid entries
+            .map(entry => ({
+                url: entry.webpage_url || `https://www.youtube.com/watch?v=${entry.id}`,
+                title: entry.title || 'Unknown Title',
+                channel: entry.uploader || entry.channel || 'Unknown Channel',
+                duration: entry.duration_string || 'Unknown',
+                thumbnail: entry.thumbnail || null
+            }));
+
+        console.log(`[YOUTUBE_PLAYLIST] Found ${videos.length} videos in playlist`);
+
+        return {
+            name: playlistData.title || 'YouTube Playlist',
+            description: playlistData.description || '',
+            videos: videos,
+            thumbnail: videos[0]?.thumbnail || null,
+            uploader: playlistData.uploader || playlistData.channel || 'Unknown'
+        };
+    } catch (error) {
+        console.error('[YOUTUBE_PLAYLIST] Error getting playlist info:', error);
+        return null;
     }
 };
 
@@ -895,6 +971,54 @@ const createSpotifyAlbumAddedEmbed = (spotifyData, queueData, startPosition) => 
     return embed;
 };
 
+// Create enhanced YouTube playlist addition embed
+const createYouTubePlaylistAddedEmbed = (playlistData, queueData, startPosition) => {
+    const embed = new EmbedBuilder()
+        .setColor('#FF0000') // YouTube red
+        .setTitle('📺 Added YouTube Playlist to Queue')
+        .setDescription(`**${playlistData.name}**\n*All videos added to queue*`)
+        .addFields(
+            { name: '🎬 Videos Added', value: `${playlistData.videos.length}`, inline: true },
+            { name: '📋 Total Queue', value: `${queueData.songs.length} songs`, inline: true },
+            { name: '📍 Starting Position', value: `${startPosition}`, inline: true }
+        )
+        .setThumbnail(playlistData.thumbnail)
+        .setTimestamp();
+
+    // Show currently playing song
+    if (queueData.currentIndex >= 0 && queueData.currentIndex < queueData.songs.length) {
+        const currentSong = queueData.songs[queueData.currentIndex];
+        embed.addFields({
+            name: '🎵 Currently Playing',
+            value: `**${currentSong.title}** ${currentSong.isSpotifyTrack ? '🎵' : ''}`,
+            inline: false
+        });
+    }
+
+    // Show some of the newly added videos
+    const newlyAddedVideos = playlistData.videos.slice(0, 4) // Show first 4 videos from the playlist
+        .map((video, index) => {
+            const position = startPosition + index;
+            return `${position}. ${video.title}`;
+        })
+        .join('\n');
+    
+    const moreCount = playlistData.videos.length > 4 ? ` (+${playlistData.videos.length - 4} more videos)` : '';
+    embed.addFields({
+        name: '🎬 Added Videos Preview',
+        value: newlyAddedVideos + moreCount,
+        inline: false
+    });
+
+    if (playlistData.uploader && playlistData.uploader !== 'Unknown') {
+        embed.setFooter({ text: `📺 Playlist by ${playlistData.uploader} • All videos added to queue` });
+    } else {
+        embed.setFooter({ text: '📺 YouTube Playlist • All videos added to queue' });
+    }
+
+    return embed;
+};
+
 // Create control buttons for queue additions
 const createQueueAddedButtons = () => {
     return new ActionRowBuilder()
@@ -913,13 +1037,13 @@ const createQueueAddedButtons = () => {
                 .setStyle(ButtonStyle.Danger)
         );
 };
-const createControlButtons = (hasQueue = false) => {
+const createControlButtons = (hasQueue = false, isPaused = false) => {
     const row = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId('music_pause')
-                .setLabel('⏸️ Pause')
-                .setStyle(ButtonStyle.Primary),
+                .setLabel(isPaused ? '▶️ Resume' : '⏸️ Pause')
+                .setStyle(isPaused ? ButtonStyle.Success : ButtonStyle.Primary),
             new ButtonBuilder()
                 .setCustomId('music_skip')
                 .setLabel('⏭️ Skip')
@@ -1039,7 +1163,7 @@ const playNextSong = async (guildId, interaction = null) => {
 
             // Update embed
             const embed = createMusicEmbed(song, queueData);
-            const buttons = createControlButtons(queueData.songs.length > 1);
+            const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
             if (queueData.lastMessage) {
                 await queueData.lastMessage.edit({
@@ -1219,7 +1343,7 @@ const playCommand = {
 
                         // Create and send embed with controls
                         const embed = createMusicEmbed(songData, queueData);
-                        const buttons = createControlButtons(queueData.songs.length > 1);
+                        const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
                         console.log('[MAIN] Sending final reply...');
                         const message = await interaction.editReply({
@@ -1300,8 +1424,146 @@ const playCommand = {
                 }
 
                 if (urlAnalysis.isPlaylist) {
-                    await interaction.editReply('❌ YouTube playlists are not directly supported. Please provide individual video URLs or use a Spotify playlist instead.');
-                    return;
+                    // Handle YouTube playlist
+                    await interaction.editReply('📺 Fetching YouTube playlist information...');
+                    
+                    const playlistData = await getYouTubePlaylistInfo(link);
+                    
+                    if (!playlistData || playlistData.videos.length === 0) {
+                        await interaction.editReply('❌ Failed to get playlist information or the playlist is empty. Please try a different playlist URL.');
+                        return;
+                    }
+
+                    console.log(`[MAIN] Processing YouTube playlist with ${playlistData.videos.length} videos`);
+                    await interaction.editReply(`📺 Found playlist: **${playlistData.name}**\n🎬 Adding ${playlistData.videos.length} videos to queue...`);
+                    
+                    // Get or create queue
+                    let queueData = musicQueues.get(guildId);
+                    let connection = connections.get(guildId);
+
+                    if (!queueData) {
+                        console.log('[MAIN] Creating new queue for YouTube playlist...');
+                        // Create new queue with first video
+                        const firstVideo = playlistData.videos[0];
+                        console.log('[MAIN] First video:', firstVideo.title);
+                        
+                        songData = {
+                            url: firstVideo.url,
+                            title: firstVideo.title,
+                            channel: firstVideo.channel,
+                            duration: firstVideo.duration,
+                            thumbnail: firstVideo.thumbnail,
+                            isSpotifyTrack: false
+                        };
+
+                        queueData = {
+                            songs: [songData],
+                            currentIndex: 0,
+                            player: createAudioPlayer(),
+                            isPaused: false,
+                            lastMessage: null
+                        };
+                        musicQueues.set(guildId, queueData);
+
+                        console.log('[MAIN] Joining voice channel...');
+                        connection = joinVoiceChannel({
+                            channelId: channel.id,
+                            guildId: channel.guild.id,
+                            adapterCreator: channel.guild.voiceAdapterCreator,
+                            selfDeaf: false,
+                        });
+                        connections.set(guildId, connection);
+
+                        // Register music activity
+                        voiceActivityManager.startActivity(guildId, 'music', channel.id, queueData);
+
+                        queueData.player.on(AudioPlayerStatus.Idle, () => {
+                            playNextSong(guildId);
+                        });
+
+                        connection.subscribe(queueData.player);
+
+                        console.log('[MAIN] Adding remaining videos to queue...');
+                        // Add remaining videos to queue
+                        for (let i = 1; i < playlistData.videos.length; i++) {
+                            const video = playlistData.videos[i];
+                            queueData.songs.push({
+                                url: video.url,
+                                title: video.title,
+                                channel: video.channel,
+                                duration: video.duration,
+                                thumbnail: video.thumbnail,
+                                isSpotifyTrack: false
+                            });
+                        }
+
+                        youtubeUrl = firstVideo.url;
+                        console.log('[MAIN] Will start playing:', youtubeUrl);
+                        
+                        // Now proceed to play the first video
+                        console.log('[MAIN] Starting playback for playlist first video:', youtubeUrl);
+                        // Get audio stream using yt-dlp
+                        let stream;
+                        try {
+                            stream = await getAudioStream(youtubeUrl);
+                        } catch (audioError) {
+                            console.error('[AUDIO] Error getting audio stream for playlist video:', audioError);
+                            console.error('[AUDIO] Error details:', audioError.message);
+                            await interaction.editReply('❌ Failed to process the first video from the playlist. Please try a different playlist.');
+                            return;
+                        }
+
+                        console.log('[MAIN] Got audio stream, creating resource...');
+                        console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
+                        const resource = createAudioResource(stream.stream, { 
+                            inputType: stream.type,
+                            inlineVolume: true 
+                        });
+                        console.log('[AUDIO] Audio resource created successfully');
+
+                        console.log('[MAIN] Playing audio...');
+                        queueData.player.play(resource);
+
+                        // Create and send embed with controls
+                        const embed = createMusicEmbed(songData, queueData);
+                        const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
+
+                        console.log('[MAIN] Sending final reply...');
+                        const message = await interaction.editReply({
+                            embeds: [embed],
+                            components: [buttons]
+                        });
+
+                        queueData.lastMessage = message;
+                        console.log('[MAIN] YouTube playlist setup complete!');
+                        return; // Exit here to avoid falling through to general queue logic
+                    } else {
+                        console.log('[MAIN] Adding YouTube playlist videos to existing queue...');
+                        // Store the starting position for the new videos
+                        const startPosition = queueData.songs.length + 1;
+                        
+                        // Add all videos to existing queue
+                        for (const video of playlistData.videos) {
+                            queueData.songs.push({
+                                url: video.url,
+                                title: video.title,
+                                channel: video.channel,
+                                duration: video.duration,
+                                thumbnail: video.thumbnail,
+                                isSpotifyTrack: false
+                            });
+                        }
+
+                        // Create enhanced embed with queue info and controls
+                        const embed = createYouTubePlaylistAddedEmbed(playlistData, queueData, startPosition);
+                        const buttons = createQueueAddedButtons();
+
+                        await interaction.editReply({
+                            embeds: [embed],
+                            components: [buttons]
+                        });
+                        return;
+                    }
                 }
 
                 // Get video info using yt-dlp
@@ -1491,7 +1753,7 @@ const playCommand = {
 
             // Create and send embed with controls
             const embed = createMusicEmbed(songData, queueData);
-            const buttons = createControlButtons(queueData.songs.length > 1);
+            const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
             console.log('[MAIN] Sending final reply...');
             const message = await interaction.editReply({
@@ -1605,7 +1867,7 @@ export const handleMusicInteraction = async (interaction) => {
                 const embed = createMusicEmbed(currentSong, queueData, true);
                 await interaction.update({
                     embeds: [embed],
-                    components: [createControlButtons(queueData.songs.length > 1)]
+                    components: [createControlButtons(queueData.songs.length > 1, false)]
                 });
             } else {
                 queueData.player.pause();
@@ -1614,7 +1876,7 @@ export const handleMusicInteraction = async (interaction) => {
                 embed.setTitle('⏸️ Paused');
                 await interaction.update({
                     embeds: [embed],
-                    components: [createControlButtons(queueData.songs.length > 1)]
+                    components: [createControlButtons(queueData.songs.length > 1, true)]
                 });
             }
             break;
