@@ -185,38 +185,66 @@ export async function chatWithWebSearch(messages, options = {}) {
  * @returns {boolean} True if query likely needs search
  */
 export function shouldUseWebSearch(query) {
+  // Normalize query for better matching
+  const normalizedQuery = query.toLowerCase().trim();
+  
+  // Quick reject: Very short messages unlikely to need search
+  if (normalizedQuery.length < 10) {
+    return false;
+  }
+  
+  // Quick reject: Common conversational phrases that don't need search
+  const conversationalPhrases = [
+    /^(hi|hey|hello|sup|yo|thanks|thank you|ok|okay|lol|lmao|nice|cool|good|great)\b/i,
+    /^(implemented|added|fixed|updated|changed|created|working on)/i,
+    /\b(web search|search feature|search functionality|search system)\s+(when|if|for|to)/i,
+  ];
+  
+  if (conversationalPhrases.some(pattern => pattern.test(normalizedQuery))) {
+    return false;
+  }
+  
   const searchIndicators = [
-    // Explicit search/information requests
-    /\b(search|find|look up|google|show me|check)\b/i,
+    // Explicit search/information requests (but exclude technical discussion about search features)
+    /\b(search|find|look up|google|show me|check)\s+(for|about|the|what|who|when|where|how)\s+\w+/i,
     
-    // Time-sensitive queries - EXPANDED
-    /\b(latest|current|today|now|recent|this week|this month|right now|currently)\b/i,
-    /\b(news|update|announcement|breaking)\b/i,
-    /\b(live|real.?time|ongoing|happening)\b/i,
+    // Time-sensitive queries - EXPANDED (require context)
+    /\b(latest|current|today's|right now|currently)\s+\w+/i,
+    /\b(recent|this week|this month)\s+\w+/i,
+    /\b(news|update|announcement|breaking)\s+(about|on|for|regarding)/i,
+    /\b(live|real.?time|ongoing|happening)\s+(now|today|currently)/i,
     
-    // Information queries
-    /\b(what is|who is|when did|where is|how much|how many)\b/i,
-    /\b(tell me about|information about|details about)\b/i,
+    // Information queries (stricter - require full question patterns)
+    /\b(what is|what are|what's)\s+\w+/i,
+    /\b(who is|who are|who's)\s+\w+/i,
+    /\b(when did|when was|when will|when does)\s+\w+/i,
+    /\b(where is|where are|where can)\s+\w+/i,
+    /\b(how much|how many)\s+\w+/i,
+    /\b(tell me about|information about|details about)\s+\w+/i,
     
-    // Current events and data - EXPANDED
-    /\b(weather|temperature|forecast|climate)\b/i,
-    /\b(price|cost|stock|rate|value|trading)\b/i,
-    /\b(score|result|standings|stats|game|match)\b/i,
-    /\b(nfl|nba|mlb|nhl|soccer|football|basketball|baseball|hockey)\b/i,
-    /\b(election|vote|poll|candidate)\b/i,
+    // Current events and data - EXPANDED (with context)
+    /\b(weather|temperature|forecast)\s+(in|for|today|now)/i,
+    /\b(price|cost|value)\s+(of|for)\s+\w+/i,
+    /\b(stock|rate|trading)\s+(price|for)/i,
+    /\b(score|result|standings|stats)\s+(for|of|today)/i,
+    /\b(nfl|nba|mlb|nhl|soccer|football|basketball|baseball|hockey)\s+(score|game|stats|standing)/i,
+    /\b(election|vote|poll)\s+(result|count|update)/i,
     
-    // Recent dates (2024-2025+)
-    /\b(202[4-9]|20[3-9][0-9])\b/i,
+    // Patch notes and game updates (specific context)
+    /\b(patch note|update note|changelog|release note)s?\b/i,
+    /\b(game update|balance change|nerf|buff)\s+(for|in)\s+\w+/i,
     
-    // Time references
-    /\b(yesterday|tomorrow|tonight|this morning|this evening)\b/i,
-    /\b(monday|tuesday|wednesday|thursday|friday|saturday|sunday)\b/i,
+    // Recent dates (2024-2025+) - but only in question context
+    /\b(202[4-9]|20[3-9][0-9])\s+(update|news|patch|release)/i,
     
-    // Questions about current state
-    /\?(.*)(now|today|currently|at the moment|right now)/i,
+    // Time references with context
+    /\b(yesterday|tomorrow|tonight|this morning|this evening)\s*('s)?\s+(score|news|weather|game)/i,
     
-    // Market/Finance
-    /\b(bitcoin|ethereum|crypto|dow|nasdaq|s&p)\b/i,
+    // Questions about current state (require question mark)
+    /\?\s*.*(now|today|currently|at the moment|right now)/i,
+    
+    // Market/Finance with context
+    /\b(bitcoin|ethereum|crypto|dow|nasdaq|s&p)\s+(price|value|rate)/i,
   ];
   
   return searchIndicators.some(pattern => pattern.test(query));
