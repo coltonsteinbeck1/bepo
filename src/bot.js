@@ -33,6 +33,7 @@ import stopyapCommand from "./commands/fun/stopyap.js";
 import markovCommand from "./commands/fun/markov.js";
 import gifCommand from "./commands/fun/gif.js";
 import jigginCommand from "./commands/fun/jigglin.js";
+import rhynoCommand from "./commands/fun/rhyno.js";
 import recordCommand from "./commands/fun/record.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { MarkovPersistence } from "./utils/markovPersistence.js";
@@ -47,6 +48,7 @@ import {
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import { RoleManager } from "./utils/roleUtils.js";
+import { checkUserTriggers } from "./utils/userTriggers.js";
 import healthMonitor from "./utils/healthMonitor.js";
 import { getStatusChecker } from "./utils/statusChecker.js";
 import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
@@ -297,6 +299,7 @@ client.commands.set("stopyap", stopyapCommand);
 client.commands.set("markov", markovCommand);
 client.commands.set("gif", gifCommand);
 client.commands.set("jigglin", jigginCommand);
+client.commands.set("rhyno", rhynoCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
@@ -660,6 +663,10 @@ client.on("messageCreate", async (message) => {
 
   // Meme reactions
   await memeFilter(message);
+
+  // Check user-specific triggers (responds and returns early if triggered)
+  const triggerActivated = await checkUserTriggers(message);
+  if (triggerActivated) return;
 
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
