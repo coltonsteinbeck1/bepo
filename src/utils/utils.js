@@ -263,9 +263,27 @@ export async function buildStreamlinedConversationContext(message) {
       console.log(`Built and cached fresh memory context for ${key} (${memoryContext.length} chars)`);
     }
 
-    // Combine system message with memory context
+    // Combine system message with memory context and current date/time
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
-    let finalSystemMessage = systemMsg;
+    
+    // Add current date and time for temporal accuracy
+    const now = new Date();
+    const dateString = now.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric',
+      timeZone: 'America/New_York'
+    });
+    const timeString = now.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'America/New_York',
+      timeZoneName: 'short'
+    });
+    const dateTimeContext = `\n\n--- Current Date & Time ---\nToday is ${dateString}\nCurrent time: ${timeString}\n--- End DateTime ---`;
+    
+    let finalSystemMessage = systemMsg + dateTimeContext;
     if (memoryContext.trim()) {
       finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
     }

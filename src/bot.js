@@ -48,6 +48,7 @@ import {
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import { RoleManager } from "./utils/roleUtils.js";
+import { chatWithWebSearch, shouldUseWebSearch, formatCitationsFooter } from "./utils/webSearchUtils.js";
 import { checkUserTriggers } from "./utils/userTriggers.js";
 import healthMonitor from "./utils/healthMonitor.js";
 import { getStatusChecker } from "./utils/statusChecker.js";
@@ -955,25 +956,58 @@ client.on("messageCreate", async (message) => {
       // This prevents thread context from accumulating and causing hallucinations
       appendToConversation(message, "user", messageData.processedContent);
 
-      response = await safeAsync(async () => {
-        return await xAI.chat.completions.create({
-          model: "grok-4",
-          messages: [...context, {
+      // Check if query needs web search
+      const needsWebSearch = shouldUseWebSearch(userContent);
+
+      if (needsWebSearch) {
+        console.log(`🔍 Query detected as needing web search: "${userContent.substring(0, 100)}"`);
+        
+        // Use web search-enabled chat
+        response = await safeAsync(async () => {
+          return await chatWithWebSearch([...context, {
             role: "user",
             content: userContent
-          }],
-          temperature: 0.8, // Balanced for speed and creativity
-          stream: false, // Disable streaming for better response timing
-        });
-      }, async (error) => {
-        const aiErrorResult = handleAIError(error, 'xai');
-        console.log("Grok-4 connection Error:", error);
+          }], {
+            enableWebSearch: true,
+            enableXSearch: false, // Can be enabled for specific queries
+            maxTokens: 4096, // Higher limit for web search responses
+          });
+        }, async (error) => {
+          console.log("Web search error, falling back to standard chat:", error);
+          // Fallback to standard chat if web search fails
+          return await xAI.chat.completions.create({
+            model: "grok-4",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+            temperature: 0.8,
+            stream: false,
+          });
+        }, 'grok4_websearch_call');
 
-        await safeAsync(async () => {
-          await message.reply("Grok-4 model connection having issues - please try again in a moment");
-        }, null, 'ai_error_reply');
-        return null;
-      }, 'grok4_call');
+      } else {
+        // Standard chat without web search
+        response = await safeAsync(async () => {
+          return await xAI.chat.completions.create({
+            model: "grok-4",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+            temperature: 0.8, // Balanced for speed and creativity
+            stream: false, // Disable streaming for better response timing
+          });
+        }, async (error) => {
+          const aiErrorResult = handleAIError(error, 'xai');
+          console.log("Grok-4 connection Error:", error);
+
+          await safeAsync(async () => {
+            await message.reply("Grok-4 model connection having issues - please try again in a moment");
+          }, null, 'ai_error_reply');
+          return null;
+        }, 'grok4_call');
+      }
     }
 
     clearInterval(sendTypingInterval);
@@ -988,6 +1022,11 @@ client.on("messageCreate", async (message) => {
     console.log(`🕒 Processing completed in ${processingTime}ms`);
 
     const responseMessage = response.choices[0].message.content;
+    
+    // Add citations footer if available (from web search)
+    const citations = response.citations || [];
+    const citationsFooter = citations.length > 0 ? formatCitationsFooter(citations) : '';
+    const fullResponse = responseMessage + citationsFooter;
 
     appendToConversation(message, "assistant", responseMessage);
 
@@ -1032,8 +1071,9 @@ client.on("messageCreate", async (message) => {
 
     const chunkSizeLimit = 2000;
 
-    for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
-      const chunk = responseMessage.substring(i, i + chunkSizeLimit);
+    // Send response with citations (use fullResponse which includes citations footer)
+    for (let i = 0; i < fullResponse.length; i += chunkSizeLimit) {
+      const chunk = fullResponse.substring(i, i + chunkSizeLimit);
       await safeAsync(async () => {
         await message.reply(chunk);
       }, async (error) => {
