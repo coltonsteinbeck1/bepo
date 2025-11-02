@@ -4,7 +4,16 @@
 
 # Load configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/bepo-config.sh"
+source "$SCRIPT_DIR/bepo-config.sh" 2>/dev/null || {
+    echo "ERROR: Could not load bepo-config.sh"
+    exit 1
+}
+
+# Ensure we're in the project root
+cd "$BEPO_ROOT" || {
+    echo "ERROR: Could not change to project root: $BEPO_ROOT"
+    exit 1
+}
 
 # Function to check service health
 check_service_health() {
@@ -158,18 +167,24 @@ main() {
     
     # Show help
     echo ""
-    print_status $COLOR_CYAN "Management Commands:"
-    echo "  Start services: ./start-bepo.sh"
-    echo "  Stop services: ./stop-bepo.sh"
-    echo "  View this status: ./scripts/bepo-status.sh"
-    echo "  View logs: ./scripts/bepo-status.sh --logs"
-    echo "  Monitor logs: tail -f $BEPO_BOT_LOG $BEPO_MONITOR_LOG $BEPO_OFFLINE_LOG"
+    print_status $COLOR_CYAN "Quick Commands:"
+    echo "  npm run health           # Live health dashboard"
+    echo "  npm run start:quick      # Start all services"
+    echo "  npm run stop             # Stop all services"
+    echo "  npm run logs             # List available logs"
+    echo "  npm run logs:bot         # View bot logs"
+    echo "  npm run logs:search      # Search logs"
+    echo ""
+    print_status $COLOR_CYAN "Advanced Commands:"
+    echo "  npm run cleanup          # Clean old logs & files"
+    echo "  npm run logs:rotate      # Rotate large logs"
+    echo "  npm run dev:helper       # Interactive dev menu"
     echo ""
     
     print_status $COLOR_CYAN "Configuration:"
     echo "  Disable monitor: ENABLE_BOT_MONITOR=false ./start-bepo.sh"
     echo "  Disable offline: ENABLE_OFFLINE_MODE=false ./start-bepo.sh"
-    echo "  Edit config: vim scripts/bepo-config.sh"
+    echo "  Edit config: vim bepo-config.sh"
     echo ""
 }
 

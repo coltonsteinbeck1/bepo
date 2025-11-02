@@ -77,20 +77,27 @@ All documentation has been moved to the [`docs/`](./docs/) folder:
 
 ```bash
 # Service Management
-./start-bepo.sh          # Start full system
-./stop-bepo.sh           # Stop everything
-./start-bot-only.sh      # Start just the bot
-./stop-bot-only.sh       # Stop just the bot
-./scripts/bepo-status.sh # Check system status
+npm run start:quick      # Start full system
+npm run stop             # Stop everything
+npm run restart          # Restart all services
+npm run status           # Check system status
 
-# Validation & Testing
-npm run validate-offline  # Validate offline setup
-node test-shutdown-reason.js  # Test status detection
+# Health & Monitoring
+npm run health           # Real-time health dashboard
+npm run health:once      # Single status snapshot
 
-# Logs & Monitoring
-tail -f serverOutput.log     # Bot logs
-tail -f monitorOutput.log    # Monitor logs
-tail -f offlineOutput.log    # Offline system logs
+# Logs & Debugging
+npm run logs             # List all log files
+npm run logs:bot         # View bot logs
+npm run logs:follow serverOutput.log  # Live tail
+npm run logs:search "error"  # Search across logs
+npm run logs:stats       # Log statistics
+
+# Maintenance
+npm run logs:rotate      # Rotate large logs
+npm run logs:archive     # Archive old logs
+npm run logs:cleanup     # Delete old logs
+npm run cleanup          # Clean up repository
 ```
 
 ## 🔧 Architecture

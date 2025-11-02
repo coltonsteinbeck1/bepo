@@ -29,43 +29,62 @@
     "deploy": "node --no-deprecation scripts/deploy-commands.js",
     "delete": "node --no-deprecation scripts/delete-commands.js",
     "generate": "node --no-deprecation src/dalle/cli.js generate",
+    
     "start": "node --no-deprecation src/bot.js",
-    "start:quick": "./start-bepo.sh",
+    "start:quick": "./scripts/start-bepo.sh",
     "start:full": "node --no-deprecation src/bot.js & node --no-deprecation scripts/monitor-service.js & node --no-deprecation scripts/offline-response-system.js",
-    "start:bot-only": "./start-bot-only.sh",
+    "start:bot-only": "./scripts/start-bot-only.sh",
     "start:bot-direct": "node --no-deprecation src/bot.js",
     "start:monitor": "node --no-deprecation scripts/monitor-service.js",
     "start:offline": "node --no-deprecation scripts/offline-response-system.js",
-    "stop": "./stop-bepo.sh",
+    
+    "stop": "./scripts/stop-bepo.sh",
     "stop:all": "pkill -f 'node.*src/bot.js' || true; pkill -f 'node.*monitor-service.js' || true; pkill -f 'node.*offline-response-system.js' || true",
-    "stop:bot": "./stop-bot-only.sh",
+    "stop:bot": "./scripts/stop-bot-only.sh",
     "stop:monitor": "pkill -f 'node.*monitor-service.js' || true",
     "stop:offline": "pkill -f 'node.*offline-response-system.js' || true",
     "restart": "npm run stop && sleep 2 && npm run start",
+    
     "dev": "node --no-deprecation src/bot.js",
+    
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
-    "prestart": "npm run test",
-    "prebuild": "npm run test",
-    "monitor": "node scripts/bot-monitor.js",
-    "setup-webhooks": "node scripts/setup-webhook-notifications.js",
-    "test-notifications": "node scripts/test-offline-notifications.js",
-    "test-scenarios": "node scripts/test-offline-notifications.js scenarios",
+    
+    "health": "node scripts/health-dashboard.js",
+    "health:once": "node scripts/health-dashboard.js 0",
     "status": "./scripts/bepo-status.sh",
     "status:detailed": "node scripts/check-bot-status-detailed.js",
-    "setup-offline-responses": "node scripts/setup-offline-responses.js",
-    "offline-monitor": "node scripts/offline-response-system.js",
-    "logs": "tail -f logs/monitor.log",
-    "logs:health": "tail -f logs/health-$(date +%Y-%m-%d).json",
+    
+    "logs": "node scripts/log-manager.js list",
+    "logs:tail": "node scripts/log-manager.js tail",
+    "logs:follow": "node scripts/log-manager.js follow",
+    "logs:search": "node scripts/log-manager.js search",
+    "logs:stats": "node scripts/log-manager.js stats",
+    "logs:archive": "node scripts/log-manager.js archive",
+    "logs:cleanup": "node scripts/log-manager.js cleanup",
     "logs:bot": "tail -f logs/serverOutput.log",
     "logs:monitor": "tail -f logs/monitorOutput.log",
     "logs:offline": "tail -f logs/offlineOutput.log",
     "logs:all": "tail -f logs/serverOutput.log logs/monitorOutput.log logs/offlineOutput.log",
-    "validate-offline": "node scripts/validate-offline-setup.js"
+    "logs:rotate": "./scripts/rotate-logs.sh",
+    
+    "monitor": "node scripts/bot-monitor.js",
+    "setup-webhooks": "node scripts/setup-webhook-notifications.js",
+    "setup-offline-responses": "node scripts/setup-offline-responses.js",
+    "validate-offline": "node scripts/validate-offline-setup.js",
+    
+    "cleanup": "node scripts/cleanup-repo.js",
+    "cleanup:dry": "node scripts/cleanup-repo.js --dry-run",
+    "cleanup:force": "node scripts/cleanup-repo.js --force",
+    
+    "dev:helper": "node scripts/dev-helper.js",
+    
+    "prestart": "npm run test",
+    "prebuild": "npm run test"
   },
   "bin": {
     "bepo": "./src/cli.js"

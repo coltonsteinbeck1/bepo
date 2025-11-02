@@ -8,11 +8,16 @@ export BEPO_BOT_WINDOW="bot"
 export BEPO_MONITOR_WINDOW="monitor" 
 export BEPO_OFFLINE_WINDOW="offline"
 
-# Log Files
-export BEPO_BOT_LOG="logs/serverOutput.log"
-export BEPO_MONITOR_LOG="logs/monitorOutput.log"
-export BEPO_OFFLINE_LOG="logs/offlineOutput.log"
-export BEPO_HEALTH_LOG="logs/health-$(date +%Y-%m-%d).json"
+# Project Root (relative to scripts directory)
+export BEPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+# Log Files (relative to project root)
+export BEPO_BOT_LOG="$BEPO_ROOT/logs/serverOutput.log"
+export BEPO_MONITOR_LOG="$BEPO_ROOT/logs/monitorOutput.log"
+export BEPO_OFFLINE_LOG="$BEPO_ROOT/logs/offlineOutput.log"
+export BEPO_HEALTH_LOG="$BEPO_ROOT/logs/health-$(date +%Y-%m-%d).json"
+export BEPO_STATUS_FILE="$BEPO_ROOT/logs/bot-status.json"
+export BEPO_MONITOR_STATUS="$BEPO_ROOT/logs/bot-status-monitor.json"
 
 # Service Configuration
 export ENABLE_BOT_MONITOR=${ENABLE_BOT_MONITOR:-true}
@@ -143,8 +148,8 @@ show_service_status() {
 
 # Function to ensure log directories exist
 setup_log_directories() {
-    mkdir -p logs
-    mkdir -p temp
+    cd "$BEPO_ROOT"
+    mkdir -p logs logs/archive temp
     touch "$BEPO_BOT_LOG" "$BEPO_MONITOR_LOG" "$BEPO_OFFLINE_LOG"
 }
 

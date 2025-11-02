@@ -4,6 +4,12 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/bepo-config.sh"
 
+# Ensure we're in the project root
+cd "$BEPO_ROOT" || {
+    echo "ERROR: Could not change to project root: $BEPO_ROOT"
+    exit 1
+}
+
 # Backward compatibility - use config variables
 SESSION_NAME="$BEPO_SESSION_NAME"
 LOG_FILE="$BEPO_BOT_LOG"

@@ -10,6 +10,15 @@ if [ -z "$BEPO_SESSION_NAME" ]; then
     exit 1
 fi
 
+# Ensure we're in the project root
+cd "$BEPO_ROOT" || {
+    echo "ERROR: Could not change to project root: $BEPO_ROOT"
+    exit 1
+}
+
+# Setup log directories
+setup_log_directories
+
 # Check if session already exists
 if tmux has-session -t $BEPO_SESSION_NAME 2>/dev/null; then
     echo "Session $BEPO_SESSION_NAME already exists."

@@ -1,6 +1,7 @@
 // errorHandler.js - Comprehensive error handling and resilience utilities
 import fs from 'fs';
 import path from 'path';
+import logger from './logger.js';
 
 class ErrorHandler {
     constructor() {
