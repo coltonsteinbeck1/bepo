@@ -20,6 +20,7 @@ const ec2Client = new EC2Client({
 // Launch template IDs for Spot instances
 const LAUNCH_TEMPLATE_XL = process.env.MC_XL_TEMPLATE_ID;
 const LAUNCH_TEMPLATE_REGULAR = process.env.MC_TEMPLATE_ID;
+const LAUNCH_TEMPLATE_BACKUP = process.env.MC_BACKUP_TEMPLATE_ID;
 const MC_ELASTIC_IP = process.env.MC_ELASTIC_IP;
 
 /**
@@ -256,7 +257,7 @@ const minecraftServer = {
     const action = interaction.options.getString('action');
 
     // Validate required environment variables
-    if (!MC_ELASTIC_IP || !LAUNCH_TEMPLATE_XL || !LAUNCH_TEMPLATE_REGULAR) {
+    if (!MC_ELASTIC_IP || !LAUNCH_TEMPLATE_XL || !LAUNCH_TEMPLATE_REGULAR || !LAUNCH_TEMPLATE_BACKUP) {
       const configErrorEmbed = new EmbedBuilder()
         .setColor('#FF0000')
         .setTitle('❌ Configuration Error')
@@ -376,12 +377,23 @@ const minecraftServer = {
 
             instanceData = await launchSpotInstance(LAUNCH_TEMPLATE_REGULAR);
           } catch (regularError) {
-            console.error('Both instance launches failed:', regularError);
-            const errorEmbed = createServerStatusEmbed('error', {
-              error: 'Failed to launch Spot instance. Both XL and Regular templates failed.'
-            });
+            console.log('Regular instance launch failed, trying backup instance:', regularError.message);
 
-            return await interaction.editReply({ embeds: [errorEmbed] });
+            // Fall back to backup instance
+            try {
+              templateType = 'Backup';
+              const backupEmbed = createServerStatusEmbed('starting', { templateType: 'Backup' });
+              await interaction.editReply({ embeds: [backupEmbed] });
+
+              instanceData = await launchSpotInstance(LAUNCH_TEMPLATE_BACKUP);
+            } catch (backupError) {
+              console.error('All instance launches failed:', backupError);
+              const errorEmbed = createServerStatusEmbed('error', {
+                error: 'Failed to launch Spot instance. All templates (XL, Regular, and Backup) failed.'
+              });
+
+              return await interaction.editReply({ embeds: [errorEmbed] });
+            }
           }
         }
 
