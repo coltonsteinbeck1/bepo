@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from "discord.js";
+import { SlashCommandBuilder, MessageFlags } from "discord.js";
 
 export default {
   data: new SlashCommandBuilder()
@@ -43,7 +43,7 @@ export default {
     if (!markov) {
       return interaction.reply({
         content: "❌ Markov chain not available.",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -105,7 +105,7 @@ export default {
     if (!markov || Object.keys(markov.chain).length === 0) {
       return interaction.reply({
         content: "❌ Markov chain hasn't been trained yet or has no data. Send some messages first!",
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 

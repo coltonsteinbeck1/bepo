@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from "discord.js";
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from "discord.js";
 import {
   EC2Client,
   DescribeInstancesCommand,
@@ -265,7 +265,7 @@ const minecraftServer = {
         .addFields({ name: 'Status', value: 'Configuration Error', inline: true })
         .setTimestamp();
 
-      return await interaction.reply({ embeds: [configErrorEmbed], ephemeral: true });
+      return await interaction.reply({ embeds: [configErrorEmbed], flags: MessageFlags.Ephemeral });
     }
 
     try {
@@ -519,7 +519,7 @@ const minecraftServer = {
           error: 'Invalid action. Use `start`, `stop`, or `status`.'
         });
 
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
       }
 
     } catch (error) {
@@ -532,7 +532,7 @@ const minecraftServer = {
       if (interaction.replied || interaction.deferred) {
         await interaction.editReply({ embeds: [errorEmbed] });
       } else {
-        await interaction.reply({ embeds: [errorEmbed], ephemeral: true });
+        await interaction.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
       }
     }
   },
