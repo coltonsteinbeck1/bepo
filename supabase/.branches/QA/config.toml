@@ -1,0 +1,6 @@
+# QA branch configuration
+# This configuration is used for preview branches in Supabase
+
+[db]
+# The database major version to use
+major_version = 17
