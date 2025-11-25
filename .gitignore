@@ -1,18 +1,47 @@
+# Environment and secrets
 .env
-node_modules
-app.log
-nohup.out
-src/images/image.png
-temp/
+*.pem
+*.key
+
+# Dependencies
+node_modules/
+
+# Log files
 logs/
+logs/*.log
+logs/*.json
+!logs/.gitkeep
+logs/archive/
 *.log
-serverOutput.log
-monitorOutput.log
-offlineOutput.log
-scripts/*.log
-scripts/serverOutput.log
-scripts/monitorOutput.log
-scripts/offlineOutput.log
+
+# Temporary files
+temp/*
+!temp/.gitkeep
+nohup.out
+
+# Generated images
+src/images/image.png
 image.png
-config.toml
-data/
+
+# Database
+data/markov-chain.json
+data/*.db
+data/*.sqlite
+
+# Config (contains sensitive data)
+supabase/config.toml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/

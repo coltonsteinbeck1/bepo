@@ -4,7 +4,22 @@ dotenv.config();
 
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseKey = process.env.SUPABASE_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Create Supabase client with better timeout and retry configuration
+const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: false // We don't need persistent sessions for a bot
+  },
+  global: {
+    fetch: (url, options) => {
+      // Add timeout and retry logic to fetch requests
+      return fetch(url, {
+        ...options,
+        timeout: 15000, // 15 second timeout instead of default 10s
+      });
+    }
+  }
+})
 
 // Function to get all guilds
 async function getAllGuilds() {
@@ -16,18 +31,40 @@ async function getAllGuilds() {
     return data
 }
 
-// Function to get channels Markov can run in
-async function getMarkovChannels() {
-    const { data, error } = await supabase
-        .from('channels')
-        .select('channel_id')
-        .in('channel_name', ['chillin', 'bot_spam']);
-  
-    if (error) {
-        console.error('Error fetching channels:', error);
-        return [];
+// Function to get channels Markov can run in with retry logic
+async function getMarkovChannels(retries = 3) {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+        try {
+            const { data, error } = await supabase
+                .from('channels')
+                .select('channel_id')
+                .in('channel_name', ['chillin', 'bot_spam']);
+          
+            if (error) {
+                throw error;
+            }
+            
+            console.log(`Successfully fetched ${data?.length || 0} markov channels`);
+            return data || [];
+        } catch (error) {
+            console.error(`Error fetching channels (attempt ${attempt}/${retries}):`, {
+                message: error.message,
+                details: error.stack,
+                hint: error.hint || '',
+                code: error.code || ''
+            });
+            
+            if (attempt === retries) {
+                console.error('Failed to fetch markov channels after all retries, using empty array');
+                return [];
+            }
+            
+            // Wait before retrying (exponential backoff)
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+            console.log(`Retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
     }
-    return data;
 }
 
 // Function to get all users
@@ -407,78 +444,65 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
   try {
     // Get relevant conversation memories
     const searchTerms = extractKeywords(currentMessage);
-    let relevantMemories = [];
     
-    for (const term of searchTerms.slice(0, 3)) { // Limit to 3 keywords
-      const memories = await searchUserMemories(userId, term, 'conversation', 3);
-      relevantMemories.push(...memories);
+    // Combine multiple database queries into fewer Promise.all() calls for better performance
+    const [userMemoriesResults, userPrefs, serverMemoriesResults] = await Promise.all([
+      // Combine user memory searches into a single operation
+      Promise.all([
+        // Search for relevant memories with combined terms (reduced queries)
+        searchTerms.length > 0 
+          ? searchUserMemories(userId, searchTerms.slice(0, 2).join(' '), 'conversation', 5)
+          : Promise.resolve([]),
+        // Get conversation summaries
+        getUserMemories(userId, 'conversation_summary', 3),
+        // Get recent memories as fallback
+        getUserMemories(userId, 'conversation', 3)
+      ]),
+      // Get user preferences
+      getUserPreferences(userId),
+      // Server memories (if serverId provided)
+      serverId ? Promise.all([
+        // Combine server memory searches with fewer, more targeted queries
+        searchTerms.length > 0 
+          ? searchServerMemories(serverId, searchTerms.slice(0, 2).join(' '), null, 6)
+          : Promise.resolve([]),
+        // Get recent server memories
+        getServerMemories(serverId, null, 6)
+      ]) : [[], []]
+    ]);
+
+    // Flatten and process user memories
+    const [searchResults, summaries, recentMemories] = userMemoriesResults;
+    let relevantMemories = [...searchResults];
+    
+    // Add recent memories if no relevant ones found
+    if (relevantMemories.length === 0) {
+      relevantMemories.push(...recentMemories);
     }
     
-    // Remove duplicates
+    // Remove duplicates from user memories
     const uniqueMemories = [...new Map(relevantMemories.map(m => [m.id, m])).values()];
-    
-    // Get recent conversations if no relevant ones found
-    if (uniqueMemories.length === 0) {
-      const recentMemories = await getUserMemories(userId, 'conversation', 5);
-      uniqueMemories.push(...recentMemories);
-    }
-    
-    // Get conversation summaries
-    const summaries = await getUserMemories(userId, 'conversation_summary', 3);
-    
-    // Get user preferences
-    const preferences = await getUserPreferences(userId);
-    
-    // Get server memories if serverId is provided
+
+    // Process server memories if available
     let relevantServerMemories = [];
     if (serverId) {
-      // Get keyword-based server memories - use more search terms
-      for (const term of searchTerms.slice(0, 5)) { // Increased from 3 to 5
-        const serverMemories = await searchServerMemories(serverId, term, null, 4); // Increased limit
-        relevantServerMemories.push(...serverMemories);
+      const [serverSearchResults, recentServerMemories] = serverMemoriesResults;
+      relevantServerMemories = [...serverSearchResults, ...recentServerMemories];
+      
+      // Add fallback searches for common patterns if no results
+      if (relevantServerMemories.length === 0) {
+        const fallbackPatterns = ['creator', 'plays', 'game', 'made', 'developer'];
+        const fallbackResults = await Promise.all(
+          fallbackPatterns.slice(0, 2).map(pattern => 
+            searchServerMemories(serverId, pattern, null, 2)
+          )
+        );
+        relevantServerMemories = fallbackResults.flat();
       }
       
-      // Add fallback searches for common question patterns
-      const questionPatterns = [];
-      const messageWords = searchTerms.join(' ');
-      
-      // Check for creator/who questions
-      if (messageWords.includes('creator') || messageWords.includes('who') || messageWords.includes('made') || messageWords.includes('built') || searchTerms.length === 0) {
-        questionPatterns.push('creator', 'made', 'built', 'developer', 'author');
-      }
-      
-      // Check for game-related questions  
-      if (messageWords.includes('plays') || messageWords.includes('playing') || messageWords.includes('game') || messageWords.includes('final') || messageWords.includes('fantasy')) {
-        questionPatterns.push('plays', 'playing', 'game', 'final fantasy', 'ff');
-      }
-      
-      // Check for "bitch made" questions (handle variations) - search by phrase, not keyword
-      if (currentMessage.toLowerCase().includes('bitch made') || 
-          currentMessage.toLowerCase().includes('bitch-made') || 
-          currentMessage.toLowerCase().includes('most bitch') ||
-          (messageWords.includes('most') && currentMessage.toLowerCase().includes('bitch'))) {
-        questionPatterns.push('bitch made', 'bitch-made', 'most bitch');
-      }
-      
-      // If no specific patterns detected, search for common server info
-      if (questionPatterns.length === 0 || searchTerms.length === 0) {
-        questionPatterns.push('creator', 'plays', 'game', 'made', 'developer');
-      }
-      
-      // Search for fallback patterns
-      for (const pattern of questionPatterns) {
-        const fallbackMemories = await searchServerMemories(serverId, pattern, null, 3);
-        relevantServerMemories.push(...fallbackMemories);
-      }
-      
-      // Also get recent server memories to ensure important server knowledge is included
-      const recentServerMemories = await getServerMemories(serverId, null, 8); // Increased from 5
-      relevantServerMemories.push(...recentServerMemories);
-      
-      // Remove duplicates and limit results to top 12 (increased from 10)
-      const uniqueCount = relevantServerMemories.length;
+      // Remove duplicates and limit results
       relevantServerMemories = [...new Map(relevantServerMemories.map(m => [m.id, m])).values()]
-        .slice(0, 12);
+        .slice(0, 10); // Reduced from 12 to 10
       
       // Sort by relevance: more specific matches first, then by recency
       relevantServerMemories.sort((a, b) => {
@@ -493,22 +517,10 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
             term.length > 3 && !['who', 'what', 'when', 'where', 'how', 'the', 'and', 'for', 'with'].includes(term)
           );
           
-          // Medium priority keywords (question words, common terms)
-          const mediumPriorityTerms = searchTerms.filter(term => 
-            ['who', 'what', 'when', 'where', 'how', 'creator', 'created', 'make', 'maker'].includes(term)
-          );
-          
           // Score high priority matches higher
           highPriorityTerms.forEach(term => {
             if (content.includes(term) || title.includes(term)) {
               score += 10;
-            }
-          });
-          
-          // Score medium priority matches lower
-          mediumPriorityTerms.forEach(term => {
-            if (content.includes(term) || title.includes(term)) {
-              score += 3;
             }
           });
           
@@ -526,14 +538,12 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
         // If scores are equal, sort by recency
         return new Date(b.updated_at) - new Date(a.updated_at);
       });
-    } else {
-      console.log(`No server ID provided, skipping server memories`);
     }
-    
-    // Build context string
+
+    // Build context string efficiently
     let context = '';
     
-    // Add server memories first (they're important for server context)
+    // Add server memories first (they're important for server context)  
     if (relevantServerMemories.length > 0) {
       context += '=== SERVER KNOWLEDGE & FACTS ===\n';
       context += 'The following information is stored server knowledge that you MUST reference when answering questions:\n\n';
@@ -548,7 +558,7 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
           const uniqueUserIds = [...new Set(relevantServerMemories.map(m => m.user_id))];
           const usernames = await getUsernamesFromIds(client, uniqueUserIds);
           
-          for (const memory of relevantServerMemories.slice(0, 10)) { // Increased from 8 to 10
+          for (const memory of relevantServerMemories.slice(0, 8)) { // Reduced from 10 to 8
             const timeAgo = getTimeAgo(memory.updated_at);
             const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
             const username = usernames[memory.user_id] || 'Unknown User';
@@ -561,7 +571,7 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
         } catch (error) {
           console.error('Error resolving usernames for server memories:', error);
           // Fallback to original format if username resolution fails
-          relevantServerMemories.slice(0, 10).forEach(memory => { // Increased from 8 to 10
+          relevantServerMemories.slice(0, 8).forEach(memory => { // Reduced from 10 to 8
             const timeAgo = getTimeAgo(memory.updated_at);
             const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
             context += `• ${title}${memory.memory_content} (added ${timeAgo})\n`;
@@ -569,7 +579,7 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
         }
       } else {
         // Fallback when no client is available
-        relevantServerMemories.slice(0, 10).forEach(memory => { // Increased from 8 to 10
+        relevantServerMemories.slice(0, 8).forEach(memory => { // Reduced from 10 to 8
           const timeAgo = getTimeAgo(memory.updated_at);
           const title = memory.memory_title ? `[${memory.memory_title}] ` : '';
           context += `• ${title}${memory.memory_content} (added ${timeAgo})\n`;
@@ -577,31 +587,49 @@ async function buildMemoryContext(userId, currentMessage = '', serverId = null, 
       }
       
       context += '\nIMPORTANT: Use this server knowledge to answer questions accurately. If someone asks about something covered in the server knowledge, reference it directly.\n\n';
-    } else {
-      console.log('No server memories found or no server ID provided');
     }
     
     if (uniqueMemories.length > 0) {
-      context += 'Previous Conversations:\n';
-      uniqueMemories.slice(0, 5).forEach(memory => {
-        const timeAgo = getTimeAgo(memory.updated_at);
-        context += `- ${memory.memory_content} (${timeAgo})\n`;
+      // Filter out memories that might contain false ping count information
+      const filteredMemories = uniqueMemories.filter(memory => {
+        const content = memory.memory_content.toLowerCase();
+        // Skip memories that contain potentially false ping/mention counts
+        const hasCountPattern = content.match(/(?:four|twice|three|five|\d+)\s*times.*(?:ping|mention|said)/i) ||
+                               content.match(/me\?\s*(?:twice|four|three|five|\d+)/i) ||
+                               content.match(/(?:ping|mention).*(?:four|twice|three|five|\d+).*(?:times|time)/i);
+        
+        if (hasCountPattern) {
+          console.log(`[MEMORY_FILTER] Filtered out potentially false memory: "${memory.memory_content.substring(0, 100)}..."`);
+          return false;
+        }
+        return true;
       });
-      context += '\n';
+      
+      if (filteredMemories.length > 0) {
+        console.log(`[MEMORY_FILTER] Using ${filteredMemories.length}/${uniqueMemories.length} memories after filtering`);
+        context += 'Previous Conversations:\n';
+        filteredMemories.slice(0, 4).forEach(memory => { // Reduced from 5 to 4
+          const timeAgo = getTimeAgo(memory.updated_at);
+          context += `- ${memory.memory_content} (${timeAgo})\n`;
+        });
+        context += '\n';
+      } else {
+        console.log(`[MEMORY_FILTER] All ${uniqueMemories.length} memories filtered out due to potential false information`);
+      }
     }
     
     if (summaries.length > 0) {
       context += 'Conversation Summaries:\n';
-      summaries.forEach(summary => {
+      summaries.slice(0, 2).forEach(summary => { // Limit to 2 summaries
         const timeAgo = getTimeAgo(summary.updated_at);
         context += `- ${summary.memory_content} (${timeAgo})\n`;
       });
       context += '\n';
     }
     
-    if (Object.keys(preferences).length > 0) {
+    if (userPrefs && Object.keys(userPrefs).length > 0) {
       context += 'User Preferences:\n';
-      Object.entries(preferences).forEach(([key, value]) => {
+      Object.entries(userPrefs).slice(0, 5).forEach(([key, value]) => { // Limit preferences
         context += `- ${key}: ${JSON.stringify(value)}\n`;
       });
       context += '\n';
@@ -963,9 +991,282 @@ async function getServerMemoryByPartialId(partialId, serverId = null) {
     return matchingMemories.length > 0 ? matchingMemories[0] : null;
 }
 
-export { 
-    getAllGuilds, 
-    getMarkovChannels, 
+// Thread tracking functions using existing messages table
+async function storeMessageThread(messageData) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .insert([messageData])
+            .select();
+        
+        if (error) {
+            console.error('Error storing message in messages table:', error);
+            return null;
+        }
+        
+        return data[0];
+    } catch (error) {
+        console.error('Error in storeMessageThread:', error);
+        return null;
+    }
+}
+
+async function getMessageThread(messageId) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('message_id', messageId)
+            .single();
+        
+        if (error) {
+            console.error('Error fetching message thread:', error);
+            return null;
+        }
+        
+        return { ...data, thread_id: data.thread };
+    } catch (error) {
+        console.error('Error in getMessageThread:', error);
+        return null;
+    }
+}
+
+async function getThreadMessages(threadId, limit = 20) {
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('thread', threadId)
+            .order('created_at', { ascending: true })
+            .limit(limit);
+        
+        if (error) {
+            console.error('Error fetching thread messages:', error);
+            return [];
+        }
+        
+        return data || [];
+    } catch (error) {
+        console.error('Error in getThreadMessages:', error);
+        return [];
+    }
+}
+
+async function cleanupOldMessageThreads(daysOld = 7) {
+    try {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        
+        const { data, error } = await supabase
+            .from('messages')
+            .delete()
+            .lt('created_at', cutoffDate.toISOString())
+            .not('thread', 'is', null);
+        
+        if (error) {
+            console.error('Error cleaning up old message threads:', error);
+            return 0;
+        }
+        
+        const deletedCount = data ? data.length : 0;
+        console.log(`Cleaned up ${deletedCount} old thread messages`);
+        return deletedCount;
+    } catch (error) {
+        console.error('Error in cleanupOldMessageThreads:', error);
+        return 0;
+    }
+}
+
+// Video generation functions
+async function insertVideo(userId, guildId, channelId, prompt, referenceImages = [], metadata = {}) {
+    const { data, error } = await supabase
+        .from('videos')
+        .insert([{
+            user_id: userId,
+            guild_id: guildId,
+            channel_id: channelId,
+            prompt: prompt,
+            reference_images: referenceImages,
+            status: 'pending',
+            metadata: metadata
+        }])
+        .select();
+    
+    if (error) {
+        console.error('Error inserting video:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function updateVideoStatus(videoId, status, videoUrl = null, errorMessage = null) {
+    const updates = {
+        status: status,
+        updated_at: new Date().toISOString()
+    };
+    
+    if (videoUrl) {
+        updates.video_url = videoUrl;
+    }
+    
+    if (status === 'completed') {
+        updates.completed_at = new Date().toISOString();
+    }
+    
+    if (errorMessage) {
+        updates.error_message = errorMessage;
+    }
+    
+    const { data, error } = await supabase
+        .from('videos')
+        .update(updates)
+        .eq('id', videoId)
+        .select();
+    
+    if (error) {
+        console.error('Error updating video status:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function updateVideoWithOpenAIId(videoId, openaiVideoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .update({ 
+            video_id: openaiVideoId,
+            status: 'processing',
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', videoId)
+        .select();
+    
+    if (error) {
+        console.error('Error updating video with OpenAI ID:', error);
+        return null;
+    }
+    return data[0];
+}
+
+async function getVideoById(videoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('id', videoId)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching video:', error);
+        return null;
+    }
+    return data;
+}
+
+async function getVideoByOpenAIId(openaiVideoId) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('video_id', openaiVideoId)
+        .single();
+    
+    if (error) {
+        console.error('Error fetching video by OpenAI ID:', error);
+        return null;
+    }
+    return data;
+}
+
+async function getUserVideos(userId, limit = 10) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    
+    if (error) {
+        console.error('Error fetching user videos:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function getGuildVideos(guildId, limit = 20) {
+    const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('guild_id', guildId)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+    
+    if (error) {
+        console.error('Error fetching guild videos:', error);
+        return [];
+    }
+    return data || [];
+}
+
+async function getVideoStats(userId = null) {
+    let query = supabase
+        .from('videos')
+        .select('status, created_at');
+    
+    if (userId) {
+        query = query.eq('user_id', userId);
+    }
+    
+    const { data, error } = await query;
+    
+    if (error) {
+        console.error('Error fetching video stats:', error);
+        return { total: 0, byStatus: {} };
+    }
+    
+    const stats = { 
+        total: data?.length || 0, 
+        byStatus: {
+            pending: 0,
+            processing: 0,
+            completed: 0,
+            failed: 0
+        }
+    };
+    
+    data?.forEach(video => {
+        stats.byStatus[video.status] = (stats.byStatus[video.status] || 0) + 1;
+    });
+    
+    return stats;
+}
+
+async function cleanupOldVideos(daysOld = 30) {
+    try {
+        const cutoffDate = new Date();
+        cutoffDate.setDate(cutoffDate.getDate() - daysOld);
+        
+        const { data, error } = await supabase
+            .from('videos')
+            .delete()
+            .lt('created_at', cutoffDate.toISOString())
+            .in('status', ['completed', 'failed']);
+        
+        if (error) {
+            console.error('Error cleaning up old videos:', error);
+            return 0;
+        }
+        
+        const deletedCount = data ? data.length : 0;
+        console.log(`Cleaned up ${deletedCount} old videos`);
+        return deletedCount;
+    } catch (error) {
+        console.error('Error in cleanupOldVideos:', error);
+        return 0;
+    }
+}
+
+export {
+    getAllGuilds,
+    getMarkovChannels,
     getAllUsers, 
     getConfig, 
     insertImages, 
@@ -1003,6 +1304,21 @@ export {
     // Get functions for verification
     getUserMemoryById,
     getServerMemoryById,
-    getServerMemoryByPartialId
+    getServerMemoryByPartialId,
+    // Thread tracking functions
+    storeMessageThread,
+    getMessageThread,
+    getThreadMessages,
+    cleanupOldMessageThreads,
+    // Video functions
+    insertVideo,
+    updateVideoStatus,
+    updateVideoWithOpenAIId,
+    getVideoById,
+    getVideoByOpenAIId,
+    getUserVideos,
+    getGuildVideos,
+    getVideoStats,
+    cleanupOldVideos
 }
 

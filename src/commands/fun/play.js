@@ -4,6 +4,7 @@ import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, But
 import playdl from 'play-dl';
 import youtubedlExec from 'youtube-dl-exec';
 import { Readable } from 'stream';
+import { spawn } from 'child_process';
 import voiceActivityManager from '../../utils/voiceActivityManager.js';
 
 // Ensure FFmpeg is available in PATH for Discord.js voice
@@ -20,6 +21,228 @@ const connections = new Map(); // guildId -> voice connection
 
 // Export the musicQueues for use in other commands
 export { musicQueues };
+
+// Helper function to get audio stream using yt-dlp with android_vr client (bypasses PO token requirement)
+const getAudioStream = async (url) => {
+    console.log(`[AUDIO] Getting stream using yt-dlp android_vr client for: ${url}`);
+
+    return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+            ytdlpProcess.kill();
+            ffmpegProcess.kill();
+            reject(new Error('Timeout waiting for audio stream'));
+        }, 30000); // 30 second timeout
+
+        // Use android_vr client which doesn't require PO tokens
+        // Pipe through FFmpeg to convert to format Discord can handle
+        const ytdlpProcess = spawn('/opt/homebrew/bin/yt-dlp', [
+            url,
+            '--format', 'bestaudio/best',
+            '--output', '-', // Output to stdout
+            '--no-playlist',
+            '--extractor-args', 'youtube:player_client=android_vr'
+        ], {
+            stdio: ['ignore', 'pipe', 'pipe']
+        });
+
+        // Pipe yt-dlp output through FFmpeg for proper format conversion
+        const ffmpegProcess = spawn('/opt/homebrew/bin/ffmpeg', [
+            '-i', 'pipe:0',  // Read from stdin
+            '-analyzeduration', '0',  // Start immediately
+            '-loglevel', '0',  // Suppress logs
+            '-f', 's16le',  // PCM signed 16-bit little-endian
+            '-ar', '48000',  // 48kHz sample rate
+            '-ac', '2',  // Stereo
+            'pipe:1'  // Output to stdout
+        ], {
+            stdio: ['pipe', 'pipe', 'pipe']
+        });
+
+        // Pipe yt-dlp stdout to ffmpeg stdin with error handling
+        ytdlpProcess.stdout.pipe(ffmpegProcess.stdin);
+
+        // Handle pipe errors gracefully
+        ytdlpProcess.stdout.on('error', (err) => {
+            if (err.code !== 'EPIPE') {
+                console.error('[AUDIO] yt-dlp stdout error:', err.message);
+            }
+        });
+
+        ffmpegProcess.stdin.on('error', (err) => {
+            if (err.code !== 'EPIPE') {
+                console.error('[AUDIO] FFmpeg stdin error:', err.message);
+            }
+        });
+
+        let errorOutput = '';
+        let firstDataReceived = false;
+
+        // Capture stderr for debugging
+        ytdlpProcess.stderr.on('data', (data) => {
+            errorOutput += data.toString();
+        });
+
+        ffmpegProcess.stderr.on('data', (data) => {
+            const err = data.toString();
+            if (err.includes('error') || err.includes('ERROR')) {
+                console.error('[FFMPEG]', err.trim());
+            }
+        });
+
+        // Wait for first data chunk from FFmpeg to confirm stream is working
+        ffmpegProcess.stdout.once('data', (chunk) => {
+            firstDataReceived = true;
+            clearTimeout(timeout);
+            console.log(`[AUDIO] ✅ Stream started, first chunk received (${chunk.length} bytes)`);
+            resolve({
+                stream: ffmpegProcess.stdout,
+                type: StreamType.Raw,  // Raw PCM audio
+                process: { ytdlp: ytdlpProcess, ffmpeg: ffmpegProcess }
+            });
+        });
+
+        ytdlpProcess.on('error', (error) => {
+            clearTimeout(timeout);
+            console.error('[AUDIO] ❌ yt-dlp spawn error:', error.message);
+            ffmpegProcess.kill();
+            reject(error);
+        });
+
+        ffmpegProcess.on('error', (error) => {
+            clearTimeout(timeout);
+            console.error('[AUDIO] ❌ FFmpeg spawn error:', error.message);
+            ytdlpProcess.kill();
+            reject(error);
+        });
+
+        ytdlpProcess.on('exit', (code) => {
+            if (!firstDataReceived && code !== 0) {
+                clearTimeout(timeout);
+                console.error(`[AUDIO] ❌ yt-dlp exited before data received (code ${code})`);
+                if (errorOutput) {
+                    console.error('[AUDIO] Error output:', errorOutput.trim());
+                }
+                ffmpegProcess.kill();
+                reject(new Error(`yt-dlp exited with code ${code}: ${errorOutput || 'No error output'}`));
+            }
+        });
+    });
+};
+
+// Helper function to clean up audio processes
+const cleanupAudioProcesses = (processes) => {
+    if (!processes) return;
+
+    try {
+        if (processes.ytdlp && !processes.ytdlp.killed) {
+            processes.ytdlp.kill('SIGKILL');
+        }
+        if (processes.ffmpeg && !processes.ffmpeg.killed) {
+            processes.ffmpeg.kill('SIGKILL');
+        }
+    } catch (error) {
+        // Process may already be dead, which is fine
+        if (error.code !== 'ESRCH') {
+            console.log('[AUDIO] Process cleanup note:', error.message);
+        }
+    }
+};
+
+// Helper function to get video info using yt-dlp
+const getVideoInfo = async (url) => {
+    console.log(`[VIDEO_INFO] Getting video info for: ${url}`);
+    try {
+        const info = await youtubedl(url, {
+            dumpSingleJson: true,
+            noWarnings: true,
+            noCheckCertificates: true,
+            skipDownload: true
+        });
+        console.log(`[VIDEO_INFO] Got video info: ${info.title}`);
+        return {
+            title: info.title,
+            channel: info.uploader || info.channel || 'Unknown',
+            duration: info.duration_string || 'Unknown',
+            thumbnail: info.thumbnail || null,
+            isLive: info.is_live || false,
+            url: info.webpage_url || url
+        };
+    } catch (error) {
+        console.error('[VIDEO_INFO] Error getting video info:', error);
+        throw error;
+    }
+};
+
+// Helper function to search YouTube using yt-dlp
+const searchYouTube = async (query, limit = 1) => {
+    console.log(`[YOUTUBE_SEARCH] Searching for: "${query}"`);
+    try {
+        const results = await youtubedl(`ytsearch${limit}:${query}`, {
+            dumpSingleJson: true,
+            noWarnings: true,
+            skipDownload: true,
+            flatPlaylist: true
+        });
+
+        // yt-dlp returns single object for one result, or an object with entries for multiple
+        const entries = results.entries || [results];
+        const videos = entries.map(entry => ({
+            title: entry.title,
+            url: entry.webpage_url || `https://www.youtube.com/watch?v=${entry.id}`,
+            duration: entry.duration_string || 'Unknown',
+            thumbnail: entry.thumbnail,
+            channel: entry.uploader || entry.channel
+        }));
+
+        console.log(`[YOUTUBE_SEARCH] Found ${videos.length} result(s)`);
+        return videos;
+    } catch (error) {
+        console.error('[YOUTUBE_SEARCH] Error searching YouTube:', error);
+        return [];
+    }
+};
+
+// Helper function to get YouTube playlist information and videos
+const getYouTubePlaylistInfo = async (playlistUrl) => {
+    console.log(`[YOUTUBE_PLAYLIST] Getting playlist info for: ${playlistUrl}`);
+    try {
+        const playlistData = await youtubedl(playlistUrl, {
+            dumpSingleJson: true,
+            noWarnings: true,
+            flatPlaylist: true,
+            skipDownload: true,
+            noCheckCertificates: true
+        });
+
+        if (!playlistData.entries || playlistData.entries.length === 0) {
+            console.log('[YOUTUBE_PLAYLIST] No entries found in playlist');
+            return null;
+        }
+
+        const videos = playlistData.entries
+            .filter(entry => entry && entry.id) // Filter out null/invalid entries
+            .map(entry => ({
+                url: entry.webpage_url || `https://www.youtube.com/watch?v=${entry.id}`,
+                title: entry.title || 'Unknown Title',
+                channel: entry.uploader || entry.channel || 'Unknown Channel',
+                duration: entry.duration_string || 'Unknown',
+                thumbnail: entry.thumbnail || null
+            }));
+
+        console.log(`[YOUTUBE_PLAYLIST] Found ${videos.length} videos in playlist`);
+
+        return {
+            name: playlistData.title || 'YouTube Playlist',
+            description: playlistData.description || '',
+            videos: videos,
+            thumbnail: videos[0]?.thumbnail || null,
+            uploader: playlistData.uploader || playlistData.channel || 'Unknown'
+        };
+    } catch (error) {
+        console.error('[YOUTUBE_PLAYLIST] Error getting playlist info:', error);
+        return null;
+    }
+};
 
 // Helper function to detect YouTube URL types
 const analyzeYouTubeUrl = (url) => {
@@ -51,8 +274,8 @@ const analyzeYouTubeUrl = (url) => {
         }
 
         // Check for livestream indicators
-        if (pathname.includes('/live/') || 
-            searchParams.get('live') === '1' || 
+        if (pathname.includes('/live/') ||
+            searchParams.get('live') === '1' ||
             searchParams.has('live')) {
             result.isLivestream = true;
             result.type = 'livestream';
@@ -100,20 +323,20 @@ export const removeFromQueue = (guildId, index) => {
 
 export const moveInQueue = (guildId, fromIndex, toIndex) => {
     const queueData = musicQueues.get(guildId);
-    if (queueData && fromIndex >= 0 && fromIndex < queueData.songs.length && 
-        toIndex >= 0 && toIndex < queueData.songs.length && 
+    if (queueData && fromIndex >= 0 && fromIndex < queueData.songs.length &&
+        toIndex >= 0 && toIndex < queueData.songs.length &&
         fromIndex !== queueData.currentIndex && toIndex !== queueData.currentIndex) {
-        
+
         const song = queueData.songs.splice(fromIndex, 1)[0];
         queueData.songs.splice(toIndex, 0, song);
-        
+
         // Adjust current index if necessary
         if (fromIndex < queueData.currentIndex && toIndex >= queueData.currentIndex) {
             queueData.currentIndex--;
         } else if (fromIndex > queueData.currentIndex && toIndex <= queueData.currentIndex) {
             queueData.currentIndex++;
         }
-        
+
         return song;
     }
     return null;
@@ -131,30 +354,17 @@ export const clearQueue = (guildId) => {
     return 0;
 };
 
-// Set up play-dl with some configuration
-const setupPlayDL = async () => {
-    try {
-        await playdl.setToken({
-            youtube: {
-                cookie: process.env.YOUTUBE_COOKIE || ''
-            }
-        });
-    } catch (error) {
-        console.log('play-dl setup note:', error.message);
-    }
-};
-
 // Function to get Spotify metadata and search YouTube for each track
 const getSpotifyTrackInfo = async (spotifyUrl) => {
     try {
         console.log(`[SPOTIFY] Starting to process URL: ${spotifyUrl}`);
-        
+
         // Parse Spotify URL to extract track/playlist/album ID
         const spotifyRegex = /spotify\.com\/(track|playlist|album)\/([a-zA-Z0-9]+)/;
         const openSpotifyRegex = /open\.spotify\.com\/(track|playlist|album)\/([a-zA-Z0-9]+)/;
-        
+
         let match = spotifyUrl.match(spotifyRegex) || spotifyUrl.match(openSpotifyRegex);
-        
+
         if (!match) {
             console.log('[SPOTIFY] No regex match found for URL');
             return null;
@@ -176,9 +386,9 @@ const getSpotifyTrackInfo = async (spotifyUrl) => {
             // Search with both artist and song name for better results
             const searchQuery = `${trackData.artists.join(' ')} ${trackData.name}`;
             console.log(`[SPOTIFY] Searching YouTube for: "${searchQuery}"`);
-            
-            const searchResults = await playdl.search(searchQuery, { limit: 1, source: { youtube: 'video' } });
-            
+
+            const searchResults = await searchYouTube(searchQuery, 1);
+
             if (searchResults.length > 0) {
                 const youtubeVideo = searchResults[0];
                 console.log(`[SPOTIFY] Found YouTube video: ${youtubeVideo.title}`);
@@ -187,8 +397,8 @@ const getSpotifyTrackInfo = async (spotifyUrl) => {
                     youtubeUrl: youtubeVideo.url,
                     title: trackData.name,
                     artist: trackData.artists.join(', '),
-                    duration: youtubeVideo.durationRaw || 'Unknown',
-                    thumbnail: trackData.image || youtubeVideo.thumbnails?.[0]?.url,
+                    duration: youtubeVideo.duration || 'Unknown',
+                    thumbnail: trackData.image || youtubeVideo.thumbnail,
                     isSpotifyTrack: true
                 };
             } else {
@@ -204,183 +414,55 @@ const getSpotifyTrackInfo = async (spotifyUrl) => {
             }
 
             console.log(`[SPOTIFY] Got ${type} data: ${spotifyData.name} with ${spotifyData.tracks.length} tracks`);
-            
-            // First, try to find the complete album/playlist on YouTube
-            console.log('[SPOTIFY] Searching for complete album/playlist on YouTube...');
-            const albumSearchQueries = [
-                `${spotifyData.name} full album`,
-                `${spotifyData.name} complete album`,
-                `${spotifyData.name} playlist`,
-                `${spotifyData.name} all tracks`,
-                spotifyData.name
-            ];
-            
-            let foundPlaylistTracks = [];
-            
-            // Try searching for playlists first
-            for (const query of albumSearchQueries) {
-                console.log(`[SPOTIFY] Trying playlist search: "${query}"`);
-                try {
-                    const playlistResults = await playdl.search(query, { 
-                        limit: 5, 
-                        source: { youtube: 'playlist' } 
-                    });
-                    
-                    if (playlistResults.length > 0) {
-                        for (const playlist of playlistResults) {
-                            console.log(`[SPOTIFY] Found playlist: ${playlist.title} (${playlist.videoCount || 'unknown'} videos)`);
-                            try {
-                                // Get playlist videos
-                                const playlistInfo = await playdl.playlist_info(playlist.url);
-                                const videos = await playlistInfo.all_videos();
-                                
-                                console.log(`[SPOTIFY] Playlist has ${videos.length} videos`);
-                                
-                                // Check if this playlist matches our expected tracks
-                                const matchedTracks = matchPlaylistToSpotifyTracks(videos, spotifyData.tracks);
-                                
-                                if (matchedTracks.length >= Math.min(spotifyData.tracks.length * 0.6, 8)) { // At least 60% match or 8 tracks
-                                    console.log(`[SPOTIFY] Good playlist match found! ${matchedTracks.length}/${spotifyData.tracks.length} tracks matched`);
-                                    foundPlaylistTracks = matchedTracks;
-                                    break;
-                                }
-                            } catch (error) {
-                                console.log(`[SPOTIFY] Error processing playlist ${playlist.title}:`, error.message);
-                            }
-                        }
-                        
-                        if (foundPlaylistTracks.length > 0) break;
-                    }
-                } catch (error) {
-                    console.log(`[SPOTIFY] Error searching for album playlist:`, error.message);
-                }
-                
-                // Small delay between searches
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
-            
-            // If no good playlist found, try searching for full album videos
-            if (foundPlaylistTracks.length === 0) {
-                console.log('[SPOTIFY] No good playlists found, searching for full album videos...');
-                for (const query of albumSearchQueries) {
-                    console.log(`[SPOTIFY] Trying full album video search: "${query}"`);
-                    try {
-                        const videoResults = await playdl.search(query, { 
-                            limit: 5, 
-                            source: { youtube: 'video' } 
-                        });
-                        
-                        for (const video of videoResults) {
-                            const title = video.title.toLowerCase();
-                            const duration = video.durationInSec || 0;
-                            
-                            // Check if this looks like a full album (long duration, contains "full" or "complete")
-                            const hasFullKeywords = title.includes('full') || title.includes('complete') || 
-                                                  title.includes('entire') || title.includes('whole');
-                            const isLongEnough = duration > 1800; // At least 30 minutes for full album
-                            const containsAlbumName = title.includes(spotifyData.name.toLowerCase());
-                            
-                            if (containsAlbumName && (hasFullKeywords || isLongEnough)) {
-                                console.log(`[SPOTIFY] Found potential full album video: "${video.title}" (${video.durationRaw})`);
-                                // For full album videos, we'll just add it as a single track and let users skip through
-                                foundPlaylistTracks = [{
-                                    originalUrl: spotifyUrl,
-                                    youtubeUrl: video.url,
-                                    title: `${spotifyData.name} (Full Album)`,
-                                    artist: spotifyData.tracks[0]?.artists?.join(', ') || 'Various Artists',
-                                    duration: video.durationRaw || 'Unknown',
-                                    thumbnail: video.thumbnails?.[0]?.url,
-                                    isSpotifyTrack: true,
-                                    isFullAlbum: true
-                                }];
-                                console.log(`[SPOTIFY] Using full album video instead of individual tracks`);
-                                break;
-                            }
-                        }
-                        
-                        if (foundPlaylistTracks.length > 0) break;
-                    } catch (error) {
-                        console.log(`[SPOTIFY] Error searching for full album video:`, error.message);
-                    }
-                    
-                    await new Promise(resolve => setTimeout(resolve, 200));
-                }
-            }
-            
-            // Now we have some tracks from playlist, search individually for missing ones
-            const tracks = [...foundPlaylistTracks];
-            
-            // Always search for individual tracks to maintain skip functionality
-            // Even if we found a full album video, we want individual tracks for better control
-            const foundTrackNames = foundPlaylistTracks.map(t => t.title.toLowerCase());
-            const missingSpotifyTracks = spotifyData.tracks.filter(track => 
-                !foundTrackNames.some(foundName => 
-                    foundName.includes(track.name.toLowerCase()) || 
-                    track.name.toLowerCase().includes(foundName.split(' - ')[0]?.toLowerCase() || '')
-                )
-            );
-            
-            console.log(`[SPOTIFY] Found ${foundPlaylistTracks.length} tracks from playlist, need to search for ${missingSpotifyTracks.length} missing tracks`);
-            
-            // If we found a full album video but no individual tracks, search for all tracks individually
-            if (foundPlaylistTracks.length > 0 && foundPlaylistTracks[0].isFullAlbum) {
-                console.log(`[SPOTIFY] Found full album video, but searching for individual tracks for better skip functionality`);
-                // Clear the full album track and search for all individual tracks instead
-                tracks.length = 0;
-                missingSpotifyTracks.length = 0;
-                missingSpotifyTracks.push(...spotifyData.tracks);
-            }
-            
-            const maxIndividualSearches = Math.min(missingSpotifyTracks.length, 20);
+            console.log('[SPOTIFY] Searching YouTube for individual tracks...');
+
+            // Search for individual tracks directly (simpler and more reliable than playlist matching)
+            const tracks = [];
+            const maxIndividualSearches = Math.min(spotifyData.tracks.length, 20);
             for (let i = 0; i < maxIndividualSearches; i++) {
-                const track = missingSpotifyTracks[i];
+                const track = spotifyData.tracks[i];
                 const searchQuery = `${track.artists.join(' ')} ${track.name}`;
                 console.log(`[SPOTIFY] [${i + 1}/${maxIndividualSearches}] Searching for track: "${searchQuery}"`);
-                
+
                 try {
-                    const searchResults = await playdl.search(searchQuery, { 
-                        limit: 1, 
-                        source: { youtube: 'video' } 
-                    });
-                    
+                    const searchResults = await searchYouTube(searchQuery, 1);
+
                     if (searchResults.length > 0) {
                         const video = searchResults[0];
                         console.log(`[SPOTIFY] [${i + 1}/${maxIndividualSearches}] Found: ${video.title}`);
-                        
-                        // Find the correct position for this track to maintain Spotify order
-                        const originalIndex = spotifyData.tracks.findIndex(t => t.name === track.name);
+
                         const trackData = {
                             originalUrl: spotifyUrl,
                             youtubeUrl: video.url,
                             title: track.name,
                             artist: track.artists.join(', '),
-                            duration: video.durationRaw || 'Unknown',
-                            thumbnail: track.image || video.thumbnails?.[0]?.url,
+                            duration: video.duration || 'Unknown',
+                            thumbnail: track.image || video.thumbnail,
                             isSpotifyTrack: true,
-                            originalIndex: originalIndex
+                            originalIndex: i
                         };
-                        
+
                         tracks.push(trackData);
                     } else {
                         console.log(`[SPOTIFY] [${i + 1}/${maxIndividualSearches}] No results found`);
                     }
-                    
+
                     // Small delay to avoid rate limiting
                     await new Promise(resolve => setTimeout(resolve, 300));
                 } catch (error) {
                     console.log(`[SPOTIFY] [${i + 1}/${maxIndividualSearches}] Error searching for track "${track.name}":`, error.message);
                 }
             }
-            
+
             // Sort tracks by their original Spotify order
             tracks.sort((a, b) => {
                 const aIndex = a.originalIndex !== undefined ? a.originalIndex : spotifyData.tracks.findIndex(t => t.name === a.title);
                 const bIndex = b.originalIndex !== undefined ? b.originalIndex : spotifyData.tracks.findIndex(t => t.name === b.title);
                 return aIndex - bIndex;
             });
-            
+
             console.log(`[SPOTIFY] Successfully found ${tracks.length} total tracks on YouTube, sorted in original order`);
-            
+
             if (tracks.length > 0) {
                 return {
                     type: type,
@@ -390,7 +472,7 @@ const getSpotifyTrackInfo = async (spotifyUrl) => {
                 };
             }
         }
-        
+
         console.log('[SPOTIFY] No results found');
         return null;
     } catch (error) {
@@ -403,23 +485,23 @@ const getSpotifyTrackInfo = async (spotifyUrl) => {
 const getSpotifyMetadata = async (type, id) => {
     try {
         console.log(`[SPOTIFY_META] Fetching metadata for ${type}/${id}`);
-        
+
         // Try multiple approaches to get track metadata
         if (type === 'track') {
             // Method 1: Try oEmbed API first
             try {
                 const oEmbedUrl = `https://open.spotify.com/oembed?url=https://open.spotify.com/${type}/${id}`;
                 console.log(`[SPOTIFY_META] Calling oEmbed API: ${oEmbedUrl}`);
-                
+
                 const oEmbedResponse = await fetch(oEmbedUrl);
-                
+
                 if (oEmbedResponse.ok) {
                     const oEmbedData = await oEmbedResponse.json();
                     console.log(`[SPOTIFY_META] Got oEmbed data:`, oEmbedData);
-                    
+
                     const title = oEmbedData.title || '';
                     console.log(`[SPOTIFY_META] Processing track title: "${title}"`);
-                    
+
                     // Try to parse "Song by Artist" format
                     const parts = title.split(' by ');
                     if (parts.length >= 2) {
@@ -431,7 +513,7 @@ const getSpotifyMetadata = async (type, id) => {
                         console.log(`[SPOTIFY_META] Parsed track from oEmbed:`, result);
                         return result;
                     }
-                    
+
                     // Store title and image for potential fallback use
                     var oEmbedTitle = title;
                     var oEmbedImage = oEmbedData.thumbnail_url;
@@ -439,7 +521,7 @@ const getSpotifyMetadata = async (type, id) => {
             } catch (error) {
                 console.log(`[SPOTIFY_META] oEmbed API failed:`, error.message);
             }
-            
+
             // Method 2: Try scraping the Spotify page for more metadata
             try {
                 console.log(`[SPOTIFY_META] Attempting to scrape Spotify page for track metadata...`);
@@ -449,21 +531,21 @@ const getSpotifyMetadata = async (type, id) => {
                         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
                     }
                 });
-                
+
                 if (pageResponse.ok) {
                     const html = await pageResponse.text();
                     console.log(`[SPOTIFY_META] Got HTML content, length: ${html.length} characters`);
-                    
+
                     // Try multiple approaches to extract artist and title
                     let extractedArtist = null;
                     let extractedTitle = oEmbedTitle || null;
-                    
+
                     // Method 1: Look for og:description meta tag (often contains "Song · Artist · Year")
                     const ogDescMatch = html.match(/<meta property="og:description" content="([^"]*?)"/i);
                     if (ogDescMatch && ogDescMatch[1]) {
                         console.log(`[SPOTIFY_META] Found og:description: "${ogDescMatch[1]}"`);
                         const description = ogDescMatch[1];
-                        
+
                         // Pattern: "Song · Artist · Year" or "Song by Artist"
                         if (description.includes(' · ')) {
                             const parts = description.split(' · ');
@@ -481,7 +563,7 @@ const getSpotifyMetadata = async (type, id) => {
                             }
                         }
                     }
-                    
+
                     // Method 2: Look for JSON-LD structured data
                     if (!extractedArtist) {
                         const jsonLdMatches = html.match(/<script type="application\/ld\+json"[^>]*>(.*?)<\/script>/gis);
@@ -491,11 +573,11 @@ const getSpotifyMetadata = async (type, id) => {
                                     const jsonContent = jsonMatch.replace(/<script[^>]*>/, '').replace(/<\/script>/, '');
                                     const jsonData = JSON.parse(jsonContent);
                                     console.log(`[SPOTIFY_META] Found JSON-LD data:`, jsonData);
-                                    
+
                                     if (jsonData.name && !extractedTitle) {
                                         extractedTitle = jsonData.name;
                                     }
-                                    
+
                                     if (jsonData.byArtist && jsonData.byArtist.name) {
                                         extractedArtist = jsonData.byArtist.name;
                                         console.log(`[SPOTIFY_META] Extracted artist from JSON-LD byArtist: "${extractedArtist}"`);
@@ -511,7 +593,7 @@ const getSpotifyMetadata = async (type, id) => {
                             }
                         }
                     }
-                    
+
                     // Method 3: Look for specific meta tags
                     if (!extractedArtist) {
                         const artistMatches = [
@@ -520,7 +602,7 @@ const getSpotifyMetadata = async (type, id) => {
                             html.match(/<meta property="twitter:audio:artist_name" content="([^"]+)"/i),
                             html.match(/<meta name="music:musician" content="([^"]+)"/i)
                         ];
-                        
+
                         for (const match of artistMatches) {
                             if (match && match[1] && match[1].trim() !== '' && !match[1].toLowerCase().includes('spotify')) {
                                 extractedArtist = match[1].trim();
@@ -529,7 +611,7 @@ const getSpotifyMetadata = async (type, id) => {
                             }
                         }
                     }
-                    
+
                     // Method 4: Look for title patterns in the page title
                     if (!extractedArtist || !extractedTitle) {
                         const titleMatches = [
@@ -537,7 +619,7 @@ const getSpotifyMetadata = async (type, id) => {
                             html.match(/<title>([^-]+) - ([^|<]+)/i),
                             html.match(/<title>([^<]*?) by ([^|<]+)/i)
                         ];
-                        
+
                         for (const match of titleMatches) {
                             if (match && match[1] && match[2]) {
                                 if (!extractedTitle) extractedTitle = match[1].trim();
@@ -549,7 +631,7 @@ const getSpotifyMetadata = async (type, id) => {
                             }
                         }
                     }
-                    
+
                     // Method 5: Look for inline JavaScript data
                     if (!extractedArtist) {
                         const scriptMatches = [
@@ -557,7 +639,7 @@ const getSpotifyMetadata = async (type, id) => {
                             html.match(/"artist":\s*{\s*"name":\s*"([^"]+)"/i),
                             html.match(/"creator":\s*{\s*"name":\s*"([^"]+)"/i)
                         ];
-                        
+
                         for (const match of scriptMatches) {
                             if (match && match[1] && match[1].trim() !== '') {
                                 extractedArtist = match[1].trim();
@@ -566,7 +648,7 @@ const getSpotifyMetadata = async (type, id) => {
                             }
                         }
                     }
-                    
+
                     // If we found artist info, use it
                     if (extractedArtist && extractedTitle) {
                         const result = {
@@ -585,25 +667,25 @@ const getSpotifyMetadata = async (type, id) => {
             } catch (error) {
                 console.log(`[SPOTIFY_META] Scraping failed:`, error.message);
             }
-            
+
             // Method 3: Enhanced fallback - try to extract artist from YouTube search
             if (oEmbedTitle) {
                 console.log(`[SPOTIFY_META] Attempting enhanced fallback - searching YouTube to find artist...`);
                 try {
                     // Search YouTube with just the song title to see if we can find the artist
-                    const searchResults = await playdl.search(oEmbedTitle, { limit: 3, source: { youtube: 'video' } });
-                    
+                    const searchResults = await searchYouTube(oEmbedTitle, 3);
+
                     let extractedArtist = 'Unknown Artist';
-                    
+
                     if (searchResults.length > 0) {
                         for (const video of searchResults) {
                             const videoTitle = video.title.toLowerCase();
                             const songTitle = oEmbedTitle.toLowerCase();
-                            
+
                             // Check if this video looks like it matches our song
                             if (videoTitle.includes(songTitle) || songTitle.includes(videoTitle.split('-')[0]?.trim() || '')) {
                                 console.log(`[SPOTIFY_META] Analyzing YouTube video: "${video.title}"`);
-                                
+
                                 // Try to extract artist from video title patterns
                                 const titlePatterns = [
                                     video.title.match(/^([^-]+) - /), // "Artist - Song"
@@ -613,7 +695,7 @@ const getSpotifyMetadata = async (type, id) => {
                                     video.title.match(/by ([^(]+)/i), // "Song by Artist"
                                     video.title.match(/^([^(]+) \(/), // "Artist (Song)"
                                 ];
-                                
+
                                 for (const pattern of titlePatterns) {
                                     if (pattern && pattern[1]) {
                                         const candidate = pattern[1].trim();
@@ -625,7 +707,7 @@ const getSpotifyMetadata = async (type, id) => {
                                         }
                                     }
                                 }
-                                
+
                                 // Also try the channel name if title parsing didn't work
                                 if (extractedArtist === 'Unknown Artist' && video.channel && video.channel.name) {
                                     const channelName = video.channel.name;
@@ -635,12 +717,12 @@ const getSpotifyMetadata = async (type, id) => {
                                         console.log(`[SPOTIFY_META] Using YouTube channel name as artist: "${extractedArtist}"`);
                                     }
                                 }
-                                
+
                                 if (extractedArtist !== 'Unknown Artist') break;
                             }
                         }
                     }
-                    
+
                     const result = {
                         name: oEmbedTitle,
                         artists: [extractedArtist],
@@ -648,10 +730,10 @@ const getSpotifyMetadata = async (type, id) => {
                     };
                     console.log(`[SPOTIFY_META] Enhanced fallback result:`, result);
                     return result;
-                    
+
                 } catch (searchError) {
                     console.log(`[SPOTIFY_META] YouTube search fallback failed:`, searchError.message);
-                    
+
                     // Final fallback
                     const result = {
                         name: oEmbedTitle,
@@ -669,11 +751,11 @@ const getSpotifyMetadata = async (type, id) => {
             // For albums/playlists, we'll try to extract basic info and use a fallback approach
             const title = oEmbedData.title || '';
             console.log(`[SPOTIFY_META] Processing ${type} title: "${title}"`);
-            
+
             // Since we can't get track listings from oEmbed, we'll use a different approach
             // Try to extract some common album track names for known albums
             let tracks = [];
-            
+
             if (id === '41GuZcammIkupMPKH2OJ6I' || title.toLowerCase().includes('astroworld')) {
                 console.log(`[SPOTIFY_META] Detected Astroworld album`);
                 // Astroworld album tracks
@@ -700,7 +782,7 @@ const getSpotifyMetadata = async (type, id) => {
                 const artistMatch = title.match(/by (.+)$/);
                 const artist = artistMatch ? artistMatch[1] : 'Unknown Artist';
                 console.log(`[SPOTIFY_META] Extracted artist: "${artist}"`);
-                
+
                 tracks = [
                     { name: `${artist} - Popular Song 1`, artists: [artist] },
                     { name: `${artist} - Popular Song 2`, artists: [artist] },
@@ -709,7 +791,7 @@ const getSpotifyMetadata = async (type, id) => {
                     { name: `${artist} - Popular Song 5`, artists: [artist] }
                 ];
             }
-            
+
             const result = {
                 name: title,
                 tracks: tracks.map(track => ({
@@ -717,7 +799,7 @@ const getSpotifyMetadata = async (type, id) => {
                     image: oEmbedData.thumbnail_url
                 }))
             };
-            
+
             console.log(`[SPOTIFY_META] Final ${type} result:`, result);
             return result;
         }
@@ -742,68 +824,68 @@ const extractTrackInfoFromUrl = async (spotifyUrl) => {
 // Helper function to match YouTube playlist tracks to Spotify tracks
 const matchPlaylistToSpotifyTracks = (youtubeVideos, spotifyTracks) => {
     console.log(`[SPOTIFY_MATCH] Matching ${youtubeVideos.length} YouTube videos to ${spotifyTracks.length} Spotify tracks`);
-    
+
     const matchedTracks = [];
     const usedVideoIndices = new Set();
-    
+
     // Try to match each Spotify track to a YouTube video
     for (let i = 0; i < spotifyTracks.length; i++) {
         const spotifyTrack = spotifyTracks[i];
         const spotifyTitle = spotifyTrack.name.toLowerCase();
         const spotifyArtists = spotifyTrack.artists.map(a => a.toLowerCase());
-        
+
         console.log(`[SPOTIFY_MATCH] Looking for: "${spotifyTrack.name}" by ${spotifyTrack.artists.join(', ')}`);
-        
+
         let bestMatch = null;
         let bestScore = 0;
         let bestVideoIndex = -1;
-        
+
         // Check each YouTube video for a match
         for (let j = 0; j < youtubeVideos.length; j++) {
             if (usedVideoIndices.has(j)) continue; // Skip already matched videos
-            
+
             const video = youtubeVideos[j];
             const videoTitle = video.title.toLowerCase();
-            
+
             // Calculate match score
             let score = 0;
-            
+
             // Check if video title contains the track name
             if (videoTitle.includes(spotifyTitle)) {
                 score += 50;
             }
-            
+
             // Check if video title contains any artist name
             for (const artist of spotifyArtists) {
                 if (videoTitle.includes(artist)) {
                     score += 30;
                 }
             }
-            
+
             // Bonus for exact position match (track order)
             if (Math.abs(j - i) <= 2) { // Within 2 positions
                 score += 20;
             }
-            
+
             // Penalty for very different lengths
             const titleLengthDiff = Math.abs(videoTitle.length - spotifyTitle.length);
             if (titleLengthDiff > 20) {
                 score -= 10;
             }
-            
+
             console.log(`[SPOTIFY_MATCH] Video "${video.title}" scored ${score}`);
-            
+
             if (score > bestScore && score >= 30) { // Minimum score threshold
                 bestMatch = video;
                 bestScore = score;
                 bestVideoIndex = j;
             }
         }
-        
+
         if (bestMatch) {
             console.log(`[SPOTIFY_MATCH] Matched "${spotifyTrack.name}" to "${bestMatch.title}" (score: ${bestScore})`);
             usedVideoIndices.add(bestVideoIndex);
-            
+
             matchedTracks.push({
                 originalUrl: `https://open.spotify.com/track/${spotifyTrack.id || 'unknown'}`,
                 youtubeUrl: bestMatch.url,
@@ -819,7 +901,7 @@ const matchPlaylistToSpotifyTracks = (youtubeVideos, spotifyTracks) => {
             console.log(`[SPOTIFY_MATCH] No good match found for "${spotifyTrack.name}"`);
         }
     }
-    
+
     console.log(`[SPOTIFY_MATCH] Successfully matched ${matchedTracks.length}/${spotifyTracks.length} tracks`);
     return matchedTracks;
 };
@@ -828,8 +910,8 @@ const matchPlaylistToSpotifyTracks = (youtubeVideos, spotifyTracks) => {
 const createMusicEmbed = (song, queue, isPlaying = true) => {
     const isSpotify = song.isSpotifyTrack;
     const embedColor = isSpotify ? '#1DB954' : (isPlaying ? '#00ff00' : '#ff9900');
-    const title = isPlaying ? 
-        (isSpotify ? '🎵 Now Playing (via Spotify)' : '🎵 Now Playing') : 
+    const title = isPlaying ?
+        (isSpotify ? '🎵 Now Playing (via Spotify)' : '🎵 Now Playing') :
         '⏸️ Paused';
 
     const embed = new EmbedBuilder()
@@ -862,7 +944,7 @@ const createMusicEmbed = (song, queue, isPlaying = true) => {
 const createQueueAddedEmbed = (addedSong, queueData) => {
     const embedColor = addedSong.isSpotifyTrack ? '#1DB954' : '#00ff00';
     const embedTitle = addedSong.isSpotifyTrack ? '🎵 Added Spotify Track to Queue' : '➕ Added to Queue';
-    
+
     const embed = new EmbedBuilder()
         .setColor(embedColor)
         .setTitle(embedTitle)
@@ -897,7 +979,7 @@ const createQueueAddedEmbed = (addedSong, queueData) => {
                 return `${prefix} ${song.title}${song.isSpotifyTrack ? ' 🎵' : ''}${suffix}`;
             })
             .join('\n');
-        
+
         const moreCount = upcomingSongs.length > 5 ? ` (+${upcomingSongs.length - 5} more)` : '';
         embed.addFields({
             name: '🔜 Up Next',
@@ -944,7 +1026,7 @@ const createSpotifyAlbumAddedEmbed = (spotifyData, queueData, startPosition) => 
             return `${position}. ${track.title} 🎵`;
         })
         .join('\n');
-    
+
     const moreCount = spotifyData.tracks.length > 4 ? ` (+${spotifyData.tracks.length - 4} more tracks)` : '';
     embed.addFields({
         name: '🎶 Added Tracks Preview',
@@ -953,6 +1035,54 @@ const createSpotifyAlbumAddedEmbed = (spotifyData, queueData, startPosition) => 
     });
 
     embed.setFooter({ text: '🎵 Converted from Spotify • All tracks added to queue' });
+
+    return embed;
+};
+
+// Create enhanced YouTube playlist addition embed
+const createYouTubePlaylistAddedEmbed = (playlistData, queueData, startPosition) => {
+    const embed = new EmbedBuilder()
+        .setColor('#FF0000') // YouTube red
+        .setTitle('📺 Added YouTube Playlist to Queue')
+        .setDescription(`**${playlistData.name}**\n*All videos added to queue*`)
+        .addFields(
+            { name: '🎬 Videos Added', value: `${playlistData.videos.length}`, inline: true },
+            { name: '📋 Total Queue', value: `${queueData.songs.length} songs`, inline: true },
+            { name: '📍 Starting Position', value: `${startPosition}`, inline: true }
+        )
+        .setThumbnail(playlistData.thumbnail)
+        .setTimestamp();
+
+    // Show currently playing song
+    if (queueData.currentIndex >= 0 && queueData.currentIndex < queueData.songs.length) {
+        const currentSong = queueData.songs[queueData.currentIndex];
+        embed.addFields({
+            name: '🎵 Currently Playing',
+            value: `**${currentSong.title}** ${currentSong.isSpotifyTrack ? '🎵' : ''}`,
+            inline: false
+        });
+    }
+
+    // Show some of the newly added videos
+    const newlyAddedVideos = playlistData.videos.slice(0, 4) // Show first 4 videos from the playlist
+        .map((video, index) => {
+            const position = startPosition + index;
+            return `${position}. ${video.title}`;
+        })
+        .join('\n');
+
+    const moreCount = playlistData.videos.length > 4 ? ` (+${playlistData.videos.length - 4} more videos)` : '';
+    embed.addFields({
+        name: '🎬 Added Videos Preview',
+        value: newlyAddedVideos + moreCount,
+        inline: false
+    });
+
+    if (playlistData.uploader && playlistData.uploader !== 'Unknown') {
+        embed.setFooter({ text: `📺 Playlist by ${playlistData.uploader} • All videos added to queue` });
+    } else {
+        embed.setFooter({ text: '📺 YouTube Playlist • All videos added to queue' });
+    }
 
     return embed;
 };
@@ -975,13 +1105,13 @@ const createQueueAddedButtons = () => {
                 .setStyle(ButtonStyle.Danger)
         );
 };
-const createControlButtons = (hasQueue = false) => {
+const createControlButtons = (hasQueue = false, isPaused = false) => {
     const row = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId('music_pause')
-                .setLabel('⏸️ Pause')
-                .setStyle(ButtonStyle.Primary),
+                .setLabel(isPaused ? '▶️ Resume' : '⏸️ Pause')
+                .setStyle(isPaused ? ButtonStyle.Success : ButtonStyle.Primary),
             new ButtonBuilder()
                 .setCustomId('music_skip')
                 .setLabel('⏭️ Skip')
@@ -1012,13 +1142,13 @@ const createControlButtons = (hasQueue = false) => {
 const playNextSong = async (guildId, interaction = null) => {
     const queueData = musicQueues.get(guildId);
     const connection = connections.get(guildId);
-    
+
     if (!queueData || !connection || !queueData.player) return;
 
     if (queueData.currentIndex >= queueData.songs.length - 1) {
         // End of queue - keep connection alive but show finished status
         console.log('[PLAYER] Queue finished, keeping connection alive');
-        
+
         if (interaction) {
             await interaction.editReply({
                 embeds: [new EmbedBuilder()
@@ -1049,17 +1179,17 @@ const playNextSong = async (guildId, interaction = null) => {
                 )]
             });
         }
-        
+
         // Keep the connection alive but mark queue as finished
         // Don't delete the queue data or connection - let user manually stop or add more songs
         queueData.isFinished = true;
-        
+
         return;
     }
 
     queueData.currentIndex++;
     const song = queueData.songs[queueData.currentIndex];
-    
+
     try {
         // Get audio stream using play-dl (more reliable than youtube-dl-exec)
         let stream;
@@ -1106,14 +1236,18 @@ const playNextSong = async (guildId, interaction = null) => {
             inputType: stream.type || StreamType.Opus, // Use detected type or default to Opus
             inlineVolume: true 
         });
+        console.log('[AUDIO] Audio resource created successfully');
+        console.log(`[AUDIO] Resource readable: ${resource.readable}, volume: ${!!resource.volume}`);
 
         // Play the song
         if (queueData.player) {
+            console.log(`[AUDIO] Starting playback for: ${song.title}`);
             queueData.player.play(resource);
+            console.log(`[AUDIO] Player state: ${queueData.player.state.status}`);
 
             // Update embed
             const embed = createMusicEmbed(song, queueData);
-            const buttons = createControlButtons(queueData.songs.length > 1);
+            const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
             if (queueData.lastMessage) {
                 await queueData.lastMessage.edit({
@@ -1129,18 +1263,18 @@ const playNextSong = async (guildId, interaction = null) => {
 
 const playCommand = {
     data: new SlashCommandBuilder()
-    .setName('play')
-    .setDescription('Plays audio from YouTube or Spotify links in a voice channel')
-    .addStringOption(option => 
-        option.setName('link')
-        .setDescription('YouTube or Spotify URL to play')
-        .setRequired(true)
-    )
-    .addChannelOption(option => 
-        option.setName('channel')
-        .setDescription('The voice channel to play in')
-        .setRequired(true)
-    ),
+        .setName('play')
+        .setDescription('Plays audio from YouTube or Spotify links in a voice channel')
+        .addStringOption(option =>
+            option.setName('link')
+                .setDescription('YouTube or Spotify URL to play')
+                .setRequired(true)
+        )
+        .addChannelOption(option =>
+            option.setName('channel')
+                .setDescription('The voice channel to play in')
+                .setRequired(true)
+        ),
     async execute(interaction) {
         const link = interaction.options.getString('link');
         const channel = interaction.options.getChannel('channel');
@@ -1161,9 +1295,9 @@ const playCommand = {
         const conflictCheck = voiceActivityManager.canStartActivity(guildId, 'music');
         if (!conflictCheck.canStart) {
             const errorMessage = voiceActivityManager.getBlockedMessage(
-                'music', 
-                conflictCheck.conflictType, 
-                conflictCheck.channelId, 
+                'music',
+                conflictCheck.conflictType,
+                conflictCheck.channelId,
                 interaction.client
             );
             await interaction.reply({ content: errorMessage, flags: MessageFlags.Ephemeral });
@@ -1171,8 +1305,6 @@ const playCommand = {
         }
 
         try {
-            await setupPlayDL();
-            
             await interaction.deferReply();
 
             // Check if it's a Spotify URL
@@ -1183,11 +1315,11 @@ const playCommand = {
             if (isSpotify) {
                 // Handle Spotify URL
                 await interaction.editReply('🎵 Processing Spotify link and finding YouTube equivalent...');
-                
+
                 console.log('[MAIN] Starting Spotify processing...');
                 const spotifyData = await getSpotifyTrackInfo(link);
                 console.log('[MAIN] Got Spotify data:', spotifyData ? 'SUCCESS' : 'FAILED');
-                
+
                 if (!spotifyData) {
                     await interaction.editReply('❌ Failed to process Spotify link. Please try copying the song/artist name and searching for it directly on YouTube, or provide a YouTube link instead.');
                     return;
@@ -1196,7 +1328,7 @@ const playCommand = {
                 if (spotifyData.type === 'album' || spotifyData.type === 'playlist') {
                     console.log(`[MAIN] Processing ${spotifyData.type} with ${spotifyData.tracks.length} tracks`);
                     await interaction.editReply(`🎵 Found ${spotifyData.type}: **${spotifyData.name}**\n🔍 Searching YouTube for ${spotifyData.tracks.length} tracks...`);
-                    
+
                     // Handle Spotify album/playlist
                     if (spotifyData.tracks.length === 0) {
                         await interaction.editReply('❌ No tracks found. Please try a different Spotify link or search YouTube directly.');
@@ -1213,7 +1345,7 @@ const playCommand = {
                         // Create new queue with first track
                         const firstTrack = spotifyData.tracks[0];
                         console.log('[MAIN] First track:', firstTrack.title);
-                        
+
                         songData = {
                             url: firstTrack.youtubeUrl,
                             title: firstTrack.title,
@@ -1268,7 +1400,7 @@ const playCommand = {
 
                         youtubeUrl = firstTrack.youtubeUrl;
                         console.log('[MAIN] Will start playing:', youtubeUrl);
-                        
+
                         // Now proceed to play the first track - don't fall through to general queue logic
                         console.log('[MAIN] Starting playback for album first track:', youtubeUrl);
                         // Get audio stream using play-dl (more reliable than youtube-dl-exec)
@@ -1301,13 +1433,14 @@ const playCommand = {
                             inputType: stream.type || StreamType.Opus,
                             inlineVolume: true 
                         });
+                        console.log('[AUDIO] Audio resource created successfully');
 
                         console.log('[MAIN] Playing audio...');
                         queueData.player.play(resource);
 
                         // Create and send embed with controls
                         const embed = createMusicEmbed(songData, queueData);
-                        const buttons = createControlButtons(queueData.songs.length > 1);
+                        const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
                         console.log('[MAIN] Sending final reply...');
                         const message = await interaction.editReply({
@@ -1322,7 +1455,7 @@ const playCommand = {
                         console.log('[MAIN] Adding tracks to existing queue...');
                         // Store the starting position for the new tracks
                         const startPosition = queueData.songs.length + 1;
-                        
+
                         // Add all tracks to existing queue
                         for (const track of spotifyData.tracks) {
                             queueData.songs.push({
@@ -1348,6 +1481,15 @@ const playCommand = {
                     }
                 } else {
                     console.log('[MAIN] Processing single Spotify track...');
+                    console.log('[MAIN] Spotify data:', JSON.stringify(spotifyData, null, 2));
+
+                    // Validate that we have a YouTube URL
+                    if (!spotifyData.youtubeUrl) {
+                        console.error('[MAIN] ERROR: spotifyData.youtubeUrl is undefined!');
+                        await interaction.editReply('❌ Failed to find a YouTube equivalent for this Spotify track. Please try a different song or search YouTube directly.');
+                        return;
+                    }
+
                     // Single Spotify track
                     songData = {
                         url: spotifyData.youtubeUrl,
@@ -1359,51 +1501,184 @@ const playCommand = {
                         originalSpotifyUrl: spotifyData.originalUrl
                     };
                     youtubeUrl = spotifyData.youtubeUrl;
+                    console.log('[MAIN] Single track YouTube URL:', youtubeUrl);
                     // Continue to general playback logic for single tracks
                 }
             } else {
-                // Handle YouTube URL (existing logic)
-                const isValid = playdl.yt_validate(link);
-                if (!isValid) {
+                // Handle YouTube URL
+                // Simple URL validation
+                if (!link.includes('youtube.com') && !link.includes('youtu.be')) {
                     await interaction.editReply('Please provide a valid YouTube or Spotify URL.');
                     return;
                 }
 
                 // Analyze the YouTube URL for type detection
                 const urlAnalysis = analyzeYouTubeUrl(link);
-                
+
                 if (urlAnalysis.isLivestream) {
                     await interaction.editReply('❌ Livestreams are not supported. Please provide a regular YouTube video URL.');
                     return;
                 }
 
                 if (urlAnalysis.isPlaylist) {
-                    await interaction.editReply('❌ YouTube playlists are not directly supported. Please provide individual video URLs or use a Spotify playlist instead.');
-                    return;
-                }
+                    // Handle YouTube playlist
+                    await interaction.editReply('📺 Fetching YouTube playlist information...');
 
-                // Additional check for livestreams using playdl
-                try {
-                    const info = await playdl.video_info(link);
-                    
-                    // Check if it's a livestream
-                    if (info.video_details.live) {
-                        await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
+                    const playlistData = await getYouTubePlaylistInfo(link);
+
+                    if (!playlistData || playlistData.videos.length === 0) {
+                        await interaction.editReply('❌ Failed to get playlist information or the playlist is empty. Please try a different playlist URL.');
                         return;
                     }
 
-                    // Check if duration is unavailable (common for livestreams)
-                    if (!info.video_details.durationInSec || info.video_details.durationInSec === 0) {
-                        await interaction.editReply('❌ This video appears to be a livestream or has no duration, which is not supported. Please provide a regular YouTube video URL.');
+                    console.log(`[MAIN] Processing YouTube playlist with ${playlistData.videos.length} videos`);
+                    await interaction.editReply(`📺 Found playlist: **${playlistData.name}**\n🎬 Adding ${playlistData.videos.length} videos to queue...`);
+
+                    // Get or create queue
+                    let queueData = musicQueues.get(guildId);
+                    let connection = connections.get(guildId);
+
+                    if (!queueData) {
+                        console.log('[MAIN] Creating new queue for YouTube playlist...');
+                        // Create new queue with first video
+                        const firstVideo = playlistData.videos[0];
+                        console.log('[MAIN] First video:', firstVideo.title);
+
+                        songData = {
+                            url: firstVideo.url,
+                            title: firstVideo.title,
+                            channel: firstVideo.channel,
+                            duration: firstVideo.duration,
+                            thumbnail: firstVideo.thumbnail,
+                            isSpotifyTrack: false
+                        };
+
+                        queueData = {
+                            songs: [songData],
+                            currentIndex: 0,
+                            player: createAudioPlayer(),
+                            isPaused: false,
+                            lastMessage: null
+                        };
+                        musicQueues.set(guildId, queueData);
+
+                        console.log('[MAIN] Joining voice channel...');
+                        connection = joinVoiceChannel({
+                            channelId: channel.id,
+                            guildId: channel.guild.id,
+                            adapterCreator: channel.guild.voiceAdapterCreator,
+                            selfDeaf: false,
+                        });
+                        connections.set(guildId, connection);
+
+                        // Register music activity
+                        voiceActivityManager.startActivity(guildId, 'music', channel.id, queueData);
+
+                        queueData.player.on(AudioPlayerStatus.Idle, () => {
+                            playNextSong(guildId);
+                        });
+
+                        connection.subscribe(queueData.player);
+
+                        console.log('[MAIN] Adding remaining videos to queue...');
+                        // Add remaining videos to queue
+                        for (let i = 1; i < playlistData.videos.length; i++) {
+                            const video = playlistData.videos[i];
+                            queueData.songs.push({
+                                url: video.url,
+                                title: video.title,
+                                channel: video.channel,
+                                duration: video.duration,
+                                thumbnail: video.thumbnail,
+                                isSpotifyTrack: false
+                            });
+                        }
+
+                        youtubeUrl = firstVideo.url;
+                        console.log('[MAIN] Will start playing:', youtubeUrl);
+
+                        // Now proceed to play the first video
+                        console.log('[MAIN] Starting playback for playlist first video:', youtubeUrl);
+                        // Get audio stream using yt-dlp
+                        let stream;
+                        try {
+                            stream = await getAudioStream(youtubeUrl);
+                        } catch (audioError) {
+                            console.error('[AUDIO] Error getting audio stream for playlist video:', audioError);
+                            console.error('[AUDIO] Error details:', audioError.message);
+                            await interaction.editReply('❌ Failed to process the first video from the playlist. Please try a different playlist.');
+                            return;
+                        }
+
+                        console.log('[MAIN] Got audio stream, creating resource...');
+                        console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
+                        const resource = createAudioResource(stream.stream, {
+                            inputType: stream.type,
+                            inlineVolume: true
+                        });
+                        console.log('[AUDIO] Audio resource created successfully');
+
+                        console.log('[MAIN] Playing audio...');
+                        queueData.player.play(resource);
+
+                        // Create and send embed with controls
+                        const embed = createMusicEmbed(songData, queueData);
+                        const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
+
+                        console.log('[MAIN] Sending final reply...');
+                        const message = await interaction.editReply({
+                            embeds: [embed],
+                            components: [buttons]
+                        });
+
+                        queueData.lastMessage = message;
+                        console.log('[MAIN] YouTube playlist setup complete!');
+                        return; // Exit here to avoid falling through to general queue logic
+                    } else {
+                        console.log('[MAIN] Adding YouTube playlist videos to existing queue...');
+                        // Store the starting position for the new videos
+                        const startPosition = queueData.songs.length + 1;
+
+                        // Add all videos to existing queue
+                        for (const video of playlistData.videos) {
+                            queueData.songs.push({
+                                url: video.url,
+                                title: video.title,
+                                channel: video.channel,
+                                duration: video.duration,
+                                thumbnail: video.thumbnail,
+                                isSpotifyTrack: false
+                            });
+                        }
+
+                        // Create enhanced embed with queue info and controls
+                        const embed = createYouTubePlaylistAddedEmbed(playlistData, queueData, startPosition);
+                        const buttons = createQueueAddedButtons();
+
+                        await interaction.editReply({
+                            embeds: [embed],
+                            components: [buttons]
+                        });
+                        return;
+                    }
+                }
+
+                // Get video info using yt-dlp
+                try {
+                    const info = await getVideoInfo(link);
+
+                    // Check if it's a livestream
+                    if (info.isLive) {
+                        await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
                         return;
                     }
 
                     songData = {
                         url: link,
-                        title: info.video_details.title,
-                        channel: info.video_details.channel?.name || 'Unknown',
-                        duration: info.video_details.durationRaw || 'Unknown',
-                        thumbnail: info.video_details.thumbnails?.[0]?.url || null,
+                        title: info.title,
+                        channel: info.channel,
+                        duration: info.duration,
+                        thumbnail: info.thumbnail,
                         isSpotifyTrack: false
                     };
                     youtubeUrl = link; // Make sure we use the original YouTube link
@@ -1474,18 +1749,35 @@ const playCommand = {
                 });
 
                 queueData.player.on(AudioPlayerStatus.Playing, () => {
-                    console.log('[PLAYER] Player started playing');
+                    console.log('[PLAYER] ✅ Player started playing successfully');
                 });
 
                 queueData.player.on(AudioPlayerStatus.Paused, () => {
-                    console.log('[PLAYER] Player paused');
+                    console.log('[PLAYER] ⏸️ Player paused');
                 });
 
                 queueData.player.on('error', (error) => {
-                    console.error('[PLAYER] Player error:', error);
+                    console.error('[PLAYER] ❌ Player error:', error);
+                    console.error('[PLAYER] Error message:', error.message);
+                    console.error('[PLAYER] Error stack:', error.stack);
                 });
 
-                connection.subscribe(queueData.player);
+                console.log('[VOICE] Subscribing player to voice connection...');
+                const subscription = connection.subscribe(queueData.player);
+                if (subscription) {
+                    console.log('[VOICE] ✅ Successfully subscribed player to connection');
+                } else {
+                    console.error('[VOICE] ❌ Failed to subscribe player to connection');
+                }
+
+                // Add connection state listeners
+                connection.on('stateChange', (oldState, newState) => {
+                    console.log(`[VOICE] Connection state changed: ${oldState.status} -> ${newState.status}`);
+                });
+
+                connection.on('error', (error) => {
+                    console.error('[VOICE] ❌ Connection error:', error);
+                });
             } else {
                 if (queueData.isFinished) {
                     console.log('[MAIN] Queue was finished, restarting with new song...');
@@ -1499,11 +1791,11 @@ const playCommand = {
                     console.log('[MAIN] Adding to existing queue...');
                     // Add to existing queue
                     queueData.songs.push(songData);
-                    
+
                     // Create enhanced embed with queue info and controls
                     const embed = createQueueAddedEmbed(songData, queueData);
                     const buttons = createQueueAddedButtons();
-                    
+
                     await interaction.editReply({
                         embeds: [embed],
                         components: [buttons]
@@ -1553,13 +1845,16 @@ const playCommand = {
                 inputType: stream.type || StreamType.Opus,
                 inlineVolume: true 
             });
+            console.log('[AUDIO] Audio resource created successfully');
 
             console.log('[MAIN] Playing audio...');
+            console.log('[PLAYER] Current player state:', queueData.player.state.status);
             queueData.player.play(resource);
+            console.log('[PLAYER] Play command issued, new state:', queueData.player.state.status);
 
             // Create and send embed with controls
             const embed = createMusicEmbed(songData, queueData);
-            const buttons = createControlButtons(queueData.songs.length > 1);
+            const buttons = createControlButtons(queueData.songs.length > 1, queueData.isPaused || false);
 
             console.log('[MAIN] Sending final reply...');
             const message = await interaction.editReply({
@@ -1568,7 +1863,7 @@ const playCommand = {
             });
 
             queueData.lastMessage = message;
-            console.log('[MAIN] Setup complete!');
+            console.log('[MAIN] ✅ Setup complete! Waiting for audio to start playing...');
 
         } catch (error) {
             console.error('Error playing audio:', error);
@@ -1576,7 +1871,7 @@ const playCommand = {
         }
     }
 
-}; 
+};
 
 // Button interaction handlers
 export const handleMusicInteraction = async (interaction) => {
@@ -1593,7 +1888,7 @@ export const handleMusicInteraction = async (interaction) => {
         const currentSong = queueData.songs[queueData.currentIndex];
         const upcomingSongs = queueData.songs.slice(queueData.currentIndex + 1);
         const previousSongs = queueData.songs.slice(0, queueData.currentIndex);
-        
+
         const queueEmbed = new EmbedBuilder()
             .setColor('#0099ff')
             .setTitle('📋 Current Queue')
@@ -1621,7 +1916,7 @@ export const handleMusicInteraction = async (interaction) => {
                     return `${position}. ${song.title} ${song.isSpotifyTrack ? '🎵' : ''}`;
                 })
                 .join('\n');
-            
+
             queueEmbed.addFields({
                 name: '⏮️ Recently Played',
                 value: prevList,
@@ -1637,7 +1932,7 @@ export const handleMusicInteraction = async (interaction) => {
                     return `${position}. ${song.title} ${song.isSpotifyTrack ? '🎵' : ''}`;
                 })
                 .join('\n');
-            
+
             const moreCount = upcomingSongs.length > 8 ? `\n*...and ${upcomingSongs.length - 8} more songs*` : '';
             queueEmbed.addFields({
                 name: '🔜 Up Next',
@@ -1653,7 +1948,7 @@ export const handleMusicInteraction = async (interaction) => {
         }
 
         queueEmbed.setFooter({ text: '🎵 = Spotify Track • Use buttons to control playback' });
-            
+
         await interaction.reply({ embeds: [queueEmbed], flags: MessageFlags.Ephemeral });
         return;
     }
@@ -1666,14 +1961,14 @@ export const handleMusicInteraction = async (interaction) => {
                 await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
-            
+
             if (queueData.isPaused) {
                 queueData.player.unpause();
                 queueData.isPaused = false;
                 const embed = createMusicEmbed(currentSong, queueData, true);
                 await interaction.update({
                     embeds: [embed],
-                    components: [createControlButtons(queueData.songs.length > 1)]
+                    components: [createControlButtons(queueData.songs.length > 1, false)]
                 });
             } else {
                 queueData.player.pause();
@@ -1682,7 +1977,7 @@ export const handleMusicInteraction = async (interaction) => {
                 embed.setTitle('⏸️ Paused');
                 await interaction.update({
                     embeds: [embed],
-                    components: [createControlButtons(queueData.songs.length > 1)]
+                    components: [createControlButtons(queueData.songs.length > 1, true)]
                 });
             }
             break;
@@ -1692,7 +1987,7 @@ export const handleMusicInteraction = async (interaction) => {
                 await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
-            
+
             if (queueData.currentIndex < queueData.songs.length - 1) {
                 queueData.player.stop(); // This will trigger the next song
                 await interaction.deferUpdate();
@@ -1706,7 +2001,7 @@ export const handleMusicInteraction = async (interaction) => {
                 await interaction.reply({ content: 'No audio player is currently active!', flags: MessageFlags.Ephemeral });
                 return;
             }
-            
+
             if (queueData.currentIndex > 0) {
                 queueData.currentIndex -= 2; // Will be incremented by playNextSong
                 queueData.player.stop();
@@ -1721,21 +2016,26 @@ export const handleMusicInteraction = async (interaction) => {
                 queueData.player.stop();
                 queueData.player = null; // Set to null only when explicitly stopping
             }
+            // Clean up processes
+            if (queueData.currentProcesses) {
+                console.log('[AUDIO] Cleaning up processes on stop...');
+                cleanupAudioProcesses(queueData.currentProcesses);
+            }
             musicQueues.delete(guildId);
             const connection = connections.get(guildId);
             if (connection) {
                 connection.destroy();
                 connections.delete(guildId);
             }
-            
+
             // Unregister music activity
             voiceActivityManager.stopActivity(guildId, 'music');
-            
+
             const stopEmbed = new EmbedBuilder()
                 .setColor('#ff0000')
                 .setTitle('⏹️ Music Stopped')
                 .setDescription('Music has been stopped and queue cleared.');
-                
+
             await interaction.update({
                 embeds: [stopEmbed],
                 components: []

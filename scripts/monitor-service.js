@@ -86,6 +86,19 @@ class UnifiedMonitoringService {
         try {
             if (fs.existsSync(this.healthFile)) {
                 const healthData = JSON.parse(fs.readFileSync(this.healthFile, 'utf8'));
+                
+                // Check if health data is fresh (updated within last 2 minutes)
+                const lastUpdate = healthData.lastUpdated ? new Date(healthData.lastUpdated).getTime() : 0;
+                const now = Date.now();
+                const timeSinceUpdate = now - lastUpdate;
+                const isStale = timeSinceUpdate > 120000; // 2 minutes
+                
+                // Mark data as stale if it's old
+                if (isStale) {
+                    healthData._isStale = true;
+                    healthData._staleDuration = timeSinceUpdate;
+                }
+                
                 return healthData;
             }
         } catch (error) {
@@ -96,7 +109,8 @@ class UnifiedMonitoringService {
             uptime: 0,
             memory: { used: 0, total: 0 },
             errors: { count: 0, recent: [] },
-            lastUpdated: new Date().toISOString()
+            lastUpdated: new Date().toISOString(),
+            _isStale: true
         };
     }
 
@@ -187,6 +201,7 @@ class UnifiedMonitoringService {
             const botStatus = healthData.botStatus;
             const health = healthData.health || {};
             const discord = healthData.discord || {};
+            const isStale = healthData._isStale || false;
             
             embed.fields.push(
                 {
@@ -203,9 +218,11 @@ class UnifiedMonitoringService {
                 },
                 {
                     name: 'Discord Connection',
-                    value: discord.connected ? 
-                        `✅ Connected (${discord.guilds || 0} guilds, ${discord.users || 0} users)` : 
-                        '❌ Disconnected',
+                    value: isStale ? 
+                        '🔄 Connecting...' : // Show "Connecting" if health data is stale
+                        (discord.connected ? 
+                            `✅ Connected (${discord.guilds || 0} guilds, ${discord.users || 0} users)` : 
+                            '❌ Disconnected'),
                     inline: true
                 },
                 {
@@ -228,6 +245,16 @@ class UnifiedMonitoringService {
                     name: 'Last Seen',
                     value: `<t:${Math.floor(new Date(botStatus.lastSeen).getTime() / 1000)}:R>`,
                     inline: true
+                });
+            }
+            
+            // Add note if health data is stale
+            if (isStale) {
+                const staleDurationSeconds = Math.floor((healthData._staleDuration || 0) / 1000);
+                embed.fields.push({
+                    name: '⚠️ Note',
+                    value: `Health data is ${staleDurationSeconds}s old - metrics may be outdated`,
+                    inline: false
                 });
             }
         } else if (!isOnline) {
@@ -338,7 +365,7 @@ class UnifiedMonitoringService {
 
     async performStatusCheck() {
         const isOnline = this.checkBotStatus();
-        const healthData = this.getHealthData();
+        let healthData = this.getHealthData();
         const currentStatus = this.getStatus();
         
         const timestamp = new Date().toLocaleTimeString();
@@ -355,6 +382,13 @@ class UnifiedMonitoringService {
             // Update health status file when going offline
             if (!isOnline) {
                 this.updateHealthStatus(false, statusChangeTime);
+            } else {
+                // Bot just came online - wait a bit for it to update its health file
+                console.log('⏳ Waiting 5 seconds for bot to initialize and update health data...');
+                await new Promise(resolve => setTimeout(resolve, 5000));
+                // Re-read health data after waiting
+                healthData = this.getHealthData();
+                console.log(`📊 Health data refreshed - Discord connected: ${healthData.discord?.connected || false}`);
             }
             
             // Update status with the exact change time

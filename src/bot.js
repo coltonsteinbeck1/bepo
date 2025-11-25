@@ -33,25 +33,37 @@ import stopyapCommand from "./commands/fun/stopyap.js";
 import markovCommand from "./commands/fun/markov.js";
 import gifCommand from "./commands/fun/gif.js";
 import jigginCommand from "./commands/fun/jigglin.js";
+import rhynoCommand from "./commands/fun/rhyno.js";
+import recordCommand from "./commands/fun/record.js";
 import MarkovChain from "./utils/markovChaining.js";
 import { MarkovPersistence } from "./utils/markovPersistence.js";
-import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories } from "./supabase/supabase.js";
+import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, cleanupExpiredServerMemories, cleanupOldMessageThreads } from "./supabase/supabase.js";
 import {
   memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing,
   isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
   sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads,
   updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences,
-  getBotManagedThreadInfo, looksLikeAsciiArt
+  getBotManagedThreadInfo, looksLikeAsciiArt, cleanupMemoryCache
 } from "./utils//utils.js";
 import { convertImageToBase64, analyzeGifWithFrames } from "./utils/imageUtils.js";
 import errorHandler, { safeAsync, handleDiscordError, handleDatabaseError, handleAIError, createRetryWrapper } from "./utils/errorHandler.js";
 import { RoleManager } from "./utils/roleUtils.js";
+import { chatWithWebSearch, shouldUseWebSearch, formatCitationsFooter } from "./utils/webSearchUtils.js";
+import { checkUserTriggers } from "./utils/userTriggers.js";
 import healthMonitor from "./utils/healthMonitor.js";
 import { getStatusChecker } from "./utils/statusChecker.js";
 import { initializeCS2Monitoring } from "./utils/cs2NotificationService.js";
 import { initializeApexMonitoring } from "./utils/apexNotificationService.js";
 // Import the new unified monitoring service
 import UnifiedMonitoringService from '../scripts/monitor-service.js';
+// Import reply chain tracking
+import { 
+  isReplyMessage, 
+  processMessageForThread, 
+  getThreadMessages, 
+  buildThreadContextString,
+  getThreadContext 
+} from "./utils/replyUtils.js";
 
 dotenv.config();
 
@@ -288,11 +300,12 @@ client.commands.set("stopyap", stopyapCommand);
 client.commands.set("markov", markovCommand);
 client.commands.set("gif", gifCommand);
 client.commands.set("jigglin", jigginCommand);
+client.commands.set("rhyno", rhynoCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
 client.commands.set("apex", apexCommand);
 client.commands.set("apexnotify", apexNotifyCommand);
-
+client.commands.set("record", recordCommand);
 
 // xAI API for Grok-4 (unified text and vision)
 const xAI = new OpenAI({
@@ -384,19 +397,29 @@ function startScheduledMessaging(client) {
     }, 'thread_validation_cleanup');
   }, 2 * 60 * 60 * 1000); // Every 2 hours
 
-  // Auto-save markov chain every 30 minutes
+  // Auto-save markov chain every hour (reduced frequency for performance)
   setInterval(async () => {
     await safeAsync(async () => {
       await markovPersistence.saveChain(markov);
     }, (error) => {
       console.error('Markov chain auto-save error - will retry next cycle:', error);
     }, 'markov_auto_save');
-  }, 30 * 60 * 1000); // Every 30 minutes
+  }, 60 * 60 * 1000); // Every hour (increased from 30 minutes)
 }
 
 // const chatContext = await getAllContext();
-const markovChannels = await getMarkovChannels();
-const markovChannelIds = markovChannels.map(channel => channel.channel_id);
+let markovChannels = [];
+let markovChannelIds = [];
+
+try {
+  markovChannels = await getMarkovChannels();
+  markovChannelIds = markovChannels.map(channel => channel.channel_id);
+  console.log(`Initialized with ${markovChannelIds.length} markov channels`);
+} catch (error) {
+  console.error('Failed to initialize markov channels, continuing without them:', error);
+  markovChannelIds = []; // Empty array as fallback
+}
+
 const markov = new MarkovChain(2); // Reduced from 3 to 2 for more creative but still coherent output
 const markovPersistence = new MarkovPersistence();
 
@@ -406,7 +429,7 @@ await markovPersistence.loadChain(markov);
 // Make markov instance available to commands
 client.markov = markov;
 
-client.on("ready", async () => {
+client.on("clientReady", async () => {
   console.log(`Bot is ready as: ${client.user.tag}`);
 
   // Set user mappings for markov chain
@@ -453,6 +476,22 @@ client.on("ready", async () => {
   // Initialize Apex Legends patch note monitoring
   await initializeApexMonitoring(client);
 
+  // Retry markov channels initialization if it failed earlier
+  if (markovChannelIds.length === 0) {
+    console.log('Retrying markov channels initialization...');
+    setTimeout(async () => {
+      try {
+        const retryChannels = await getMarkovChannels();
+        if (retryChannels && retryChannels.length > 0) {
+          markovChannelIds.splice(0, markovChannelIds.length, ...retryChannels.map(c => c.channel_id));
+          console.log(`Successfully initialized ${markovChannelIds.length} markov channels on retry`);
+        }
+      } catch (error) {
+        console.error('Retry of markov channels initialization failed:', error);
+      }
+    }, 30000); // Retry after 30 seconds
+  }
+
   // Start memory cleanup task (runs every 6 hours)
   setInterval(async () => {
     await safeAsync(async () => {
@@ -460,21 +499,27 @@ client.on("ready", async () => {
       const expiredCount = await cleanupExpiredMemories();
       const oldCount = await cleanupOldMemories(90); // Clean up memories older than 90 days
       const expiredServerCount = await cleanupExpiredServerMemories();
-      console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, and ${expiredServerCount} expired server memories`);
+      const threadCount = await cleanupOldMessageThreads(7); // Clean up threads older than 7 days
+      console.log(`🧹 Cleaned up ${expiredCount} expired user memories, ${oldCount} old user memories, ${expiredServerCount} expired server memories, and ${threadCount} old thread messages`);
     }, (error) => {
       handleDatabaseError(error, 'memory_cleanup');
       console.error('Memory cleanup error - will retry next cycle:', error);
     }, 'memory_cleanup');
   }, 6 * 60 * 60 * 1000); // Every 6 hours
 
-  // Auto-save markov chain every 30 minutes
+  // Auto-save markov chain every hour (reduced frequency for performance)
   setInterval(async () => {
     await safeAsync(async () => {
       await markovPersistence.saveChain(markov);
     }, (error) => {
       console.error('Markov chain auto-save error - will retry next cycle:', error);
     }, 'markov_auto_save');
-  }, 30 * 60 * 1000); // Every 30 minutes
+  }, 60 * 60 * 1000); // Every hour (increased from 30 minutes)
+  
+  // Clean up expired memory context cache entries every 10 minutes
+  setInterval(() => {
+    cleanupMemoryCache();
+  }, 10 * 60 * 1000); // Every 10 minutes
 });
 
 client.on("interactionCreate", async (interaction) => {
@@ -607,11 +652,22 @@ client.on("messageCreate", async (message) => {
   if (message.content.length > 10 &&
     !message.content.startsWith(BOT_PREFIX) &&
     !message.mentions.users.has(client.user.id)) {
-    markov.train(message.content);
+    // Make training asynchronous to not block message processing
+    setImmediate(() => {
+      try {
+        markov.train(message.content);
+      } catch (error) {
+        console.error('Markov training error:', error);
+      }
+    });
   }
 
   // Meme reactions
   await memeFilter(message);
+
+  // Check user-specific triggers (responds and returns early if triggered)
+  const triggerActivated = await checkUserTriggers(message);
+  if (triggerActivated) return;
 
   // Doesn't respond on group pings
   if (isGroupPing(message)) return;
@@ -650,7 +706,7 @@ client.on("messageCreate", async (message) => {
   }
 
   // Check if bot was mentioned and respond with status if needed
-  if (botMentioned && !isBotMessageOrPrefix(message, BOT_PREFIX) && !isInBotThread) {
+  if (botMentioned && !isBotMessageOrPrefix(message, BOT_PREFIX, client.commands) && !isInBotThread) {
     // Check current bot health status
     const statusChecker = getStatusChecker();
     const currentStatus = await safeAsync(async () => {
@@ -677,7 +733,7 @@ client.on("messageCreate", async (message) => {
   }
 
   // Main message processing condition with enhanced logic
-  const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX) || botMentioned || isInBotThread;
+  const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX, client.commands) || botMentioned || isInBotThread;
   
   if (shouldProcessMessage) {
     // Start typing indicator immediately
@@ -688,6 +744,34 @@ client.on("messageCreate", async (message) => {
       convoStore.delete(key);
       clearInterval(sendTypingInterval);
       return message.reply("Your conversation has been reset.");
+    }
+
+    // SIMPLE thread context - just get immediate reply context (no database)
+    let threadContext = '';
+    let isReply = isReplyMessage(message);
+    
+    if (isReply) {
+      console.log(`[THREAD] Reply detected: ${message.id} -> ${message.reference.messageId}`);
+      
+      // Get immediate context from Discord API (no DB needed)
+      const replyContext = await safeAsync(async () => {
+        const referencedMessage = await message.fetchReference();
+        if (referencedMessage) {
+          return {
+            author: referencedMessage.author.username,
+            content: referencedMessage.content,
+            isBot: referencedMessage.author.bot
+          };
+        }
+        return null;
+      }, null, 'reply_context');
+      
+      if (replyContext && !replyContext.isBot) {
+        threadContext = `--- Reply Context ---\nReplying to ${replyContext.author}: "${replyContext.content}"\n--- End Context ---\n`;
+        console.log(`[THREAD] Reply context built (${threadContext.length} chars)`);
+      } else if (replyContext && replyContext.isBot) {
+        console.log(`[THREAD] Skipping bot message from reply context to prevent hallucination propagation`);
+      }
     }
 
     // Process message and check for images
@@ -717,6 +801,12 @@ client.on("messageCreate", async (message) => {
         imagePrompt = message.content || "this is a gif but i can only see the first frame... react to what i can see and acknowledge it's supposed to be animated. keep it real.";
       } else {
         imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
+      }
+      
+      // Add thread context if available
+      if (threadContext) {
+        imagePrompt = threadContext + '\n' + imagePrompt;
+        console.log(`[THREAD] Added reply context to image message (${threadContext.length} chars)`);
       }
 
       // Debug logging for image processing
@@ -848,34 +938,76 @@ client.on("messageCreate", async (message) => {
         }, 'grok4_fallback_call');
       }
 
-      // Store the processed message in conversation history
+      // Store the processed message in conversation history (without thread context)
       if (response) {
-        appendToConversation(message, "user", message.content + " [User shared an image]");
+        appendToConversation(message, "user", messageData.processedContent + " [User shared an image]");
       }
     } else {
       // Use Grok-4 for text-only messages
-      const userContent = messageData.processedContent;
-      appendToConversation(message, "user", userContent);
+      let userContent = messageData.processedContent;
+      
+      // Add thread context if available (for AI context only, NOT stored in conversation)
+      if (threadContext) {
+        userContent = threadContext + '\n' + userContent;
+        console.log(`[THREAD] Added reply context to message (${threadContext.length} chars)`);
+      }
+      
+      // Store ONLY the processed content (without thread context) in conversation history
+      // This prevents thread context from accumulating and causing hallucinations
+      appendToConversation(message, "user", messageData.processedContent);
 
-      response = await safeAsync(async () => {
-        return await xAI.chat.completions.create({
-          model: "grok-4",
-          messages: [...context, {
+      // Check if query needs web search
+      const needsWebSearch = shouldUseWebSearch(userContent);
+
+      if (needsWebSearch) {
+        console.log(`🔍 Query detected as needing web search: "${userContent.substring(0, 100)}"`);
+        
+        // Use web search-enabled chat
+        response = await safeAsync(async () => {
+          return await chatWithWebSearch([...context, {
             role: "user",
             content: userContent
-          }],
-          temperature: 0.8, // Balanced for speed and creativity
-          stream: false, // Disable streaming for better response timing
-        });
-      }, async (error) => {
-        const aiErrorResult = handleAIError(error, 'xai');
-        console.log("Grok-4 connection Error:", error);
+          }], {
+            enableWebSearch: true,
+            enableXSearch: false, // Can be enabled for specific queries
+            maxTokens: 4096, // Higher limit for web search responses
+          });
+        }, async (error) => {
+          console.log("Web search error, falling back to standard chat:", error);
+          // Fallback to standard chat if web search fails
+          return await xAI.chat.completions.create({
+            model: "grok-4",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+            temperature: 0.8,
+            stream: false,
+          });
+        }, 'grok4_websearch_call');
 
-        await safeAsync(async () => {
-          await message.reply("Grok-4 model connection having issues - please try again in a moment");
-        }, null, 'ai_error_reply');
-        return null;
-      }, 'grok4_call');
+      } else {
+        // Standard chat without web search
+        response = await safeAsync(async () => {
+          return await xAI.chat.completions.create({
+            model: "grok-4",
+            messages: [...context, {
+              role: "user",
+              content: userContent
+            }],
+            temperature: 0.8, // Balanced for speed and creativity
+            stream: false, // Disable streaming for better response timing
+          });
+        }, async (error) => {
+          const aiErrorResult = handleAIError(error, 'xai');
+          console.log("Grok-4 connection Error:", error);
+
+          await safeAsync(async () => {
+            await message.reply("Grok-4 model connection having issues - please try again in a moment");
+          }, null, 'ai_error_reply');
+          return null;
+        }, 'grok4_call');
+      }
     }
 
     clearInterval(sendTypingInterval);
@@ -890,15 +1022,21 @@ client.on("messageCreate", async (message) => {
     console.log(`🕒 Processing completed in ${processingTime}ms`);
 
     const responseMessage = response.choices[0].message.content;
+    
+    // Add citations footer if available (from web search)
+    const citations = response.citations || [];
+    const citationsFooter = citations.length > 0 ? formatCitationsFooter(citations) : '';
+    const fullResponse = responseMessage + citationsFooter;
 
     appendToConversation(message, "assistant", responseMessage);
 
     // Store memory after successful conversation
     await safeAsync(async () => {
-      // Store the user's message as memory
+      // Store the user's message as memory (use processedContent to avoid storing thread context)
+      // This prevents reply context from being stored in memory and causing hallucinations
       await storeUserMemory(
         message.author.id,
-        `User said: "${message.content}" in ${message.channel.name || 'DM'}`,
+        `User said: "${messageData.processedContent}" in ${message.channel.name || 'DM'}`,
         'conversation',
         {
           channel_id: message.channel.id,
@@ -927,12 +1065,15 @@ client.on("messageCreate", async (message) => {
       return null;
     }, 'memory_storage');
 
+    // Thread tracking complete - no database storage needed for now
+
     // Auto-thread creation disabled - threads can be created manually if needed
 
     const chunkSizeLimit = 2000;
 
-    for (let i = 0; i < responseMessage.length; i += chunkSizeLimit) {
-      const chunk = responseMessage.substring(i, i + chunkSizeLimit);
+    // Send response with citations (use fullResponse which includes citations footer)
+    for (let i = 0; i < fullResponse.length; i += chunkSizeLimit) {
+      const chunk = fullResponse.substring(i, i + chunkSizeLimit);
       await safeAsync(async () => {
         await message.reply(chunk);
       }, async (error) => {

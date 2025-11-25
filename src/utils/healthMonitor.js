@@ -21,6 +21,13 @@ class HealthMonitor {
     setDiscordClient(client) {
         this.discordClient = client;
         this.setupDiscordEventListeners();
+        
+        // If client is already ready when we set it, update status immediately
+        if (client && client.isReady()) {
+            this.isOnline = true;
+            console.log('Discord bot is ONLINE (already connected)');
+            this.updateStatusFile();
+        }
     }
 
     setupDiscordEventListeners() {

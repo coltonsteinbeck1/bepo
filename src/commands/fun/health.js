@@ -44,7 +44,7 @@ const healthCommand = {
                     if (buttonInteraction.user.id !== interaction.user.id) {
                         await buttonInteraction.reply({
                             content: '❌ Only the person who ran the command can use these buttons.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                         return;
                     }
@@ -74,7 +74,7 @@ const healthCommand = {
                     try {
                         await buttonInteraction.reply({
                             content: '❌ An error occurred while updating the health status.',
-                            ephemeral: true
+                            flags: MessageFlags.Ephemeral
                         });
                     } catch (replyError) {
                         console.error('Failed to reply to button interaction:', replyError);
