@@ -1,6 +1,7 @@
 // play.js
 import { joinVoiceChannel, createAudioResource, createAudioPlayer, StreamType, AudioPlayerStatus } from '@discordjs/voice';
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import playdl from 'play-dl';
 import youtubedlExec from 'youtube-dl-exec';
 import { Readable } from 'stream';
 import { spawn } from 'child_process';
@@ -1190,50 +1191,50 @@ const playNextSong = async (guildId, interaction = null) => {
     const song = queueData.songs[queueData.currentIndex];
 
     try {
-        // Clean up previous song's processes if they exist
-        if (queueData.currentProcesses) {
-            console.log('[AUDIO] Cleaning up previous song processes...');
-            cleanupAudioProcesses(queueData.currentProcesses);
-            queueData.currentProcesses = null;
-        }
-
-        // Get audio stream using yt-dlp
+        // Get audio stream using play-dl (more reliable than youtube-dl-exec)
         let stream;
         try {
-            stream = await getAudioStream(song.url);
-            // Store process references for cleanup
-            queueData.currentProcesses = stream.process;
-        } catch (audioError) {
-            console.error('[AUDIO] Error getting audio stream in playNextSong:', audioError);
-            console.error('[AUDIO] Error details:', audioError.message);
-            // Skip this song and try the next one
-            if (queueData.currentIndex < queueData.songs.length - 1) {
-                console.log('[AUDIO] Skipping problematic song and trying next...');
-                playNextSong(guildId, interaction);
-                return;
-            } else {
-                console.log('[AUDIO] Last song failed, ending queue');
-                // Clean up when queue is finished due to errors
-                if (queueData.currentProcesses) {
-                    console.log('[AUDIO] Cleaning up processes on queue end...');
-                    cleanupAudioProcesses(queueData.currentProcesses);
+            console.log(`[AUDIO] Getting stream for: ${song.url}`);
+            stream = await playdl.stream(song.url, { quality: 1 }); // High quality audio
+        } catch (playdlError) {
+            console.error('play-dl error in playNextSong:', playdlError);
+            
+            // Fallback to youtube-dl-exec
+            try {
+                console.log('[AUDIO] Trying youtube-dl-exec fallback...');
+                const audioUrl = await youtubedl(song.url, {
+                    format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
+                    getUrl: true,
+                    quiet: true
+                });
+                const response = await fetch(audioUrl);
+                stream = { stream: Readable.fromWeb(response.body), type: StreamType.Arbitrary };
+            } catch (youtubeDlError) {
+                console.error('YouTube-dl fallback error in playNextSong:', youtubeDlError);
+                // Skip this song and try the next one
+                if (queueData.currentIndex < queueData.songs.length - 1) {
+                    console.log('Skipping problematic song and trying next...');
+                    playNextSong(guildId, interaction);
+                    return;
+                } else {
+                    console.log('Last song failed, ending queue');
+                    // Clean up when queue is finished due to errors
+                    musicQueues.delete(guildId);
+                    const connection = connections.get(guildId);
+                    if (connection) {
+                        connection.destroy();
+                        connections.delete(guildId);
+                    }
+                    voiceActivityManager.stopActivity(guildId, 'music');
+                    return;
                 }
-                musicQueues.delete(guildId);
-                const connection = connections.get(guildId);
-                if (connection) {
-                    connection.destroy();
-                    connections.delete(guildId);
-                }
-                voiceActivityManager.stopActivity(guildId, 'music');
-                return;
             }
         }
 
-        // Create audio resource with proper settings for Discord voice
-        console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
-        const resource = createAudioResource(stream.stream, {
-            inputType: stream.type,
-            inlineVolume: true
+        // Create audio resource
+        const resource = createAudioResource(stream.stream, { 
+            inputType: stream.type || StreamType.Opus, // Use detected type or default to Opus
+            inlineVolume: true 
         });
         console.log('[AUDIO] Audio resource created successfully');
         console.log(`[AUDIO] Resource readable: ${resource.readable}, volume: ${!!resource.volume}`);
@@ -1402,22 +1403,35 @@ const playCommand = {
 
                         // Now proceed to play the first track - don't fall through to general queue logic
                         console.log('[MAIN] Starting playback for album first track:', youtubeUrl);
-                        // Get audio stream using yt-dlp
+                        // Get audio stream using play-dl (more reliable than youtube-dl-exec)
                         let stream;
                         try {
-                            stream = await getAudioStream(youtubeUrl);
-                        } catch (audioError) {
-                            console.error('[AUDIO] Error getting audio stream for album track:', audioError);
-                            console.error('[AUDIO] Error details:', audioError.message);
-                            await interaction.editReply('❌ Failed to process the first track from the album/playlist. Please try a different Spotify link or individual YouTube videos.');
-                            return;
+                            console.log(`[AUDIO] Getting stream for album track: ${youtubeUrl}`);
+                            stream = await playdl.stream(youtubeUrl, { quality: 1 });
+                        } catch (playdlError) {
+                            console.error('play-dl error for album track:', playdlError);
+                            
+                            // Fallback to youtube-dl-exec
+                            try {
+                                console.log('[AUDIO] Trying youtube-dl-exec fallback for album track...');
+                                const audioUrl = await youtubedl(youtubeUrl, {
+                                    format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
+                                    getUrl: true,
+                                    quiet: true
+                                });
+                                const response = await fetch(audioUrl);
+                                stream = { stream: Readable.fromWeb(response.body), type: StreamType.Arbitrary };
+                            } catch (youtubeDlError) {
+                                console.error('YouTube-dl fallback error for album track:', youtubeDlError);
+                                await interaction.editReply('❌ Failed to process the first track from the album/playlist. Please try a different Spotify link or individual YouTube videos.');
+                                return;
+                            }
                         }
 
                         console.log('[MAIN] Got audio stream, creating resource...');
-                        console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
-                        const resource = createAudioResource(stream.stream, {
-                            inputType: stream.type,
-                            inlineVolume: true
+                        const resource = createAudioResource(stream.stream, { 
+                            inputType: stream.type || StreamType.Opus,
+                            inlineVolume: true 
                         });
                         console.log('[AUDIO] Audio resource created successfully');
 
@@ -1790,42 +1804,46 @@ const playCommand = {
                 }
             }
 
-            // Validate URL before attempting playback - use songData.url which is always set
-            if (!songData || !songData.url || songData.url === 'undefined') {
-                console.error('[MAIN] ERROR: songData.url is undefined or invalid!');
-                console.error('[MAIN] songData:', JSON.stringify(songData, null, 2));
-                console.error('[MAIN] youtubeUrl:', youtubeUrl);
-                await interaction.editReply('❌ Failed to get a valid video URL. Please try again with a different link.');
-                return;
-            }
-
-            console.log('[MAIN] Starting playback for:', songData.url);
-            // Get audio stream using yt-dlp
+            console.log('[MAIN] Starting playback for:', youtubeUrl);
+            // Get audio stream using play-dl (more reliable than youtube-dl-exec)
             let stream;
             try {
-                stream = await getAudioStream(songData.url);
-            } catch (audioError) {
-                console.error('[AUDIO] Error getting audio stream:', audioError);
-                console.error('[AUDIO] Error details:', audioError.message);
-                const errorMessage = audioError.message?.toLowerCase() || '';
-
-                if (errorMessage.includes('live') || errorMessage.includes('stream')) {
-                    await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
-                } else if (errorMessage.includes('playlist')) {
-                    await interaction.editReply('❌ This appears to be a playlist URL, which is not directly supported. Please provide individual video URLs.');
-                } else if (errorMessage.includes('private') || errorMessage.includes('unavailable')) {
-                    await interaction.editReply('❌ This video is private or unavailable. Please provide a different YouTube video URL.');
-                } else {
-                    await interaction.editReply('❌ Failed to process the video URL. This might be a livestream, playlist, or the video might be unavailable. Please try a different YouTube video URL.');
+                console.log(`[AUDIO] Getting stream for: ${youtubeUrl}`);
+                stream = await playdl.stream(youtubeUrl, { quality: 1 });
+            } catch (playdlError) {
+                console.error('play-dl error:', playdlError);
+                
+                // Fallback to youtube-dl-exec
+                try {
+                    console.log('[AUDIO] Trying youtube-dl-exec fallback...');
+                    const audioUrl = await youtubedl(youtubeUrl, {
+                        format: 'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio',
+                        getUrl: true,
+                        quiet: true
+                    });
+                    const response = await fetch(audioUrl);
+                    stream = { stream: Readable.fromWeb(response.body), type: StreamType.Arbitrary };
+                } catch (youtubeDlError) {
+                    console.error('YouTube-dl fallback error:', youtubeDlError);
+                    const errorMessage = youtubeDlError.message?.toLowerCase() || '';
+                    
+                    if (errorMessage.includes('live') || errorMessage.includes('stream')) {
+                        await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
+                    } else if (errorMessage.includes('playlist')) {
+                        await interaction.editReply('❌ This appears to be a playlist URL, which is not directly supported. Please provide individual video URLs.');
+                    } else if (errorMessage.includes('private') || errorMessage.includes('unavailable')) {
+                        await interaction.editReply('❌ This video is private or unavailable. Please provide a different YouTube video URL.');
+                    } else {
+                        await interaction.editReply('❌ Failed to process the video URL. This might be a livestream, playlist, or the video might be unavailable. Please try a different YouTube video URL.');
+                    }
+                    return;
                 }
-                return;
             }
 
             console.log('[MAIN] Got audio stream, creating resource...');
-            console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
-            const resource = createAudioResource(stream.stream, {
-                inputType: stream.type,
-                inlineVolume: true
+            const resource = createAudioResource(stream.stream, { 
+                inputType: stream.type || StreamType.Opus,
+                inlineVolume: true 
             });
             console.log('[AUDIO] Audio resource created successfully');
 
