@@ -239,29 +239,22 @@ export async function buildStreamlinedConversationContext(message) {
   const channelId = message.channel.isThread() ? message.channel.parentId : message.channelId;
   const key = `${channelId}:${message.author.id}`;
 
-  // Import buildMemoryContext here to avoid circular imports
-  const { buildMemoryContext } = await import('../supabase/supabase.js');
+  // Import OPTIMIZED buildMemoryContext to avoid circular imports
+  const { buildMemoryContextOptimized } = await import('../supabase/supabase.js');
 
   const serverId = message.guild?.id;
 
   if (!convoStore.has(key)) {
-    // Check memory cache first to avoid database queries
-    const cacheKey = `memory:${message.author.id}:${serverId || 'no-server'}`;
-    let memoryContext = '';
-    const cached = memoryContextCache.get(cacheKey);
-
-    if (cached && (Date.now() - cached.timestamp) < MEMORY_CACHE_TTL) {
-      memoryContext = cached.content;
-      console.log(`Using cached memory context for ${key} (${memoryContext.length} chars)`);
-    } else {
-      // Build fresh memory context and cache it
-      memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
-      memoryContextCache.set(cacheKey, {
-        content: memoryContext,
-        timestamp: Date.now()
-      });
-      console.log(`Built and cached fresh memory context for ${key} (${memoryContext.length} chars)`);
-    }
+    // Use optimized memory context builder (has built-in caching)
+    // No need for manual caching anymore - optimization handles it
+    const memoryContext = await buildMemoryContextOptimized(
+      message.author.id, 
+      message.content, 
+      serverId, 
+      message.client
+    );
+    
+    console.log(`Built memory context for ${key} (${memoryContext.length} chars)`);
 
     // Combine system message with memory context and current date/time
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
@@ -321,22 +314,18 @@ export async function buildStreamlinedConversationContext(message) {
     if (shouldRefresh) {
       console.log(`Refreshing memory context for ${key} (time: ${Math.floor(timeSinceRefresh / 1000)}s, messages: ${entry.messageCount})`);
 
-      // Check cache first before rebuilding
-      const cacheKey = `memory:${message.author.id}:${serverId || 'no-server'}`;
+      // Import OPTIMIZED buildMemoryContext
+      const { buildMemoryContextOptimized } = await import('../supabase/supabase.js');
       let memoryContext = '';
-      const cached = memoryContextCache.get(cacheKey);
-
-      if (cached && (Date.now() - cached.timestamp) < MEMORY_CACHE_TTL) {
-        memoryContext = cached.content;
-        console.log(`Using cached memory context during refresh for ${key}`);
-      } else {
-        // Build fresh memory context - ALWAYS include server ID
-        memoryContext = await buildMemoryContext(message.author.id, message.content, serverId, message.client);
-        memoryContextCache.set(cacheKey, {
-          content: memoryContext,
-          timestamp: Date.now()
-        });
-      }
+      // Use optimized memory context builder (has built-in caching)
+      memoryContext = await buildMemoryContextOptimized(
+        message.author.id, 
+        message.content, 
+        serverId, 
+        message.client
+      );
+      
+      console.log(`Refreshed memory context for ${key}`);
 
       // Update the system message with fresh context
       const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
