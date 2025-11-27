@@ -14,10 +14,17 @@
 
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_KEY
-);
+// Lazy initialization of Supabase client
+let supabase = null;
+const getSupabaseClient = () => {
+  if (!supabase) {
+    supabase = createClient(
+      process.env.SUPABASE_URL,
+      process.env.SUPABASE_KEY
+    );
+  }
+  return supabase;
+};
 
 class UserCacheService {
   constructor() {
@@ -25,7 +32,7 @@ class UserCacheService {
     this.memoryCache = new Map();
     this.MEMORY_TTL = 5 * 60 * 1000; // 5 minutes
     this.DB_TTL = 24 * 60 * 60 * 1000; // 24 hours
-    
+
     // Cleanup interval to prevent memory leaks
     this.cleanupInterval = setInterval(() => {
       this.cleanupExpiredCache();
@@ -47,7 +54,7 @@ class UserCacheService {
       }
 
       // L2: Check database cache
-      const { data: dbUser, error: dbError } = await supabase
+      const { data: dbUser, error: dbError } = await getSupabaseClient()
         .from('users')
         .select('*')
         .eq('discord_id', userId)
@@ -55,7 +62,7 @@ class UserCacheService {
 
       if (!dbError && dbUser) {
         const cacheAge = Date.now() - new Date(dbUser.last_seen).getTime();
-        
+
         // If DB cache is fresh (< 24 hours), use it
         if (cacheAge < this.DB_TTL) {
           const userInfo = {
@@ -65,20 +72,20 @@ class UserCacheService {
             customName: dbUser.custom_name,
             avatarURL: dbUser.avatar_url
           };
-          
+
           // Store in memory cache
           this.memoryCache.set(userId, {
             data: userInfo,
             timestamp: Date.now()
           });
-          
+
           return userInfo;
         }
       }
 
       // L3: Fetch from Discord API (fallback)
       const discordUser = await client.users.fetch(userId).catch(() => null);
-      
+
       if (!discordUser) {
         // Return minimal info if Discord fetch fails
         return {
@@ -99,7 +106,7 @@ class UserCacheService {
       };
 
       // Update database cache (upsert)
-      await supabase
+      await getSupabaseClient()
         .from('users')
         .upsert({
           discord_id: discordUser.id,
@@ -147,7 +154,7 @@ class UserCacheService {
     const uniqueIds = [...new Set(userIds)];
 
     // Fetch all users in parallel
-    const userPromises = uniqueIds.map(id => 
+    const userPromises = uniqueIds.map(id =>
       this.getUserInfo(client, id)
         .then(info => ({ id, info }))
         .catch(error => {
@@ -166,7 +173,7 @@ class UserCacheService {
     );
 
     const results = await Promise.all(userPromises);
-    
+
     // Convert to Map for O(1) lookups
     const userMap = new Map();
     results.forEach(({ id, info }) => {
@@ -194,7 +201,7 @@ class UserCacheService {
    */
   async setCustomName(userId, customName) {
     try {
-      const { error } = await supabase
+      const { error } = await getSupabaseClient()
         .from('users')
         .update({
           custom_name: customName,

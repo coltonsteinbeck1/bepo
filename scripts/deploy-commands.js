@@ -1,11 +1,12 @@
+import dotenv from "dotenv";
+dotenv.config();
+
 import { REST, Routes } from "discord.js";
 import { readdirSync } from "fs";
 import ora from "ora";
 import path from "path";
 import { COMMAND_DIR_PATH, isJSFile, loadConfig } from "../src/utils/utils.js";
 import { getAllGuilds } from "../src/supabase/supabase.js";
-import dotenv from "dotenv";
-dotenv.config();
 
 const commands = [];
 const isValidCommand = (command) => "data" in command && "execute" in command;
