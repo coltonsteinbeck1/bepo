@@ -1,7 +1,6 @@
 // play.js
 import { joinVoiceChannel, createAudioResource, createAudioPlayer, StreamType, AudioPlayerStatus } from '@discordjs/voice';
 import { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
-import playdl from 'play-dl';
 import youtubedlExec from 'youtube-dl-exec';
 import { Readable } from 'stream';
 import { spawn } from 'child_process';
@@ -1191,14 +1190,20 @@ const playNextSong = async (guildId, interaction = null) => {
     const song = queueData.songs[queueData.currentIndex];
 
     try {
-        // Get audio stream using play-dl (more reliable than youtube-dl-exec)
+        // Clean up any lingering processes from the previous track
+        if (queueData.currentProcesses) {
+            cleanupAudioProcesses(queueData.currentProcesses);
+            queueData.currentProcesses = null;
+        }
+
+        // Get audio stream using yt-dlp helper (android_vr client)
         let stream;
         try {
             console.log(`[AUDIO] Getting stream for: ${song.url}`);
-            stream = await playdl.stream(song.url, { quality: 1 }); // High quality audio
-        } catch (playdlError) {
-            console.error('play-dl error in playNextSong:', playdlError);
-            
+            stream = await getAudioStream(song.url);
+        } catch (streamError) {
+            console.error('[AUDIO] getAudioStream error in playNextSong:', streamError);
+
             // Fallback to youtube-dl-exec
             try {
                 console.log('[AUDIO] Trying youtube-dl-exec fallback...');
@@ -1231,10 +1236,13 @@ const playNextSong = async (guildId, interaction = null) => {
             }
         }
 
+        // Track active processes for cleanup (if using yt-dlp helper)
+        queueData.currentProcesses = stream.process || null;
+
         // Create audio resource
-        const resource = createAudioResource(stream.stream, { 
+        const resource = createAudioResource(stream.stream, {
             inputType: stream.type || StreamType.Opus, // Use detected type or default to Opus
-            inlineVolume: true 
+            inlineVolume: true
         });
         console.log('[AUDIO] Audio resource created successfully');
         console.log(`[AUDIO] Resource readable: ${resource.readable}, volume: ${!!resource.volume}`);
@@ -1361,7 +1369,8 @@ const playCommand = {
                             currentIndex: 0,
                             player: createAudioPlayer(),
                             isPaused: false,
-                            lastMessage: null
+                            lastMessage: null,
+                            currentProcesses: null
                         };
                         musicQueues.set(guildId, queueData);
 
@@ -1403,14 +1412,19 @@ const playCommand = {
 
                         // Now proceed to play the first track - don't fall through to general queue logic
                         console.log('[MAIN] Starting playback for album first track:', youtubeUrl);
-                        // Get audio stream using play-dl (more reliable than youtube-dl-exec)
+
+                        if (queueData.currentProcesses) {
+                            cleanupAudioProcesses(queueData.currentProcesses);
+                            queueData.currentProcesses = null;
+                        }
+
                         let stream;
                         try {
                             console.log(`[AUDIO] Getting stream for album track: ${youtubeUrl}`);
-                            stream = await playdl.stream(youtubeUrl, { quality: 1 });
-                        } catch (playdlError) {
-                            console.error('play-dl error for album track:', playdlError);
-                            
+                            stream = await getAudioStream(youtubeUrl);
+                        } catch (streamError) {
+                            console.error('[AUDIO] getAudioStream error for album track:', streamError);
+
                             // Fallback to youtube-dl-exec
                             try {
                                 console.log('[AUDIO] Trying youtube-dl-exec fallback for album track...');
@@ -1428,10 +1442,12 @@ const playCommand = {
                             }
                         }
 
+                        queueData.currentProcesses = stream.process || null;
+
                         console.log('[MAIN] Got audio stream, creating resource...');
-                        const resource = createAudioResource(stream.stream, { 
+                        const resource = createAudioResource(stream.stream, {
                             inputType: stream.type || StreamType.Opus,
-                            inlineVolume: true 
+                            inlineVolume: true
                         });
                         console.log('[AUDIO] Audio resource created successfully');
 
@@ -1558,7 +1574,8 @@ const playCommand = {
                             currentIndex: 0,
                             player: createAudioPlayer(),
                             isPaused: false,
-                            lastMessage: null
+                            lastMessage: null,
+                            currentProcesses: null
                         };
                         musicQueues.set(guildId, queueData);
 
@@ -1599,7 +1616,13 @@ const playCommand = {
 
                         // Now proceed to play the first video
                         console.log('[MAIN] Starting playback for playlist first video:', youtubeUrl);
-                        // Get audio stream using yt-dlp
+
+                        if (queueData.currentProcesses) {
+                            cleanupAudioProcesses(queueData.currentProcesses);
+                            queueData.currentProcesses = null;
+                        }
+
+                        // Get audio stream using yt-dlp helper
                         let stream;
                         try {
                             stream = await getAudioStream(youtubeUrl);
@@ -1609,6 +1632,8 @@ const playCommand = {
                             await interaction.editReply('❌ Failed to process the first video from the playlist. Please try a different playlist.');
                             return;
                         }
+
+                        queueData.currentProcesses = stream.process || null;
 
                         console.log('[MAIN] Got audio stream, creating resource...');
                         console.log(`[AUDIO] Creating audio resource with inputType: ${stream.type}`);
@@ -1702,6 +1727,7 @@ const playCommand = {
                     queueData.currentIndex = 0;
                     queueData.isPaused = false;
                     queueData.isFinished = false;
+                    queueData.currentProcesses = null;
                     // Keep existing player and connection, but make sure connection is still valid
                     const existingConnection = connections.get(guildId);
                     if (!existingConnection || existingConnection.state.status === 'destroyed') {
@@ -1725,7 +1751,8 @@ const playCommand = {
                         player: createAudioPlayer(),
                         isPaused: false,
                         lastMessage: null,
-                        isFinished: false
+                        isFinished: false,
+                        currentProcesses: null
                     };
                     musicQueues.set(guildId, queueData);
 
@@ -1805,14 +1832,19 @@ const playCommand = {
             }
 
             console.log('[MAIN] Starting playback for:', youtubeUrl);
-            // Get audio stream using play-dl (more reliable than youtube-dl-exec)
+
+            if (queueData.currentProcesses) {
+                cleanupAudioProcesses(queueData.currentProcesses);
+                queueData.currentProcesses = null;
+            }
+
             let stream;
             try {
                 console.log(`[AUDIO] Getting stream for: ${youtubeUrl}`);
-                stream = await playdl.stream(youtubeUrl, { quality: 1 });
-            } catch (playdlError) {
-                console.error('play-dl error:', playdlError);
-                
+                stream = await getAudioStream(youtubeUrl);
+            } catch (streamError) {
+                console.error('[AUDIO] getAudioStream error:', streamError);
+
                 // Fallback to youtube-dl-exec
                 try {
                     console.log('[AUDIO] Trying youtube-dl-exec fallback...');
@@ -1826,7 +1858,7 @@ const playCommand = {
                 } catch (youtubeDlError) {
                     console.error('YouTube-dl fallback error:', youtubeDlError);
                     const errorMessage = youtubeDlError.message?.toLowerCase() || '';
-                    
+
                     if (errorMessage.includes('live') || errorMessage.includes('stream')) {
                         await interaction.editReply('❌ This appears to be a livestream, which is not supported. Please provide a regular YouTube video URL.');
                     } else if (errorMessage.includes('playlist')) {
@@ -1840,10 +1872,12 @@ const playCommand = {
                 }
             }
 
+            queueData.currentProcesses = stream.process || null;
+
             console.log('[MAIN] Got audio stream, creating resource...');
-            const resource = createAudioResource(stream.stream, { 
+            const resource = createAudioResource(stream.stream, {
                 inputType: stream.type || StreamType.Opus,
-                inlineVolume: true 
+                inlineVolume: true
             });
             console.log('[AUDIO] Audio resource created successfully');
 
@@ -2020,6 +2054,7 @@ export const handleMusicInteraction = async (interaction) => {
             if (queueData.currentProcesses) {
                 console.log('[AUDIO] Cleaning up processes on stop...');
                 cleanupAudioProcesses(queueData.currentProcesses);
+                queueData.currentProcesses = null;
             }
             musicQueues.delete(guildId);
             const connection = connections.get(guildId);

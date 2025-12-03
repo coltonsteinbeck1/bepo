@@ -33,6 +33,8 @@ import stopyapCommand from "./commands/fun/stopyap.js";
 import markovCommand from "./commands/fun/markov.js";
 import gifCommand from "./commands/fun/gif.js";
 import jigginCommand from "./commands/fun/jigglin.js";
+import gametimeCommand from "./commands/fun/gametime.js";
+import channelCommand from "./commands/fun/channel.js";
 import rhynoCommand from "./commands/fun/rhyno.js";
 import recordCommand from "./commands/fun/record.js";
 import MarkovChain from "./utils/markovChaining.js";
@@ -41,7 +43,7 @@ import { cleanupExpiredMemories, cleanupOldMemories, storeUserMemory, storeUserM
 import {
   memeFilter, buildStreamlinedConversationContext, appendToConversation, isBotMentioned, isGroupPing,
   isBotMessageOrPrefix, sendTypingIndicator, processMessageWithImages, convoStore, isSundayImageTime, getCurrentDateString,
-  sendGameTimeMessage, sendSundayImage, lastSentMessages, isGameTime, isBotManagedThread, cleanupOldBotThreads,
+  sendSundayImage, lastSentMessages, isBotManagedThread, cleanupOldBotThreads,
   updateThreadActivity, checkAndDeleteInactiveThreads, validateBotManagedThread, cleanupStaleThreadReferences,
   getBotManagedThreadInfo, looksLikeAsciiArt, cleanupMemoryCache
 } from "./utils//utils.js";
@@ -57,12 +59,12 @@ import { initializeApexMonitoring } from "./utils/apexNotificationService.js";
 // Import the new unified monitoring service
 import UnifiedMonitoringService from '../scripts/monitor-service.js';
 // Import reply chain tracking
-import { 
-  isReplyMessage, 
-  processMessageForThread, 
-  getThreadMessages, 
+import {
+  isReplyMessage,
+  processMessageForThread,
+  getThreadMessages,
   buildThreadContextString,
-  getThreadContext 
+  getThreadContext
 } from "./utils/replyUtils.js";
 
 dotenv.config();
@@ -311,6 +313,8 @@ client.commands.set("stopyap", stopyapCommand);
 client.commands.set("markov", markovCommand);
 client.commands.set("gif", gifCommand);
 client.commands.set("jigglin", jigginCommand);
+client.commands.set("gametime", gametimeCommand);
+client.commands.set("channel", channelCommand);
 client.commands.set("rhyno", rhynoCommand);
 client.commands.set("debug-memory", debugMemoryCommand);
 client.commands.set("health", healthCommand);
@@ -341,14 +345,7 @@ function startScheduledMessaging(client) {
       console.log(`[${now.toISOString()}] Scheduled message check - Eastern Time: ${easternTime}`);
     }
 
-    // Check for game time message
-    if (isGameTime()) {
-      if (lastSentMessages.gameTime !== currentDate) {
-        console.log(`[${now.toISOString()}] Triggering game time message`);
-        sendGameTimeMessage(client);
-        lastSentMessages.gameTime = currentDate;
-      }
-    }
+    // Game time notification disabled - use /gametime command manually
 
     // Check for Sunday image
     if (isSundayImageTime()) {
@@ -526,7 +523,7 @@ client.on("clientReady", async () => {
       console.error('Markov chain auto-save error - will retry next cycle:', error);
     }, 'markov_auto_save');
   }, 60 * 60 * 1000); // Every hour (increased from 30 minutes)
-  
+
   // Clean up expired memory context cache entries every 10 minutes
   setInterval(() => {
     cleanupMemoryCache();
@@ -652,7 +649,7 @@ client.on("messageCreate", async (message) => {
 
   // Add message ID tracking to prevent duplicate processing
   const messageId = message.id;
-  
+
   // Update user mappings periodically (when new users are encountered)
   if (!markov.userMappings.has(message.author.id)) {
     markov.userMappings.set(message.author.id, message.author.displayName || message.author.username);
@@ -710,7 +707,7 @@ client.on("messageCreate", async (message) => {
 
   // Enhanced mention detection with debugging
   const botMentioned = isBotMentioned(message, client);
-  
+
   // Debug logging for mention detection (only when mentions are involved)
   if (botMentioned || message.mentions.users.size > 0 || message.mentions.roles.size > 0) {
     console.log(`[MENTION DEBUG] Message ${messageId}: botMentioned=${botMentioned}, userMentions=${message.mentions.users.size}, roleMentions=${message.mentions.roles.size}, content="${message.content}"`);
@@ -745,7 +742,7 @@ client.on("messageCreate", async (message) => {
 
   // Main message processing condition with enhanced logic
   const shouldProcessMessage = isBotMessageOrPrefix(message, BOT_PREFIX, client.commands) || botMentioned || isInBotThread;
-  
+
   if (shouldProcessMessage) {
     // Start typing indicator immediately
     const sendTypingInterval = await sendTypingIndicator(message);
@@ -760,10 +757,10 @@ client.on("messageCreate", async (message) => {
     // SIMPLE thread context - just get immediate reply context (no database)
     let threadContext = '';
     let isReply = isReplyMessage(message);
-    
+
     if (isReply) {
       console.log(`[THREAD] Reply detected: ${message.id} -> ${message.reference.messageId}`);
-      
+
       // Get immediate context from Discord API (no DB needed)
       const replyContext = await safeAsync(async () => {
         const referencedMessage = await message.fetchReference();
@@ -776,7 +773,7 @@ client.on("messageCreate", async (message) => {
         }
         return null;
       }, null, 'reply_context');
-      
+
       if (replyContext && !replyContext.isBot) {
         threadContext = `--- Reply Context ---\nReplying to ${replyContext.author}: "${replyContext.content}"\n--- End Context ---\n`;
         console.log(`[THREAD] Reply context built (${threadContext.length} chars)`);
@@ -813,7 +810,7 @@ client.on("messageCreate", async (message) => {
       } else {
         imagePrompt = message.content || "react to this image with your usual chronically online energy. no explanations, just vibes.";
       }
-      
+
       // Add thread context if available
       if (threadContext) {
         imagePrompt = threadContext + '\n' + imagePrompt;
@@ -956,13 +953,13 @@ client.on("messageCreate", async (message) => {
     } else {
       // Use Grok-4 for text-only messages
       let userContent = messageData.processedContent;
-      
+
       // Add thread context if available (for AI context only, NOT stored in conversation)
       if (threadContext) {
         userContent = threadContext + '\n' + userContent;
         console.log(`[THREAD] Added reply context to message (${threadContext.length} chars)`);
       }
-      
+
       // Store ONLY the processed content (without thread context) in conversation history
       // This prevents thread context from accumulating and causing hallucinations
       appendToConversation(message, "user", messageData.processedContent);
@@ -972,7 +969,7 @@ client.on("messageCreate", async (message) => {
 
       if (needsWebSearch) {
         console.log(`🔍 Query detected as needing web search: "${userContent.substring(0, 100)}"`);
-        
+
         // Use web search-enabled chat
         response = await safeAsync(async () => {
           return await chatWithWebSearch([...context, {
@@ -1033,7 +1030,7 @@ client.on("messageCreate", async (message) => {
     console.log(`🕒 Processing completed in ${processingTime}ms`);
 
     const responseMessage = response.choices[0].message.content;
-    
+
     // Add citations footer if available (from web search)
     const citations = response.citations || [];
     const citationsFooter = citations.length > 0 ? formatCitationsFooter(citations) : '';
@@ -1057,7 +1054,7 @@ client.on("messageCreate", async (message) => {
         },
         client // Pass client for username resolution
       );
-      
+
       console.log(`[Memory] Stored exchange for ${message.author.username} (batched)`);
     }, (error) => {
       handleDatabaseError(error, 'memory_storage');
@@ -1096,14 +1093,14 @@ client.on("messageCreate", async (message) => {
 
     return;
   }
-  
+
   // Check for markov generation in designated channels
   if (markovChannelIds.includes(message.channelId.toString())) {
     // Skip markov generation for ASCII art
     if (looksLikeAsciiArt(message.content)) {
       return;
     }
-    
+
     if (Math.random() < 0.0033) {
       // Use enhanced generation with coherence mode enabled
       const targetLength = Math.floor(Math.random() * 50) + 25; // 25-75 words for better variety
