@@ -681,24 +681,9 @@ client.on("messageCreate", async (message) => {
   if (isGroupPing(message)) return;
 
   // Check if message is in a bot-managed thread (auto-respond)
+  // IMPORTANT: Only threads explicitly created by Bepo via /thread or /continue commands are tracked
+  // Bepo will NOT auto-respond in threads it didn't create - users must @ mention it
   const isInBotThread = message.channel.isThread() && isBotManagedThread(message.channel.id);
-
-  // If message is in a thread but not tracked, check if it should be tracked
-  if (message.channel.isThread() && !isInBotThread) {
-    // Check if this might be a thread we created but lost tracking for
-    const threadInfo = await safeAsync(async () => {
-      return await validateBotManagedThread(
-        client,
-        message.channel.id,
-        message.author.id,
-        message.channel.parentId
-      );
-    }, null, 'thread_validation');
-
-    if (threadInfo && threadInfo.exists && !threadInfo.archived) {
-      console.log(`Recovered tracking for thread ${message.channel.id} after name change or restart`);
-    }
-  }
 
   // Update thread activity if message is in a bot-managed thread
   if (isInBotThread) {

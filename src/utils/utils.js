@@ -248,23 +248,23 @@ export async function buildStreamlinedConversationContext(message) {
     // Use optimized memory context builder (has built-in caching)
     // No need for manual caching anymore - optimization handles it
     const memoryContext = await buildMemoryContextOptimized(
-      message.author.id, 
-      message.content, 
-      serverId, 
+      message.author.id,
+      message.content,
+      serverId,
       message.client
     );
-    
+
     console.log(`Built memory context for ${key} (${memoryContext.length} chars)`);
 
     // Combine system message with memory context and current date/time
     const systemMsg = process.env.MODEL_SYSTEM_MESSAGE;
-    
+
     // Add current date and time for temporal accuracy
     const now = new Date();
-    const dateString = now.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
+    const dateString = now.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
       day: 'numeric',
       timeZone: 'America/New_York'
     });
@@ -275,7 +275,7 @@ export async function buildStreamlinedConversationContext(message) {
       timeZoneName: 'short'
     });
     const dateTimeContext = `\n\n--- Current Date & Time ---\nToday is ${dateString}\nCurrent time: ${timeString}\n--- End DateTime ---`;
-    
+
     let finalSystemMessage = systemMsg + dateTimeContext;
     if (memoryContext.trim()) {
       finalSystemMessage += `\n\n--- Memory & Context ---\n${memoryContext}\n--- End Memory ---`;
@@ -319,12 +319,12 @@ export async function buildStreamlinedConversationContext(message) {
       let memoryContext = '';
       // Use optimized memory context builder (has built-in caching)
       memoryContext = await buildMemoryContextOptimized(
-        message.author.id, 
-        message.content, 
-        serverId, 
+        message.author.id,
+        message.content,
+        serverId,
         message.client
       );
-      
+
       console.log(`Refreshed memory context for ${key}`);
 
       // Update the system message with fresh context
@@ -660,13 +660,20 @@ export async function checkAndDeleteInactiveThreads(client) {
   }
 }
 
-// Function to validate and recover thread tracking
+// Function to validate thread tracking - only validates threads ALREADY in the store
+// Does NOT add new threads to tracking - that should only happen via /thread or /continue commands
 export async function validateBotManagedThread(client, threadId, userId, channelId) {
+  // Only validate threads that are already being tracked
+  // This prevents random threads from being marked as bot-managed
+  if (!isBotManagedThread(threadId)) {
+    return { exists: false, thread: null, tracked: false };
+  }
+
   try {
     const thread = await client.channels.fetch(threadId);
 
     if (!thread || !thread.isThread()) {
-      // Thread doesn't exist anymore
+      // Thread doesn't exist anymore, remove from tracking
       botThreadStore.delete(threadId);
       return { exists: false, thread: null };
     }
@@ -674,12 +681,6 @@ export async function validateBotManagedThread(client, threadId, userId, channel
     if (thread.archived) {
       // Thread is archived, but still exists
       return { exists: true, thread, archived: true };
-    }
-
-    // Ensure it's properly tracked
-    if (!isBotManagedThread(threadId)) {
-      markThreadAsBotManaged(threadId, userId, channelId);
-      console.log(`Restored tracking for thread ${threadId} after validation`);
     }
 
     return { exists: true, thread, archived: false };
